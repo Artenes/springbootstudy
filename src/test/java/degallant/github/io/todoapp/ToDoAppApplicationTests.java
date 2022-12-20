@@ -63,6 +63,22 @@ class ToDoAppApplicationTests {
                 .jsonPath("$[0].complete").isEqualTo(true);
     }
 
+    //todo add support to title and description
+
+    //todo add support to due date
+
+    //todo add support to priority
+
+    //todo add support to labels
+
+    //todo add support to subtasks
+
+    //todo add support to users
+
+    //todo add support to comments
+
+    //todo add support to buckets
+
     @AfterEach
     public void tearDown() {
         flyway.clean();
