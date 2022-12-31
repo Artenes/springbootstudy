@@ -1,9 +1,26 @@
 package degallant.github.io.todoapp;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+import java.time.OffsetDateTime;
+
 public class TodoDto {
 
-    public record Create(String description) {}
+    @Getter
+    @NoArgsConstructor
+    public static class Create {
 
-    public record PatchComplete(boolean complete) {}
+        private String title;
+        private String description;
+        @JsonProperty("due_date")
+        private OffsetDateTime dueDate;
+        private Priority priority;
+
+    }
+
+    public record PatchComplete(boolean complete) {
+    }
 
 }

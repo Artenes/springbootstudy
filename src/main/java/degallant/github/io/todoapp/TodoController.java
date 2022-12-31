@@ -21,7 +21,10 @@ public class TodoController {
     @PostMapping
     public ResponseEntity<?> create(@RequestBody TodoDto.Create request) throws URISyntaxException {
 
-        var todoEntity = new TodoEntity(request.description());
+        var todoEntity = TodoEntity.builder()
+                .title(request.getTitle())
+                .description(request.getDescription())
+                .build();
 
         todoEntity = repository.save(todoEntity);
 
@@ -46,6 +49,13 @@ public class TodoController {
         repository.save(todoEntity);
 
         return ResponseEntity.ok().build();
+
+    }
+
+    @GetMapping("/{id}")
+    public TodoEntity get(@PathVariable UUID id) {
+
+        return repository.findById(id).orElseThrow();
 
     }
 
