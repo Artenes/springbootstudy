@@ -24,6 +24,7 @@ public class TodoController {
         var todoEntity = TodoEntity.builder()
                 .title(request.getTitle())
                 .description(request.getDescription())
+                .dueDate(request.getDueDate())
                 .build();
 
         todoEntity = repository.save(todoEntity);
@@ -53,9 +54,15 @@ public class TodoController {
     }
 
     @GetMapping("/{id}")
-    public TodoEntity get(@PathVariable UUID id) {
+    public TodoDto.Details get(@PathVariable UUID id) {
 
-        return repository.findById(id).orElseThrow();
+        var todo = repository.findById(id).orElseThrow();
+
+        return TodoDto.Details.builder()
+                .title(todo.getTitle())
+                .description(todo.getDescription())
+                .dueDate(todo.getDueDate())
+                .build();
 
     }
 

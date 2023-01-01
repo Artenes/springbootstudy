@@ -2,7 +2,6 @@ package degallant.github.io.todoapp;
 
 import org.flywaydb.core.Flyway;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -85,11 +84,13 @@ class ToDoAppApplicationTests {
 
         var title = "Take the dog for a walk";
         var description = "This is very important, dog needs to walk or it will not behave";
+        var dueDate = "2023-01-01T12:50:29.790511-04:00";
 
         URI todoURI = client.post().uri("/v1/todo")
                 .bodyValue(Map.of(
                         "title", title,
-                        "description", description
+                        "description", description,
+                        "due_date", dueDate
                 ))
                 .exchange()
                 .expectBody()
@@ -101,11 +102,10 @@ class ToDoAppApplicationTests {
                 .expectStatus().isOk()
                 .expectBody()
                 .jsonPath("$.title").isEqualTo(title)
-                .jsonPath("$.description").isEqualTo(description);
+                .jsonPath("$.description").isEqualTo(description)
+                .jsonPath("$.due_date").isEqualTo(dueDate);
 
     }
-
-    //todo add support to due date
 
     //todo add support to priority
 
