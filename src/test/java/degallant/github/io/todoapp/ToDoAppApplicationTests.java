@@ -79,20 +79,24 @@ class ToDoAppApplicationTests {
 
     }
 
+    /** @noinspection ConstantConditions*/
     @Test
     public void createATodoFullOfDetails() {
 
         var title = "Take the dog for a walk";
         var description = "This is very important, dog needs to walk or it will not behave";
         var dueDate = "2023-01-01T12:50:29.790511-04:00";
+        var priority = "P3";
 
         URI todoURI = client.post().uri("/v1/todo")
                 .bodyValue(Map.of(
                         "title", title,
                         "description", description,
-                        "due_date", dueDate
+                        "due_date", dueDate,
+                        "priority", priority
                 ))
                 .exchange()
+                .expectStatus().isCreated()
                 .expectBody()
                 .returnResult()
                 .getResponseHeaders()
@@ -103,11 +107,10 @@ class ToDoAppApplicationTests {
                 .expectBody()
                 .jsonPath("$.title").isEqualTo(title)
                 .jsonPath("$.description").isEqualTo(description)
-                .jsonPath("$.due_date").isEqualTo(dueDate);
+                .jsonPath("$.due_date").isEqualTo(dueDate)
+                .jsonPath("$.priority").isEqualTo(priority);
 
     }
-
-    //todo add support to priority
 
     //todo add support to labels
 

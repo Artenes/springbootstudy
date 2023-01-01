@@ -25,6 +25,7 @@ public class TodoController {
                 .title(request.getTitle())
                 .description(request.getDescription())
                 .dueDate(request.getDueDate())
+                .priority(request.getPriority())
                 .build();
 
         todoEntity = repository.save(todoEntity);
@@ -62,6 +63,7 @@ public class TodoController {
                 .title(todo.getTitle())
                 .description(todo.getDescription())
                 .dueDate(todo.getDueDate())
+                .priority(todo.getPriority())
                 .build();
 
     }
