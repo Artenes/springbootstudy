@@ -28,6 +28,9 @@ public class TodoEntity {
 
     private Priority priority;
 
+    @Column(name = "parent_id")
+    private UUID parent;
+
     @Column(name = "due_date")
     private OffsetDateTime dueDate;
 

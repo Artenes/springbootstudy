@@ -123,13 +123,59 @@ class ToDoAppApplicationTests {
         client.get().uri(todoURI).exchange()
                 .expectStatus().isOk()
                 .expectBody()
+                .consumeWith(System.out::println)
                 .jsonPath("$.title").isEqualTo(title)
                 .jsonPath("$.description").isEqualTo(description)
                 .jsonPath("$.due_date").isEqualTo(dueDate)
                 .jsonPath("$.priority").isEqualTo(priority)
                 .jsonPath("$.tags[?(@.name == 'daily')]").exists()
                 .jsonPath("$.tags[?(@.name == 'home')]").exists()
-                .jsonPath("$.tags[?(@.name == 'pet')]").exists();
+                .jsonPath("$.tags[?(@.name == 'pet')]").exists()
+                .jsonPath("$.children").isEmpty()
+                .jsonPath("$.parent").isEmpty();
+
+    }
+
+    @Test
+    public void createASubTask() {
+
+        var todoTitle = "Buy some bread";
+        URI todoUri = client.post().uri("/v1/todo")
+                .bodyValue(Map.of("title", todoTitle))
+                .exchange()
+                .expectStatus().isCreated()
+                .expectBody()
+                .returnResult()
+                .getResponseHeaders()
+                .getLocation();
+
+        String[] parts = todoUri.getPath().split("/");
+        String parentUuid = parts[parts.length - 1];
+
+        var subtaskTitle = "Go to store";
+        URI subTaskUri = client.post().uri("/v1/todo")
+                .bodyValue(Map.of(
+                        "title", subtaskTitle,
+                        "parent", parentUuid
+                ))
+                .exchange()
+                .expectStatus().isCreated()
+                .expectBody()
+                .returnResult()
+                .getResponseHeaders()
+                .getLocation();
+
+        client.get().uri(todoUri).exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.title").isEqualTo(todoTitle)
+                .jsonPath("$.children[0]").isEqualTo(subTaskUri.toString());
+
+        client.get().uri(subTaskUri).exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.title").isEqualTo(subtaskTitle)
+                .jsonPath("$.parent").isEqualTo(todoUri.toString());
 
     }
 
@@ -148,6 +194,8 @@ class ToDoAppApplicationTests {
     //about date time in java https://reflectoring.io/spring-timezones/
 
     //retardedly, you can't have enums in the database and bring them to hibernate, maybe this can help: https://docs.jboss.org/hibernate/orm/6.1/userguide/html_single/Hibernate_User_Guide.html#basic-enums
+
+    //when creating queries in a repository, by default it uses JPQL
 
     @AfterEach
     public void tearDown() {

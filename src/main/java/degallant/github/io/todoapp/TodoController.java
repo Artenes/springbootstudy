@@ -29,7 +29,7 @@ public class TodoController {
 
         List<TagEntity> tags = Collections.emptyList();
         if (request.getTags() != null && !request.getTags().isEmpty()) {
-             tags = tagRepository.findAllById(request.getTags());
+            tags = tagRepository.findAllById(request.getTags());
         }
 
         var todoEntity = TodoEntity.builder()
@@ -38,6 +38,7 @@ public class TodoController {
                 .dueDate(request.getDueDate())
                 .priority(request.getPriority())
                 .tags(tags)
+                .parent(request.getParent())
                 .build();
 
         todoEntity = todoRepository.save(todoEntity);
@@ -73,20 +74,33 @@ public class TodoController {
 
         var todo = todoRepository.findById(id).orElseThrow();
 
-        var tags = todo.getTags().stream()
-                .map(tag -> TagDto.Details.builder()
-                        .name(tag.getName())
-                        .uuid(tag.getId())
-                        .build())
-                .collect(Collectors.toList());
-
-        return TodoDto.Details.builder()
+        var response = TodoDto.Details.builder()
                 .title(todo.getTitle())
                 .description(todo.getDescription())
                 .dueDate(todo.getDueDate())
-                .priority(todo.getPriority())
-                .tags(tags)
-                .build();
+                .priority(todo.getPriority());
+
+        if (todo.getTags() != null && !todo.getTags().isEmpty()) {
+            response.tags(todo.getTags().stream()
+                    .map(tag -> TagDto.Details.builder()
+                            .name(tag.getName())
+                            .uuid(tag.getId())
+                            .build())
+                    .collect(Collectors.toList()));
+        }
+
+        var children = todoRepository.findByParent(todo.getId());
+        if (children != null && !children.isEmpty()) {
+            response.children(children.stream()
+                    .map(child -> linkTo(TodoController.class).slash(child.getId()).toUri())
+                    .collect(Collectors.toList()));
+        }
+
+        if (todo.getParent() != null) {
+            response.parent(linkTo(TodoController.class).slash(todo.getParent()).toUri());
+        }
+
+        return response.build();
 
     }
 
