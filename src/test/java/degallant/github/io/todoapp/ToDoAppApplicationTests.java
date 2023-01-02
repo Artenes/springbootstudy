@@ -6,7 +6,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
@@ -28,15 +27,9 @@ class ToDoAppApplicationTests {
     @Autowired
     private Flyway flyway;
 
-    @LocalServerPort
-    private int port;
-
-    private URI root;
-
     @BeforeEach
     public void setUp() {
         flyway.migrate();
-        root = URI.create("http://localhost:" + port);
     }
 
     @Test
@@ -72,7 +65,7 @@ class ToDoAppApplicationTests {
                 .getResponseHeaders()
                 .getLocation();
 
-        client.patch().uri(root.resolve(todoURI))
+        client.patch().uri(todoURI)
                 .bodyValue(Map.of("complete", true))
                 .exchange();
 
@@ -127,7 +120,7 @@ class ToDoAppApplicationTests {
                 .getResponseHeaders()
                 .getLocation();
 
-        client.get().uri(root.resolve(todoURI)).exchange()
+        client.get().uri(todoURI).exchange()
                 .expectStatus().isOk()
                 .expectBody()
                 .jsonPath("$.title").isEqualTo(title)

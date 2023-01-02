@@ -3,11 +3,13 @@ package degallant.github.io.todoapp;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
+
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 
 @RestController
 @RequestMapping("/v1/todo")
@@ -25,7 +27,10 @@ public class TodoController {
     @PostMapping
     public ResponseEntity<?> create(@RequestBody TodoDto.Create request) throws URISyntaxException {
 
-        List<TagEntity> tags = tagRepository.findAllById(request.getTags());
+        List<TagEntity> tags = Collections.emptyList();
+        if (request.getTags() != null && !request.getTags().isEmpty()) {
+             tags = tagRepository.findAllById(request.getTags());
+        }
 
         var todoEntity = TodoEntity.builder()
                 .title(request.getTitle())
@@ -37,7 +42,9 @@ public class TodoController {
 
         todoEntity = todoRepository.save(todoEntity);
 
-        return ResponseEntity.created(new URI("/v1/todo/" + todoEntity.getId())).build();
+        var link = linkTo(TodoController.class).slash(todoEntity.getId());
+
+        return ResponseEntity.created(link.toUri()).build();
 
     }
 
