@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Entity(name = "todos")
@@ -29,5 +30,13 @@ public class TodoEntity {
 
     @Column(name = "due_date")
     private OffsetDateTime dueDate;
+
+    @ManyToMany
+    @JoinTable(
+            name = "todo_tags",
+            joinColumns = @JoinColumn(name = "todo_id"),
+            inverseJoinColumns = @JoinColumn(name = "tag_id")
+    )
+    private List<TagEntity> tags;
 
 }

@@ -11,8 +11,13 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
 import java.net.URI;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
+/**
+ * @noinspection ConstantConditions
+ */
 @ActiveProfiles("test")
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class ToDoAppApplicationTests {
@@ -79,7 +84,25 @@ class ToDoAppApplicationTests {
 
     }
 
-    /** @noinspection ConstantConditions*/
+    @Test
+    public void createATag() {
+
+        var tag = "house";
+
+        URI tagUri = client.post().uri("/v1/tag")
+                .bodyValue(Map.of("name", tag))
+                .exchange()
+                .expectStatus().isCreated()
+                .expectBody().returnResult().getResponseHeaders()
+                .getLocation();
+
+        client.get().uri(tagUri)
+                .exchange()
+                .expectBody()
+                .jsonPath("$.name").isEqualTo(tag);
+
+    }
+
     @Test
     public void createATodoFullOfDetails() {
 
@@ -87,13 +110,15 @@ class ToDoAppApplicationTests {
         var description = "This is very important, dog needs to walk or it will not behave";
         var dueDate = "2023-01-01T12:50:29.790511-04:00";
         var priority = "P3";
+        var tags = makeTags("daily", "home", "pet");
 
         URI todoURI = client.post().uri("/v1/todo")
                 .bodyValue(Map.of(
                         "title", title,
                         "description", description,
                         "due_date", dueDate,
-                        "priority", priority
+                        "priority", priority,
+                        "tags", tags
                 ))
                 .exchange()
                 .expectStatus().isCreated()
@@ -108,11 +133,12 @@ class ToDoAppApplicationTests {
                 .jsonPath("$.title").isEqualTo(title)
                 .jsonPath("$.description").isEqualTo(description)
                 .jsonPath("$.due_date").isEqualTo(dueDate)
-                .jsonPath("$.priority").isEqualTo(priority);
+                .jsonPath("$.priority").isEqualTo(priority)
+                .jsonPath("$.tags[?(@.name == 'daily')]").exists()
+                .jsonPath("$.tags[?(@.name == 'home')]").exists()
+                .jsonPath("$.tags[?(@.name == 'pet')]").exists();
 
     }
-
-    //todo add support to labels
 
     //todo add support to subtasks
 
@@ -124,6 +150,8 @@ class ToDoAppApplicationTests {
 
     //todo test fail cases
 
+    //todo paginate anything that returns a list
+
     //about date time in java https://reflectoring.io/spring-timezones/
 
     //retardedly, you can't have enums in the database and bring them to hibernate, maybe this can help: https://docs.jboss.org/hibernate/orm/6.1/userguide/html_single/Hibernate_User_Guide.html#basic-enums
@@ -131,6 +159,20 @@ class ToDoAppApplicationTests {
     @AfterEach
     public void tearDown() {
         flyway.clean();
+    }
+
+    private Set<String> makeTags(String... names) {
+        Set<String> uuids = new HashSet<>();
+        for (String name : names) {
+            URI uri = client.post().uri("/v1/tag")
+                    .bodyValue(Map.of("name", name))
+                    .exchange()
+                    .expectBody().returnResult().getResponseHeaders()
+                    .getLocation();
+            String[] parts = uri.getPath().split("/");
+            uuids.add(parts[parts.length - 1]);
+        }
+        return uuids;
     }
 
 }

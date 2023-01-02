@@ -7,6 +7,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.OffsetDateTime;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
 
 public class TodoDto {
 
@@ -19,6 +22,7 @@ public class TodoDto {
         @JsonProperty("due_date")
         private OffsetDateTime dueDate;
         private Priority priority;
+        private Set<UUID> tags;
 
     }
 
@@ -33,6 +37,7 @@ public class TodoDto {
         @JsonProperty("due_date")
         private OffsetDateTime dueDate;
         private Priority priority;
+        private List<TagDto.Details> tags;
 
     }
 
