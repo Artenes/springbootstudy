@@ -6,6 +6,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
@@ -13,6 +14,9 @@ import java.net.URI;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.when;
 
 /**
  * @noinspection ConstantConditions
@@ -27,9 +31,41 @@ class ToDoAppApplicationTests {
     @Autowired
     private Flyway flyway;
 
+    @MockBean
+    private OpenIdTokenParser openIdTokenParser;
+
     @BeforeEach
     public void setUp() {
         flyway.migrate();
+    }
+
+    @Test
+    public void registerNewUser() {
+
+        String email = "email@gmail.com";
+        String name = "Jhon Doe";
+        String profileUrl = "https://google.com/profile/903jfiwfiwoe";
+
+        String token = makeTokenFor(email, name, profileUrl);
+
+        URI userUri = client.post().uri("/v1/auth")
+                .bodyValue(Map.of("token", token))
+                .exchange()
+                .expectStatus().isCreated()
+                .expectBody()
+                .jsonPath("$.access_token").exists()
+                .jsonPath("$.refresh_token").exists()
+                .returnResult()
+                .getResponseHeaders().getLocation();
+
+        client.get().uri(userUri).exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .consumeWith(System.out::println)
+                .jsonPath("$.email").isEqualTo(email)
+                .jsonPath("$.name").isEqualTo(name)
+                .jsonPath("$.picture_url").isEqualTo(profileUrl);
+
     }
 
     @Test
@@ -179,9 +215,9 @@ class ToDoAppApplicationTests {
 
     }
 
-    //todo add support to subtasks
-
     //todo add support to users
+
+    //todo add token-based authentication
 
     //todo add support to comments
 
@@ -214,6 +250,13 @@ class ToDoAppApplicationTests {
             uuids.add(parts[parts.length - 1]);
         }
         return uuids;
+    }
+
+    private String makeTokenFor(String email, String name, String profileUrl) {
+        //a dummy token for test purposes
+        String token = email + name + profileUrl;
+        when(openIdTokenParser.extract(eq(token))).thenReturn(new OpenIdUser(email, name, profileUrl));
+        return token;
     }
 
 }

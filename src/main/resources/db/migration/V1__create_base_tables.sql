@@ -28,3 +28,11 @@ CREATE TABLE todo_tags(
             FOREIGN KEY(tag_id)
                 REFERENCES tags(id)
 );
+
+CREATE TABLE users (
+	id uuid NOT NULL,
+	email varchar(255) UNIQUE NOT NULL,
+	name varchar(255) NOT NULL,
+	picture_url varchar(255),
+	PRIMARY KEY (id)
+);
