@@ -1,15 +1,25 @@
 package degallant.github.io.todoapp;
 
 import com.auth0.jwt.JWT;
+import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
+import com.auth0.jwt.interfaces.DecodedJWT;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.Collections;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class AuthenticationService {
+
+    private static final Logger log = LoggerFactory.getLogger(AuthenticationService.class);
 
     private final UserRepository repository;
 
@@ -17,15 +27,18 @@ public class AuthenticationService {
 
     private final AuthenticationConfiguration config;
 
+    private final Algorithm signature;
+
     public AuthenticationService(UserRepository repository, OpenIdTokenParser openIdTokenParser, AuthenticationConfiguration config) {
         this.repository = repository;
         this.openIdTokenParser = openIdTokenParser;
         this.config = config;
+        signature = Algorithm.HMAC256(config.signKey());
     }
 
-    public AuthenticatedUser authenticate(String token) {
+    public AuthenticatedUser authenticateWithOpenId(String openIdToken) {
 
-        OpenIdUser openIdUser = openIdTokenParser.extract(token);
+        OpenIdUser openIdUser = openIdTokenParser.extract(openIdToken);
 
         Optional<UserEntity> user = repository.findByEmail(openIdUser.email());
 
@@ -51,9 +64,25 @@ public class AuthenticationService {
 
     }
 
-    public TokenPair encode(UserEntity user) {
+    public Authentication authenticateWithJWTToken(String jwtToken) {
 
-        Algorithm signature = Algorithm.HMAC256(config.signKey());
+        JWTVerifier verifier = JWT.require(signature)
+                .withIssuer(config.issuer())
+                .build();
+
+        DecodedJWT decodedJWT = verifier.verify(jwtToken);
+
+        UUID userId = UUID.fromString(decodedJWT.getSubject());
+
+        UserEntity user = repository.findById(userId).orElseThrow();
+
+        log.info("User found: " + user.getId());
+
+        return new UsernamePasswordAuthenticationToken(user, null, Collections.emptyList());
+
+    }
+
+    public TokenPair encode(UserEntity user) {
 
         String token = JWT.create()
                 .withIssuer(config.issuer())

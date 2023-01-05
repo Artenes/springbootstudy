@@ -1,15 +1,19 @@
 package degallant.github.io.todoapp;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.flywaydb.core.Flyway;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.HttpHeaders;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
+import java.io.IOException;
 import java.net.URI;
 import java.util.HashSet;
 import java.util.Map;
@@ -19,10 +23,11 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 /**
- * @noinspection ConstantConditions
+ * @noinspection ALL
  */
 @ActiveProfiles("test")
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@AutoConfigureWebTestClient(timeout = "36000")
 class ToDoAppApplicationTests {
 
     @Autowired
@@ -34,13 +39,19 @@ class ToDoAppApplicationTests {
     @MockBean
     private OpenIdTokenParser openIdTokenParser;
 
+    @Autowired
+    private ObjectMapper mapper;
+
+    @Autowired
+    private UserRepository repository;
+
     @BeforeEach
     public void setUp() {
         flyway.migrate();
     }
 
     @Test
-    public void registerNewUser() {
+    public void registerNewUser() throws IOException {
 
         String email = "email@gmail.com";
         String name = "Jhon Doe";
@@ -48,17 +59,21 @@ class ToDoAppApplicationTests {
 
         String token = makeTokenFor(email, name, profileUrl);
 
-        URI userUri = client.post().uri("/v1/auth")
+        WebTestClient.ResponseSpec responseSpec = client.post().uri("/v1/auth")
                 .bodyValue(Map.of("token", token))
-                .exchange()
+                .exchange();
+
+        responseSpec
                 .expectStatus().isCreated()
                 .expectBody()
                 .jsonPath("$.access_token").exists()
-                .jsonPath("$.refresh_token").exists()
-                .returnResult()
-                .getResponseHeaders().getLocation();
+                .jsonPath("$.refresh_token").exists();
 
-        client.get().uri(userUri).exchange()
+        URI userUri = responseSpec.expectBody().returnResult().getResponseHeaders().getLocation();
+        Map<String, String> response = mapper.readValue(responseSpec.expectBody().returnResult().getResponseBodyContent(), Map.class);
+        String accessToken = response.get("access_token");
+
+        client.get().uri(userUri).header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken).exchange()
                 .expectStatus().isOk()
                 .expectBody()
                 .consumeWith(System.out::println)
@@ -69,17 +84,42 @@ class ToDoAppApplicationTests {
     }
 
     @Test
-    public void createsAToDoToComplete() {
+    public void loginExistingUser() {
 
+        String email = "email@gmail.com";
+        String name = "Jhon Doe";
+        String profileUrl = "https://google.com/profile/903jfiwfiwoe";
+
+        String token = makeTokenFor(email, name, profileUrl);
+
+        client.post().uri("/v1/auth")
+                .bodyValue(Map.of("token", token))
+                .exchange()
+                .expectStatus().isCreated();
+
+        client.post().uri("/v1/auth")
+                .bodyValue(Map.of("token", token))
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody().jsonPath("$.access_token").exists();
+
+    }
+
+    @Test
+    public void createsAToDoToComplete() throws IOException {
+
+        var token = getAccessTokenFromTestUser();
         var title = "Take the dog for a walk";
 
         client.post().uri("/v1/todo")
                 .bodyValue(Map.of("title", title))
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
                 .exchange()
                 .expectStatus().isCreated()
                 .expectBody();
 
         client.get().uri("/v1/todo")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
                 .exchange()
                 .expectBody()
                 .jsonPath("$[0].title").isEqualTo(title)
@@ -89,12 +129,14 @@ class ToDoAppApplicationTests {
     }
 
     @Test
-    public void createsAndCompleteTodo() {
+    public void createsAndCompleteTodo() throws IOException {
 
+        var token = getAccessTokenFromTestUser();
         var title = "Take the dog for a walk";
 
         URI todoURI = client.post().uri("/v1/todo")
                 .bodyValue(Map.of("title", title))
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
                 .exchange()
                 .expectBody()
                 .returnResult()
@@ -103,9 +145,11 @@ class ToDoAppApplicationTests {
 
         client.patch().uri(todoURI)
                 .bodyValue(Map.of("complete", true))
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
                 .exchange();
 
         client.get().uri("/v1/todo")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
                 .exchange()
                 .expectBody()
                 .jsonPath("$[0].title").isEqualTo(title)
@@ -114,18 +158,21 @@ class ToDoAppApplicationTests {
     }
 
     @Test
-    public void createATag() {
+    public void createATag() throws IOException {
 
+        var token = getAccessTokenFromTestUser();
         var tag = "house";
 
         URI tagUri = client.post().uri("/v1/tag")
                 .bodyValue(Map.of("name", tag))
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
                 .exchange()
                 .expectStatus().isCreated()
                 .expectBody().returnResult().getResponseHeaders()
                 .getLocation();
 
         client.get().uri(tagUri)
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
                 .exchange()
                 .expectBody()
                 .jsonPath("$.name").isEqualTo(tag);
@@ -133,13 +180,14 @@ class ToDoAppApplicationTests {
     }
 
     @Test
-    public void createATodoFullOfDetails() {
+    public void createATodoFullOfDetails() throws IOException {
 
+        var token = getAccessTokenFromTestUser();
         var title = "Take the dog for a walk";
         var description = "This is very important, dog needs to walk or it will not behave";
         var dueDate = "2023-01-01T12:50:29.790511-04:00";
         var priority = "P3";
-        var tags = makeTags("daily", "home", "pet");
+        var tags = makeTags(token,"daily", "home", "pet");
 
         URI todoURI = client.post().uri("/v1/todo")
                 .bodyValue(Map.of(
@@ -149,6 +197,7 @@ class ToDoAppApplicationTests {
                         "priority", priority,
                         "tags", tags
                 ))
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
                 .exchange()
                 .expectStatus().isCreated()
                 .expectBody()
@@ -156,7 +205,9 @@ class ToDoAppApplicationTests {
                 .getResponseHeaders()
                 .getLocation();
 
-        client.get().uri(todoURI).exchange()
+        client.get().uri(todoURI)
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+                .exchange()
                 .expectStatus().isOk()
                 .expectBody()
                 .consumeWith(System.out::println)
@@ -173,11 +224,13 @@ class ToDoAppApplicationTests {
     }
 
     @Test
-    public void createASubTask() {
+    public void createASubTask() throws IOException {
 
+        var token = getAccessTokenFromTestUser();
         var todoTitle = "Buy some bread";
         URI todoUri = client.post().uri("/v1/todo")
                 .bodyValue(Map.of("title", todoTitle))
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
                 .exchange()
                 .expectStatus().isCreated()
                 .expectBody()
@@ -194,6 +247,7 @@ class ToDoAppApplicationTests {
                         "title", subtaskTitle,
                         "parent", parentUuid
                 ))
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
                 .exchange()
                 .expectStatus().isCreated()
                 .expectBody()
@@ -201,13 +255,17 @@ class ToDoAppApplicationTests {
                 .getResponseHeaders()
                 .getLocation();
 
-        client.get().uri(todoUri).exchange()
+        client.get().uri(todoUri)
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+                .exchange()
                 .expectStatus().isOk()
                 .expectBody()
                 .jsonPath("$.title").isEqualTo(todoTitle)
                 .jsonPath("$.children[0]").isEqualTo(subTaskUri.toString());
 
-        client.get().uri(subTaskUri).exchange()
+        client.get().uri(subTaskUri)
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+                .exchange()
                 .expectStatus().isOk()
                 .expectBody()
                 .jsonPath("$.title").isEqualTo(subtaskTitle)
@@ -238,12 +296,14 @@ class ToDoAppApplicationTests {
         flyway.clean();
     }
 
-    private Set<String> makeTags(String... names) {
+    private Set<String> makeTags(String acccessToken, String... names) {
         Set<String> uuids = new HashSet<>();
         for (String name : names) {
             URI uri = client.post().uri("/v1/tag")
                     .bodyValue(Map.of("name", name))
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + acccessToken)
                     .exchange()
+                    .expectStatus().isCreated()
                     .expectBody().returnResult().getResponseHeaders()
                     .getLocation();
             String[] parts = uri.getPath().split("/");
@@ -257,6 +317,24 @@ class ToDoAppApplicationTests {
         String token = email + name + profileUrl;
         when(openIdTokenParser.extract(eq(token))).thenReturn(new OpenIdUser(email, name, profileUrl));
         return token;
+    }
+
+    private String getAccessTokenFromTestUser() throws IOException {
+        String email = "email@gmail.com";
+        String name = "Jhon Doe";
+        String profileUrl = "https://google.com/profile/903jfiwfiwoe";
+
+        String token = makeTokenFor(email, name, profileUrl);
+
+        WebTestClient.ResponseSpec responseSpec = client.post().uri("/v1/auth")
+                .bodyValue(Map.of("token", token))
+                .exchange();
+
+        responseSpec.expectStatus().isCreated();
+
+        URI userUri = responseSpec.expectBody().returnResult().getResponseHeaders().getLocation();
+        Map<String, String> response = mapper.readValue(responseSpec.expectBody().returnResult().getResponseBodyContent(), Map.class);
+        return response.get("access_token");
     }
 
 }

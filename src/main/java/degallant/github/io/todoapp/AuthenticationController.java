@@ -23,9 +23,9 @@ public class AuthenticationController {
     @PostMapping
     public ResponseEntity<?> authenticate(@RequestBody AuthDto.Authenticate request) {
 
-        AuthenticatedUser authenticatedUser = service.authenticate(request.getToken());
+        AuthenticatedUser authenticatedUser = service.authenticateWithOpenId(request.getToken());
 
-        Link link = linkTo(UserController.class).slash(authenticatedUser.user().getId()).withSelfRel();
+        Link link = linkTo(UserController.class).withSelfRel();
         EntityModel<AuthDto.TokenPair> model = EntityModel.of(AuthDto.TokenPair.builder()
                 .accessToken(authenticatedUser.accessToken())
                 .refreshToken(authenticatedUser.refreshToken())

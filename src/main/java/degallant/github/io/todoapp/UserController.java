@@ -1,5 +1,8 @@
 package degallant.github.io.todoapp;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -11,16 +14,20 @@ import java.util.UUID;
 @RequestMapping("/v1/user")
 public class UserController {
 
+    private static final Logger log = LoggerFactory.getLogger(UserController.class);
+
     private final UserRepository repository;
 
     public UserController(UserRepository repository) {
         this.repository = repository;
     }
 
-    @GetMapping("/{id}")
-    public UserDto.Details get(@PathVariable UUID id) {
+    @GetMapping
+    public UserDto.Details get(Authentication authentication) {
 
-        var user = repository.findById(id).orElseThrow();
+        log.info("User found: " + authentication.getName());
+
+        var user = (UserEntity) authentication.getPrincipal();
 
         return UserDto.Details.builder()
                 .name(user.getName())
