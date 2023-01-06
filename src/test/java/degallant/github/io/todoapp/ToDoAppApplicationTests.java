@@ -11,6 +11,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpHeaders;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.web.reactive.server.EntityExchangeResult;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
 import java.io.IOException;
@@ -45,6 +46,8 @@ class ToDoAppApplicationTests {
     @Autowired
     private UserRepository repository;
 
+    private String accessToken;
+
     @BeforeEach
     public void setUp() {
         flyway.migrate();
@@ -59,24 +62,26 @@ class ToDoAppApplicationTests {
 
         String token = makeTokenFor(email, name, profileUrl);
 
-        WebTestClient.ResponseSpec responseSpec = client.post().uri("/v1/auth")
+        EntityExchangeResult<byte[]> result = client.post().uri("/v1/auth")
                 .bodyValue(Map.of("token", token))
-                .exchange();
-
-        responseSpec
+                .exchange()
                 .expectStatus().isCreated()
                 .expectBody()
                 .jsonPath("$.access_token").exists()
-                .jsonPath("$.refresh_token").exists();
+                .jsonPath("$.refresh_token").exists()
+                .returnResult();
 
-        URI userUri = responseSpec.expectBody().returnResult().getResponseHeaders().getLocation();
-        Map<String, String> response = mapper.readValue(responseSpec.expectBody().returnResult().getResponseBodyContent(), Map.class);
-        String accessToken = response.get("access_token");
+        URI userUri = result.getResponseHeaders().getLocation();
+        Map<String, String> response = mapper.readValue(result.getResponseBodyContent(), Map.class);
 
-        client.get().uri(userUri).header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken).exchange()
+        authenticate(response.get("access_token"));
+
+        client.get()
+                .uri(userUri)
+                .headers(this::authenticateRequest)
+                .exchange()
                 .expectStatus().isOk()
                 .expectBody()
-                .consumeWith(System.out::println)
                 .jsonPath("$.email").isEqualTo(email)
                 .jsonPath("$.name").isEqualTo(name)
                 .jsonPath("$.picture_url").isEqualTo(profileUrl);
@@ -108,18 +113,19 @@ class ToDoAppApplicationTests {
     @Test
     public void createsAToDoToComplete() throws IOException {
 
-        var token = getAccessTokenFromTestUser();
+        authenticate();
+
         var title = "Take the dog for a walk";
 
         client.post().uri("/v1/todo")
                 .bodyValue(Map.of("title", title))
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+                .headers(this::authenticateRequest)
                 .exchange()
                 .expectStatus().isCreated()
                 .expectBody();
 
         client.get().uri("/v1/todo")
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+                .headers(this::authenticateRequest)
                 .exchange()
                 .expectBody()
                 .jsonPath("$[0].title").isEqualTo(title)
@@ -131,12 +137,13 @@ class ToDoAppApplicationTests {
     @Test
     public void createsAndCompleteTodo() throws IOException {
 
-        var token = getAccessTokenFromTestUser();
+        authenticate();
+
         var title = "Take the dog for a walk";
 
         URI todoURI = client.post().uri("/v1/todo")
                 .bodyValue(Map.of("title", title))
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+                .headers(this::authenticateRequest)
                 .exchange()
                 .expectBody()
                 .returnResult()
@@ -145,11 +152,11 @@ class ToDoAppApplicationTests {
 
         client.patch().uri(todoURI)
                 .bodyValue(Map.of("complete", true))
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+                .headers(this::authenticateRequest)
                 .exchange();
 
         client.get().uri("/v1/todo")
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+                .headers(this::authenticateRequest)
                 .exchange()
                 .expectBody()
                 .jsonPath("$[0].title").isEqualTo(title)
@@ -160,19 +167,20 @@ class ToDoAppApplicationTests {
     @Test
     public void createATag() throws IOException {
 
-        var token = getAccessTokenFromTestUser();
+        authenticate();
+
         var tag = "house";
 
         URI tagUri = client.post().uri("/v1/tag")
                 .bodyValue(Map.of("name", tag))
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+                .headers(this::authenticateRequest)
                 .exchange()
                 .expectStatus().isCreated()
                 .expectBody().returnResult().getResponseHeaders()
                 .getLocation();
 
         client.get().uri(tagUri)
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+                .headers(this::authenticateRequest)
                 .exchange()
                 .expectBody()
                 .jsonPath("$.name").isEqualTo(tag);
@@ -182,12 +190,13 @@ class ToDoAppApplicationTests {
     @Test
     public void createATodoFullOfDetails() throws IOException {
 
-        var token = getAccessTokenFromTestUser();
+        authenticate();
+
         var title = "Take the dog for a walk";
         var description = "This is very important, dog needs to walk or it will not behave";
         var dueDate = "2023-01-01T12:50:29.790511-04:00";
         var priority = "P3";
-        var tags = makeTags(token,"daily", "home", "pet");
+        var tags = makeTags("daily", "home", "pet");
 
         URI todoURI = client.post().uri("/v1/todo")
                 .bodyValue(Map.of(
@@ -197,7 +206,7 @@ class ToDoAppApplicationTests {
                         "priority", priority,
                         "tags", tags
                 ))
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+                .headers(this::authenticateRequest)
                 .exchange()
                 .expectStatus().isCreated()
                 .expectBody()
@@ -206,7 +215,7 @@ class ToDoAppApplicationTests {
                 .getLocation();
 
         client.get().uri(todoURI)
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+                .headers(this::authenticateRequest)
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody()
@@ -226,11 +235,12 @@ class ToDoAppApplicationTests {
     @Test
     public void createASubTask() throws IOException {
 
-        var token = getAccessTokenFromTestUser();
+        authenticate();
+
         var todoTitle = "Buy some bread";
         URI todoUri = client.post().uri("/v1/todo")
                 .bodyValue(Map.of("title", todoTitle))
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+                .headers(this::authenticateRequest)
                 .exchange()
                 .expectStatus().isCreated()
                 .expectBody()
@@ -247,7 +257,7 @@ class ToDoAppApplicationTests {
                         "title", subtaskTitle,
                         "parent", parentUuid
                 ))
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+                .headers(this::authenticateRequest)
                 .exchange()
                 .expectStatus().isCreated()
                 .expectBody()
@@ -256,7 +266,7 @@ class ToDoAppApplicationTests {
                 .getLocation();
 
         client.get().uri(todoUri)
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+                .headers(this::authenticateRequest)
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody()
@@ -264,7 +274,7 @@ class ToDoAppApplicationTests {
                 .jsonPath("$.children[0]").isEqualTo(subTaskUri.toString());
 
         client.get().uri(subTaskUri)
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+                .headers(this::authenticateRequest)
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody()
@@ -296,12 +306,12 @@ class ToDoAppApplicationTests {
         flyway.clean();
     }
 
-    private Set<String> makeTags(String acccessToken, String... names) {
+    private Set<String> makeTags(String... names) {
         Set<String> uuids = new HashSet<>();
         for (String name : names) {
             URI uri = client.post().uri("/v1/tag")
                     .bodyValue(Map.of("name", name))
-                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + acccessToken)
+                    .headers(this::authenticateRequest)
                     .exchange()
                     .expectStatus().isCreated()
                     .expectBody().returnResult().getResponseHeaders()
@@ -319,22 +329,34 @@ class ToDoAppApplicationTests {
         return token;
     }
 
-    private String getAccessTokenFromTestUser() throws IOException {
+    private void authenticate() throws IOException {
         String email = "email@gmail.com";
         String name = "Jhon Doe";
         String profileUrl = "https://google.com/profile/903jfiwfiwoe";
-
         String token = makeTokenFor(email, name, profileUrl);
-
-        WebTestClient.ResponseSpec responseSpec = client.post().uri("/v1/auth")
+        EntityExchangeResult<byte[]> result = client.post().uri("/v1/auth")
                 .bodyValue(Map.of("token", token))
-                .exchange();
+                .exchange()
+                .expectStatus().isCreated()
+                .expectBody().returnResult();
+        URI userUri = result.getResponseHeaders().getLocation();
+        Map<String, String> response = mapper.readValue(result.getResponseBodyContent(), Map.class);
+        accessToken = response.get("access_token");
+    }
 
-        responseSpec.expectStatus().isCreated();
+    private void authenticate(String accessToken) {
+        this.accessToken = accessToken;
+    }
 
-        URI userUri = responseSpec.expectBody().returnResult().getResponseHeaders().getLocation();
-        Map<String, String> response = mapper.readValue(responseSpec.expectBody().returnResult().getResponseBodyContent(), Map.class);
-        return response.get("access_token");
+    private void authenticateRequest(HttpHeaders headers) {
+        if (accessToken == null || accessToken.isBlank()) {
+            return;
+        }
+        headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken);
+    }
+
+    private void printBody(EntityExchangeResult<byte[]> body) {
+        System.out.println(body);
     }
 
 }
