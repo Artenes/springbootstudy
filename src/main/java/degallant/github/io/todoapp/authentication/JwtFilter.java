@@ -1,4 +1,4 @@
-package degallant.github.io.todoapp;
+package degallant.github.io.todoapp.authentication;
 
 import jakarta.servlet.*;
 import jakarta.servlet.http.HttpServletRequest;
@@ -10,11 +10,11 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 
 @Component
-public class JWTAuthFilter extends GenericFilter {
+public class JwtFilter extends GenericFilter {
 
     private final AuthenticationService service;
 
-    public JWTAuthFilter(AuthenticationService service) {
+    public JwtFilter(AuthenticationService service) {
         this.service = service;
     }
 
@@ -23,7 +23,7 @@ public class JWTAuthFilter extends GenericFilter {
         String authHeader = ((HttpServletRequest) request).getHeader(HttpHeaders.AUTHORIZATION);
         if (authHeader != null && !authHeader.isBlank() && authHeader.startsWith("Bearer ")) {
             String token = authHeader.split(" ")[1];
-            Authentication authentication = service.authenticateWithJWTToken(token);
+            Authentication authentication = service.authenticateWithJwtToken(token);
             SecurityContextHolder.getContext().setAuthentication(authentication);
         }
         chain.doFilter(request, response);

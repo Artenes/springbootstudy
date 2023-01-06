@@ -1,6 +1,7 @@
-package degallant.github.io.todoapp;
+package degallant.github.io.todoapp.todo;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import degallant.github.io.todoapp.tag.TagDto;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;

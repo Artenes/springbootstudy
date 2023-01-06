@@ -1,4 +1,4 @@
-package degallant.github.io.todoapp;
+package degallant.github.io.todoapp.openid;
 
 public class OpenIdExtractionException extends RuntimeException {
 

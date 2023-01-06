@@ -1,6 +1,9 @@
 package degallant.github.io.todoapp;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import degallant.github.io.todoapp.openid.OpenIdTokenParser;
+import degallant.github.io.todoapp.openid.OpenIdUser;
+import degallant.github.io.todoapp.user.UserRepository;
 import org.flywaydb.core.Flyway;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -63,7 +66,7 @@ class ToDoAppApplicationTests {
         String token = makeTokenFor(email, name, profileUrl);
 
         EntityExchangeResult<byte[]> result = client.post().uri("/v1/auth")
-                .bodyValue(Map.of("token", token))
+                .bodyValue(Map.of("open_id_token", token))
                 .exchange()
                 .expectStatus().isCreated()
                 .expectBody()
@@ -98,12 +101,12 @@ class ToDoAppApplicationTests {
         String token = makeTokenFor(email, name, profileUrl);
 
         client.post().uri("/v1/auth")
-                .bodyValue(Map.of("token", token))
+                .bodyValue(Map.of("open_id_token", token))
                 .exchange()
                 .expectStatus().isCreated();
 
         client.post().uri("/v1/auth")
-                .bodyValue(Map.of("token", token))
+                .bodyValue(Map.of("open_id_token", token))
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody().jsonPath("$.access_token").exists();
@@ -335,7 +338,7 @@ class ToDoAppApplicationTests {
         String profileUrl = "https://google.com/profile/903jfiwfiwoe";
         String token = makeTokenFor(email, name, profileUrl);
         EntityExchangeResult<byte[]> result = client.post().uri("/v1/auth")
-                .bodyValue(Map.of("token", token))
+                .bodyValue(Map.of("open_id_token", token))
                 .exchange()
                 .expectStatus().isCreated()
                 .expectBody().returnResult();

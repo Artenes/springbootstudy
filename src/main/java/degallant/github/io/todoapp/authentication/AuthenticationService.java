@@ -1,9 +1,13 @@
-package degallant.github.io.todoapp;
+package degallant.github.io.todoapp.authentication;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.interfaces.DecodedJWT;
+import degallant.github.io.todoapp.openid.OpenIdTokenParser;
+import degallant.github.io.todoapp.openid.OpenIdUser;
+import degallant.github.io.todoapp.user.UserEntity;
+import degallant.github.io.todoapp.user.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -18,8 +22,6 @@ import java.util.UUID;
 
 @Service
 public class AuthenticationService {
-
-    private static final Logger log = LoggerFactory.getLogger(AuthenticationService.class);
 
     private final UserRepository repository;
 
@@ -36,7 +38,7 @@ public class AuthenticationService {
         signature = Algorithm.HMAC256(config.signKey());
     }
 
-    public AuthenticatedUser authenticateWithOpenId(String openIdToken) {
+    public Authentication authenticateWithOpenId(String openIdToken) {
 
         OpenIdUser openIdUser = openIdTokenParser.extract(openIdToken);
 
@@ -58,13 +60,28 @@ public class AuthenticationService {
             isNewUser = true;
         }
 
-        TokenPair pair = encode(userEntity);
+        String accessToken = JWT.create()
+                .withIssuer(config.issuer())
+                .withSubject(userEntity.getId().toString())
+                .withExpiresAt(Instant.now().plus(config.accessExpiryMinutes(), ChronoUnit.MINUTES))
+                .sign(signature);
 
-        return new AuthenticatedUser(userEntity, isNewUser, pair.accessToken(), pair.refreshToken());
+        String refreshToken = JWT.create()
+                .withIssuer(config.issuer())
+                .withExpiresAt(Instant.now().plus(config.refreshExpiryMinutes(), ChronoUnit.MINUTES))
+                .sign(signature);
+
+        UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                userEntity,
+                new TokenPair(accessToken, refreshToken),
+                Collections.emptyList()
+        );
+        authentication.setDetails(isNewUser);
+        return authentication;
 
     }
 
-    public Authentication authenticateWithJWTToken(String jwtToken) {
+    public Authentication authenticateWithJwtToken(String jwtToken) {
 
         JWTVerifier verifier = JWT.require(signature)
                 .withIssuer(config.issuer())
@@ -76,26 +93,11 @@ public class AuthenticationService {
 
         UserEntity user = repository.findById(userId).orElseThrow();
 
-        log.info("User found: " + user.getId());
-
         return new UsernamePasswordAuthenticationToken(user, null, Collections.emptyList());
 
     }
 
-    public TokenPair encode(UserEntity user) {
-
-        String token = JWT.create()
-                .withIssuer(config.issuer())
-                .withSubject(user.getId().toString())
-                .withExpiresAt(Instant.now().plus(config.accessExpiryMinutes(), ChronoUnit.MINUTES))
-                .sign(signature);
-
-        String refresh = JWT.create()
-                .withIssuer(config.issuer())
-                .withExpiresAt(Instant.now().plus(config.refreshExpiryMinutes(), ChronoUnit.MINUTES))
-                .sign(signature);
-
-        return new TokenPair(token, refresh);
+    public record TokenPair(String accessToken, String refreshToken) {
 
     }
 

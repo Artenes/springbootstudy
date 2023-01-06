@@ -1,4 +1,4 @@
-package degallant.github.io.todoapp;
+package degallant.github.io.todoapp.user;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 

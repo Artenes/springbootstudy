@@ -1,8 +1,10 @@
-package degallant.github.io.todoapp;
+package degallant.github.io.todoapp.authentication;
 
+import degallant.github.io.todoapp.user.UserController;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.Link;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -23,16 +25,18 @@ public class AuthenticationController {
     @PostMapping
     public ResponseEntity<?> authenticate(@RequestBody AuthDto.Authenticate request) {
 
-        AuthenticatedUser authenticatedUser = service.authenticateWithOpenId(request.getToken());
+        Authentication authenticatedUser = service.authenticateWithOpenId(request.getOpenIdToken());
+        AuthenticationService.TokenPair tokenPair = (AuthenticationService.TokenPair) authenticatedUser.getCredentials();
+        boolean isNew = (Boolean) authenticatedUser.getDetails();
 
         Link link = linkTo(UserController.class).withSelfRel();
         EntityModel<AuthDto.TokenPair> model = EntityModel.of(AuthDto.TokenPair.builder()
-                .accessToken(authenticatedUser.accessToken())
-                .refreshToken(authenticatedUser.refreshToken())
+                .accessToken(tokenPair.accessToken())
+                .refreshToken(tokenPair.refreshToken())
                 .build()
         ).add(link);
 
-        if (authenticatedUser.isNew()) {
+        if (isNew) {
             return ResponseEntity.created(link.toUri()).body(model);
         }
 

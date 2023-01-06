@@ -1,5 +1,8 @@
-package degallant.github.io.todoapp;
+package degallant.github.io.todoapp.todo;
 
+import degallant.github.io.todoapp.tag.TagDto;
+import degallant.github.io.todoapp.tag.TagEntity;
+import degallant.github.io.todoapp.tag.TagRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 

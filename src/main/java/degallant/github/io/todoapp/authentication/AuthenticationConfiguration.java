@@ -1,4 +1,4 @@
-package degallant.github.io.todoapp;
+package degallant.github.io.todoapp.authentication;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 

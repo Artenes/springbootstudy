@@ -1,4 +1,4 @@
-package degallant.github.io.todoapp;
+package degallant.github.io.todoapp.authentication;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
@@ -12,7 +12,8 @@ public class AuthDto {
     @NoArgsConstructor
     public static class Authenticate {
 
-        private String token;
+        @JsonProperty("open_id_token")
+        private String openIdToken;
 
     }
 

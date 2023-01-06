@@ -1,4 +1,4 @@
-package degallant.github.io.todoapp;
+package degallant.github.io.todoapp.tag;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

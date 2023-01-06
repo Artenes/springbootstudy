@@ -1,4 +1,4 @@
-package degallant.github.io.todoapp;
+package degallant.github.io.todoapp.todo;
 
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
