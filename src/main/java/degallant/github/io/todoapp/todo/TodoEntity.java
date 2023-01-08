@@ -29,6 +29,9 @@ public class TodoEntity {
 
     private Priority priority;
 
+    @Column(name = "user_id")
+    private UUID userId;
+
     @Column(name = "parent_id")
     private UUID parent;
 

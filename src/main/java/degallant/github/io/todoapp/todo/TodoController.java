@@ -3,7 +3,9 @@ package degallant.github.io.todoapp.todo;
 import degallant.github.io.todoapp.tag.TagDto;
 import degallant.github.io.todoapp.tag.TagEntity;
 import degallant.github.io.todoapp.tag.TagRepository;
+import degallant.github.io.todoapp.user.UserEntity;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URISyntaxException;
@@ -28,7 +30,7 @@ public class TodoController {
     }
 
     @PostMapping
-    public ResponseEntity<?> create(@RequestBody TodoDto.Create request) throws URISyntaxException {
+    public ResponseEntity<?> create(@RequestBody TodoDto.Create request, Authentication authentication) throws URISyntaxException {
 
         List<TagEntity> tags = Collections.emptyList();
         if (request.getTags() != null && !request.getTags().isEmpty()) {
@@ -42,6 +44,7 @@ public class TodoController {
                 .priority(request.getPriority())
                 .tags(tags)
                 .parent(request.getParent())
+                .userId(((UserEntity) authentication.getPrincipal()).getId())
                 .build();
 
         todoEntity = todoRepository.save(todoEntity);
@@ -53,16 +56,16 @@ public class TodoController {
     }
 
     @GetMapping
-    public List<TodoEntity> index() {
+    public List<TodoEntity> index(Authentication authentication) {
 
-        return todoRepository.findAll();
+        return todoRepository.findByUserId(((UserEntity) authentication.getPrincipal()).getId());
 
     }
 
     @PatchMapping("/{id}")
-    public ResponseEntity<?> patch(@PathVariable UUID id, @RequestBody TodoDto.PatchComplete request) {
+    public ResponseEntity<?> patch(@PathVariable UUID id, @RequestBody TodoDto.PatchComplete request, Authentication authentication) {
 
-        var todoEntity = todoRepository.findById(id).orElseThrow();
+        var todoEntity = todoRepository.findByIdAndUserId(id, ((UserEntity) authentication.getPrincipal()).getId()).orElseThrow();
 
         todoEntity.setComplete(request.complete());
 
@@ -73,9 +76,9 @@ public class TodoController {
     }
 
     @GetMapping("/{id}")
-    public TodoDto.Details get(@PathVariable UUID id) {
+    public TodoDto.Details get(@PathVariable UUID id, Authentication authentication) {
 
-        var todo = todoRepository.findById(id).orElseThrow();
+        var todo = todoRepository.findByIdAndUserId(id, ((UserEntity) authentication.getPrincipal()).getId()).orElseThrow();
 
         var response = TodoDto.Details.builder()
                 .title(todo.getTitle())

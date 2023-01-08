@@ -20,6 +20,7 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 import java.io.IOException;
 import java.net.URI;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -49,8 +50,6 @@ class ToDoAppApplicationTests {
     @Autowired
     private UserRepository repository;
 
-    private String accessToken;
-
     @BeforeEach
     public void setUp() {
         flyway.migrate();
@@ -77,11 +76,10 @@ class ToDoAppApplicationTests {
         URI userUri = result.getResponseHeaders().getLocation();
         Map<String, String> response = mapper.readValue(result.getResponseBodyContent(), Map.class);
 
-        authenticate(response.get("access_token"));
+        authenticateWithToken(response.get("access_token"));
 
         client.get()
                 .uri(userUri)
-                .headers(this::authenticateRequest)
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody()
@@ -114,6 +112,156 @@ class ToDoAppApplicationTests {
     }
 
     @Test
+    public void oneUserCantSeeOthersUsersTodos() {
+
+        String todoFromUserA = "Take dog for a walk";
+        String todoFromUserB = "Take cat for a walk";
+
+        //create a task for user A
+        authenticate("usera@gmail.com");
+        URI todoFromUserAUri = client.post().uri("/v1/todo")
+                .bodyValue(Map.of("title", todoFromUserA))
+                .exchange()
+                .expectStatus().isCreated()
+                .expectBody().returnResult()
+                .getResponseHeaders().getLocation();
+
+        //create a task for user B
+        authenticate("userb@gmail.com");
+        URI todoFromUserBUri = client.post().uri("/v1/todo")
+                .bodyValue(Map.of("title", todoFromUserB))
+                .exchange()
+                .expectStatus().isCreated()
+                .expectBody().returnResult()
+                .getResponseHeaders().getLocation();
+
+        //check user A created task and try to see created task from user b
+        authenticate("usera@gmail.com");
+        client.get().uri(todoFromUserAUri)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.title").isEqualTo(todoFromUserA);
+        client.get().uri(todoFromUserBUri)
+                .exchange()
+                .expectStatus().is5xxServerError();
+
+        //check user B created task and try to see created task from user a
+        authenticate("userb@gmail.com");
+        client.get().uri(todoFromUserBUri)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.title").isEqualTo(todoFromUserB);
+        client.get().uri(todoFromUserAUri)
+                .exchange()
+                .expectStatus().is5xxServerError();
+
+    }
+
+    @Test
+    public void oneUserCanEditOnlyItsTodos() {
+
+        String todoFromUserA = "Take dog for a walk";
+        String todoFromUserB = "Take cat for a walk";
+
+        //create a task for user A
+        authenticate("usera@gmail.com");
+        URI todoFromUserAUri = client.post().uri("/v1/todo")
+                .bodyValue(Map.of("title", todoFromUserA))
+                .exchange()
+                .expectStatus().isCreated()
+                .expectBody().returnResult()
+                .getResponseHeaders().getLocation();
+
+        //create a task for user B
+        authenticate("userb@gmail.com");
+        URI todoFromUserBUri = client.post().uri("/v1/todo")
+                .bodyValue(Map.of("title", todoFromUserB))
+                .exchange()
+                .expectStatus().isCreated()
+                .expectBody().returnResult()
+                .getResponseHeaders().getLocation();
+
+        //confirm that user A can edit its task, while not being able to edits B's
+        authenticate("usera@gmail.com");
+        client.patch().uri(todoFromUserAUri)
+                .bodyValue(Map.of("complete", true))
+                .exchange()
+                .expectStatus().isOk();
+        client.patch().uri(todoFromUserBUri)
+                .bodyValue(Map.of("complete", true))
+                .exchange()
+                .expectStatus().is5xxServerError();
+
+        //confirm that user B can edit its task, while not being able to edits A's
+        authenticate("userb@gmail.com");
+        client.patch().uri(todoFromUserBUri)
+                .bodyValue(Map.of("complete", true))
+                .exchange()
+                .expectStatus().isOk();
+        client.patch().uri(todoFromUserAUri)
+                .bodyValue(Map.of("complete", true))
+                .exchange()
+                .expectStatus().is5xxServerError();
+
+    }
+
+    @Test
+    public void aUserCanOnlyListItsTodos() throws IOException {
+
+        List<String> userATodos = List.of("Take dog for a walk", "Go get milk", "Study for test");
+        List<String> userBTodos = List.of("Take cat for a walk", "Play games");
+
+        authenticate("usera@gmail.com");
+        createTodosForUser(userATodos);
+        authenticate("userb@gmail.com");
+        createTodosForUser(userBTodos);
+
+        authenticate("usera@gmail.com");
+        client.get().uri("/v1/todo").exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.length()").isEqualTo(3)
+                .jsonPath("$[?(@.title == '%s')]", userATodos.get(0)).exists()
+                .jsonPath("$[?(@.title == '%s')]", userATodos.get(1)).exists()
+                .jsonPath("$[?(@.title == '%s')]", userATodos.get(2)).exists()
+                .jsonPath("$[?(@.title == '%s')]", userBTodos.get(0)).doesNotExist();
+
+        authenticate("userb@gmail.com");
+        client.get().uri("/v1/todo").exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.length()").isEqualTo(2)
+                .jsonPath("$[?(@.title == '%s')]", userBTodos.get(0)).exists()
+                .jsonPath("$[?(@.title == '%s')]", userBTodos.get(1)).exists()
+                .jsonPath("$[?(@.title == '%s')]", userATodos.get(0)).doesNotExist();
+
+    }
+
+    @Test
+    public void aUserCanOnlySeeItsOwnTags() {
+
+        authenticate("usera@gmail.com");
+        URI userATag = client.post().uri("/v1/tag")
+                .bodyValue(Map.of("name", "house"))
+                .exchange()
+                .expectStatus().isCreated()
+                .expectBody().returnResult()
+                .getResponseHeaders().getLocation();
+
+        client.get().uri(userATag).exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.name").isEqualTo("house");
+
+        authenticate("userb@gmail.com");
+        client.get().uri(userATag).exchange()
+                .expectStatus().is5xxServerError();
+
+    }
+
+    @Test
     public void createsAToDoToComplete() throws IOException {
 
         authenticate();
@@ -122,13 +270,10 @@ class ToDoAppApplicationTests {
 
         client.post().uri("/v1/todo")
                 .bodyValue(Map.of("title", title))
-                .headers(this::authenticateRequest)
                 .exchange()
-                .expectStatus().isCreated()
-                .expectBody();
+                .expectStatus().isCreated();
 
         client.get().uri("/v1/todo")
-                .headers(this::authenticateRequest)
                 .exchange()
                 .expectBody()
                 .jsonPath("$[0].title").isEqualTo(title)
@@ -146,7 +291,6 @@ class ToDoAppApplicationTests {
 
         URI todoURI = client.post().uri("/v1/todo")
                 .bodyValue(Map.of("title", title))
-                .headers(this::authenticateRequest)
                 .exchange()
                 .expectBody()
                 .returnResult()
@@ -155,11 +299,9 @@ class ToDoAppApplicationTests {
 
         client.patch().uri(todoURI)
                 .bodyValue(Map.of("complete", true))
-                .headers(this::authenticateRequest)
                 .exchange();
 
         client.get().uri("/v1/todo")
-                .headers(this::authenticateRequest)
                 .exchange()
                 .expectBody()
                 .jsonPath("$[0].title").isEqualTo(title)
@@ -176,14 +318,12 @@ class ToDoAppApplicationTests {
 
         URI tagUri = client.post().uri("/v1/tag")
                 .bodyValue(Map.of("name", tag))
-                .headers(this::authenticateRequest)
                 .exchange()
                 .expectStatus().isCreated()
                 .expectBody().returnResult().getResponseHeaders()
                 .getLocation();
 
         client.get().uri(tagUri)
-                .headers(this::authenticateRequest)
                 .exchange()
                 .expectBody()
                 .jsonPath("$.name").isEqualTo(tag);
@@ -209,7 +349,6 @@ class ToDoAppApplicationTests {
                         "priority", priority,
                         "tags", tags
                 ))
-                .headers(this::authenticateRequest)
                 .exchange()
                 .expectStatus().isCreated()
                 .expectBody()
@@ -218,7 +357,6 @@ class ToDoAppApplicationTests {
                 .getLocation();
 
         client.get().uri(todoURI)
-                .headers(this::authenticateRequest)
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody()
@@ -243,7 +381,6 @@ class ToDoAppApplicationTests {
         var todoTitle = "Buy some bread";
         URI todoUri = client.post().uri("/v1/todo")
                 .bodyValue(Map.of("title", todoTitle))
-                .headers(this::authenticateRequest)
                 .exchange()
                 .expectStatus().isCreated()
                 .expectBody()
@@ -260,7 +397,6 @@ class ToDoAppApplicationTests {
                         "title", subtaskTitle,
                         "parent", parentUuid
                 ))
-                .headers(this::authenticateRequest)
                 .exchange()
                 .expectStatus().isCreated()
                 .expectBody()
@@ -269,7 +405,6 @@ class ToDoAppApplicationTests {
                 .getLocation();
 
         client.get().uri(todoUri)
-                .headers(this::authenticateRequest)
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody()
@@ -277,7 +412,6 @@ class ToDoAppApplicationTests {
                 .jsonPath("$.children[0]").isEqualTo(subTaskUri.toString());
 
         client.get().uri(subTaskUri)
-                .headers(this::authenticateRequest)
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody()
@@ -285,24 +419,6 @@ class ToDoAppApplicationTests {
                 .jsonPath("$.parent").isEqualTo(todoUri.toString());
 
     }
-
-    //todo add support to users
-
-    //todo add token-based authentication
-
-    //todo add support to comments
-
-    //todo add support to projects
-
-    //todo test fail cases
-
-    //todo paginate anything that returns a list
-
-    //about date time in java https://reflectoring.io/spring-timezones/
-
-    //retardedly, you can't have enums in the database and bring them to hibernate, maybe this can help: https://docs.jboss.org/hibernate/orm/6.1/userguide/html_single/Hibernate_User_Guide.html#basic-enums
-
-    //when creating queries in a repository, by default it uses JPQL
 
     @AfterEach
     public void tearDown() {
@@ -314,7 +430,6 @@ class ToDoAppApplicationTests {
         for (String name : names) {
             URI uri = client.post().uri("/v1/tag")
                     .bodyValue(Map.of("name", name))
-                    .headers(this::authenticateRequest)
                     .exchange()
                     .expectStatus().isCreated()
                     .expectBody().returnResult().getResponseHeaders()
@@ -333,33 +448,60 @@ class ToDoAppApplicationTests {
     }
 
     private void authenticate() throws IOException {
-        String email = "email@gmail.com";
+        authenticate("email@gmail.com");
+    }
+
+    private void authenticate(String email) {
         String name = "Jhon Doe";
         String profileUrl = "https://google.com/profile/903jfiwfiwoe";
         String token = makeTokenFor(email, name, profileUrl);
         EntityExchangeResult<byte[]> result = client.post().uri("/v1/auth")
                 .bodyValue(Map.of("open_id_token", token))
                 .exchange()
-                .expectStatus().isCreated()
                 .expectBody().returnResult();
-        URI userUri = result.getResponseHeaders().getLocation();
-        Map<String, String> response = mapper.readValue(result.getResponseBodyContent(), Map.class);
-        accessToken = response.get("access_token");
-    }
-
-    private void authenticate(String accessToken) {
-        this.accessToken = accessToken;
-    }
-
-    private void authenticateRequest(HttpHeaders headers) {
-        if (accessToken == null || accessToken.isBlank()) {
-            return;
+        try {
+            Map<String, String> response = mapper.readValue(result.getResponseBodyContent(), Map.class);
+            authenticateWithToken(response.get("access_token"));
+        } catch (IOException exception) {
+            throw new RuntimeException(exception);
         }
-        headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken);
+    }
+
+    private void createTodosForUser(List<String> todos) {
+        for (String todo : todos) {
+            client.post().uri("/v1/todo")
+                    .bodyValue(Map.of("title", todo))
+                    .exchange()
+                    .expectStatus().isCreated();
+        }
+    }
+
+    private void authenticateWithToken(String accessToken) {
+        client = client.mutateWith((builder, httpHandlerBuilder, connector) -> {
+            builder.defaultHeader(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken);
+        });
     }
 
     private void printBody(EntityExchangeResult<byte[]> body) {
         System.out.println(body);
     }
+
+    //todo add support to comments
+
+    //todo add support to projects
+
+    //todo test fail cases
+
+    //todo paginate anything that returns a list
+
+    //todo make refresh token works
+
+    //todo add test for invalid tokens
+
+    //about date time in java https://reflectoring.io/spring-timezones/
+
+    //retardedly, you can't have enums in the database and bring them to hibernate, maybe this can help: https://docs.jboss.org/hibernate/orm/6.1/userguide/html_single/Hibernate_User_Guide.html#basic-enums
+
+    //when creating queries in a repository, by default it uses JPQL
 
 }

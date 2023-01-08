@@ -1,6 +1,8 @@
 package degallant.github.io.todoapp.tag;
 
+import degallant.github.io.todoapp.user.UserEntity;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URISyntaxException;
@@ -19,10 +21,11 @@ public class TagController {
     }
 
     @PostMapping
-    public ResponseEntity<?> create(@RequestBody TagDto.Create request) throws URISyntaxException {
+    public ResponseEntity<?> create(@RequestBody TagDto.Create request, Authentication authentication) throws URISyntaxException {
 
         var tagEntity = TagEntity.builder()
                 .name(request.getName())
+                .userId(((UserEntity) authentication.getPrincipal()).getId())
                 .build();
 
         tagEntity = repository.save(tagEntity);
@@ -34,9 +37,9 @@ public class TagController {
     }
 
     @GetMapping("/{id}")
-    public TagDto.Details get(@PathVariable UUID id) {
+    public TagDto.Details get(@PathVariable UUID id, Authentication authentication) {
 
-        var tag = repository.findById(id).orElseThrow();
+        var tag = repository.findByIdAndUserId(id, ((UserEntity) authentication.getPrincipal()).getId()).orElseThrow();
 
         return TagDto.Details.builder()
                 .name(tag.getName())
