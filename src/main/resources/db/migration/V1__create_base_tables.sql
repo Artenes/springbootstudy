@@ -44,3 +44,17 @@ CREATE TABLE todo_tags(
             FOREIGN KEY(tag_id)
                 REFERENCES tags(id)
 );
+
+CREATE TABLE comments(
+    id uuid NOT NULL,
+    text varchar(255) NOT NULL,
+    user_id uuid NOT NULL,
+    todo_id uuid NOT NULL,
+    PRIMARY KEY (id),
+    CONSTRAINT fk_user
+        FOREIGN KEY(user_id)
+            REFERENCES users(id),
+    CONSTRAINT fk_todo
+            FOREIGN KEY(todo_id)
+                REFERENCES todos(id)
+);

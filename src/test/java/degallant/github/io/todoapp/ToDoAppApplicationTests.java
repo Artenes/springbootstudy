@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import degallant.github.io.todoapp.openid.OpenIdTokenParser;
 import degallant.github.io.todoapp.openid.OpenIdUser;
 import degallant.github.io.todoapp.user.UserRepository;
+import org.apache.http.client.utils.URIBuilder;
 import org.flywaydb.core.Flyway;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -420,6 +421,73 @@ class ToDoAppApplicationTests {
 
     }
 
+    @Test
+    public void userCanAddCommentToATodo() {
+
+        var comment = "We have to finish this soon";
+        authenticate();
+
+        URI todoUri = client.post().uri("/v1/todo")
+                .bodyValue(Map.of("title", "Walk with dog"))
+                .exchange()
+                .expectStatus().isCreated()
+                .expectBody().returnResult().getResponseHeaders().getLocation();
+
+        URI commentsUri = URI.create(todoUri.toString() + "/comments");
+
+        client.post().uri(commentsUri)
+                .bodyValue(Map.of("text", comment))
+                .exchange()
+                .expectStatus().isCreated();
+
+        client.get().uri(commentsUri)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$[0].text").isEqualTo(comment);
+
+    }
+
+    @Test
+    public void userCanOnlyCommentOnItsTodos() {
+
+        authenticate("usera@gmail.com");
+        URI todoUri = client.post().uri("/v1/todo")
+                .bodyValue(Map.of("title", "Walk with dog"))
+                .exchange()
+                .expectStatus().isCreated()
+                .expectBody().returnResult().getResponseHeaders().getLocation();
+
+        URI commentsUri = URI.create(todoUri.toString() + "/comments");
+
+        authenticate("userb@gmail.com");
+        client.post().uri(commentsUri)
+                .bodyValue(Map.of("comment", "I agree"))
+                .exchange()
+                .expectStatus().is5xxServerError();
+
+        client.get().uri(commentsUri)
+                .exchange()
+                .expectStatus().is5xxServerError();
+
+    }
+
+    //todo add support to projects
+
+    //todo test fail cases
+
+    //todo paginate anything that returns a list
+
+    //todo make refresh token works
+
+    //todo add test for invalid tokens
+
+    //about date time in java https://reflectoring.io/spring-timezones/
+
+    //retardedly, you can't have enums in the database and bring them to hibernate, maybe this can help: https://docs.jboss.org/hibernate/orm/6.1/userguide/html_single/Hibernate_User_Guide.html#basic-enums
+
+    //when creating queries in a repository, by default it uses JPQL
+
     @AfterEach
     public void tearDown() {
         flyway.clean();
@@ -447,7 +515,7 @@ class ToDoAppApplicationTests {
         return token;
     }
 
-    private void authenticate() throws IOException {
+    private void authenticate() {
         authenticate("email@gmail.com");
     }
 
@@ -482,31 +550,13 @@ class ToDoAppApplicationTests {
         });
     }
 
-    private void see() {
+    private void show() {
         client = client.mutateWith((builder, httpHandlerBuilder, connector) -> {
-           builder.entityExchangeResultConsumer(result -> {
-               URI uri = result.getUrl();
-               System.out.println("Response from " + uri + ": "+ new String(result.getResponseBodyContent()));
-           });
+            builder.entityExchangeResultConsumer(result -> {
+                URI uri = result.getUrl();
+                System.out.println("Response from " + uri + ": "+ new String(result.getResponseBodyContent()));
+            });
         });
     }
-
-    //todo add support to comments
-
-    //todo add support to projects
-
-    //todo test fail cases
-
-    //todo paginate anything that returns a list
-
-    //todo make refresh token works
-
-    //todo add test for invalid tokens
-
-    //about date time in java https://reflectoring.io/spring-timezones/
-
-    //retardedly, you can't have enums in the database and bring them to hibernate, maybe this can help: https://docs.jboss.org/hibernate/orm/6.1/userguide/html_single/Hibernate_User_Guide.html#basic-enums
-
-    //when creating queries in a repository, by default it uses JPQL
 
 }
