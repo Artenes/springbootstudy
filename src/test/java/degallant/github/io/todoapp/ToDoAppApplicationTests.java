@@ -482,8 +482,13 @@ class ToDoAppApplicationTests {
         });
     }
 
-    private void printBody(EntityExchangeResult<byte[]> body) {
-        System.out.println(body);
+    private void see() {
+        client = client.mutateWith((builder, httpHandlerBuilder, connector) -> {
+           builder.entityExchangeResultConsumer(result -> {
+               URI uri = result.getUrl();
+               System.out.println("Response from " + uri + ": "+ new String(result.getResponseBodyContent()));
+           });
+        });
     }
 
     //todo add support to comments
