@@ -32,7 +32,8 @@ public class TodoController {
     @PostMapping
     public ResponseEntity<?> create(@RequestBody TodoDto.Create request, Authentication authentication) throws URISyntaxException {
 
-        //todo this doesn't make sense
+        //tags are created beforehand
+        //so we just query its instances to then pass in the to do entity below
         List<TagEntity> tags = Collections.emptyList();
         if (request.getTags() != null && !request.getTags().isEmpty()) {
             tags = tagRepository.findAllById(request.getTags());
