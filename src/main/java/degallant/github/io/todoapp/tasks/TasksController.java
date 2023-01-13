@@ -1,4 +1,4 @@
-package degallant.github.io.todoapp.todo;
+package degallant.github.io.todoapp.tasks;
 
 import degallant.github.io.todoapp.projects.ProjectController;
 import degallant.github.io.todoapp.tag.TagDto;
@@ -18,20 +18,20 @@ import java.util.stream.Collectors;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 
 @RestController
-@RequestMapping("/v1/todo")
-public class TodoController {
+@RequestMapping("/v1/tasks")
+public class TasksController {
 
-    private final TodoRepository todoRepository;
+    private final TasksRepository tasksRepository;
 
     private final TagRepository tagRepository;
 
-    public TodoController(TodoRepository repository, TagRepository tagRepository) {
-        this.todoRepository = repository;
+    public TasksController(TasksRepository repository, TagRepository tagRepository) {
+        this.tasksRepository = repository;
         this.tagRepository = tagRepository;
     }
 
     @PostMapping
-    public ResponseEntity<?> create(@RequestBody TodoDto.Create request, Authentication authentication) throws URISyntaxException {
+    public ResponseEntity<?> create(@RequestBody TasksDto.Create request, Authentication authentication) throws URISyntaxException {
 
         //tags are created beforehand
         //so we just query its instances to then pass in the to do entity below
@@ -40,7 +40,7 @@ public class TodoController {
             tags = tagRepository.findAllById(request.getTags());
         }
 
-        var todoEntity = TodoEntity.builder()
+        var taskEntity = TaskEntity.builder()
                 .title(request.getTitle())
                 .description(request.getDescription())
                 .dueDate(request.getDueDate())
@@ -51,53 +51,53 @@ public class TodoController {
                 .projectId(request.getProject())
                 .build();
 
-        todoEntity = todoRepository.save(todoEntity);
+        taskEntity = tasksRepository.save(taskEntity);
 
-        var link = linkTo(TodoController.class).slash(todoEntity.getId());
+        var link = linkTo(TasksController.class).slash(taskEntity.getId());
 
         return ResponseEntity.created(link.toUri()).build();
 
     }
 
     @GetMapping
-    public List<TodoEntity> index(Authentication authentication) {
+    public List<TaskEntity> index(Authentication authentication) {
 
-        return todoRepository.findByUserId(((UserEntity) authentication.getPrincipal()).getId());
+        return tasksRepository.findByUserId(((UserEntity) authentication.getPrincipal()).getId());
 
     }
 
     @PatchMapping("/{id}")
-    public ResponseEntity<?> patch(@PathVariable UUID id, @RequestBody TodoDto.Update request, Authentication authentication) {
+    public ResponseEntity<?> patch(@PathVariable UUID id, @RequestBody TasksDto.Update request, Authentication authentication) {
 
-        var todoEntity = todoRepository.findByIdAndUserId(id, ((UserEntity) authentication.getPrincipal()).getId()).orElseThrow();
+        var taskEntity = tasksRepository.findByIdAndUserId(id, ((UserEntity) authentication.getPrincipal()).getId()).orElseThrow();
 
         if (request.getComplete() != null) {
-            todoEntity.setComplete(request.getComplete());
+            taskEntity.setComplete(request.getComplete());
         }
 
         if (request.getProjectId() != null) {
-            todoEntity.setProjectId(request.getProjectId());
+            taskEntity.setProjectId(request.getProjectId());
         }
 
-        todoRepository.save(todoEntity);
+        tasksRepository.save(taskEntity);
 
         return ResponseEntity.ok().build();
 
     }
 
     @GetMapping("/{id}")
-    public TodoDto.Details get(@PathVariable UUID id, Authentication authentication) {
+    public TasksDto.Details get(@PathVariable UUID id, Authentication authentication) {
 
-        var todo = todoRepository.findByIdAndUserId(id, ((UserEntity) authentication.getPrincipal()).getId()).orElseThrow();
+        var task = tasksRepository.findByIdAndUserId(id, ((UserEntity) authentication.getPrincipal()).getId()).orElseThrow();
 
-        var response = TodoDto.Details.builder()
-                .title(todo.getTitle())
-                .description(todo.getDescription())
-                .dueDate(todo.getDueDate())
-                .priority(todo.getPriority());
+        var response = TasksDto.Details.builder()
+                .title(task.getTitle())
+                .description(task.getDescription())
+                .dueDate(task.getDueDate())
+                .priority(task.getPriority());
 
-        if (todo.getTags() != null && !todo.getTags().isEmpty()) {
-            response.tags(todo.getTags().stream()
+        if (task.getTags() != null && !task.getTags().isEmpty()) {
+            response.tags(task.getTags().stream()
                     .map(tag -> TagDto.Details.builder()
                             .name(tag.getName())
                             .uuid(tag.getId())
@@ -105,19 +105,19 @@ public class TodoController {
                     .collect(Collectors.toList()));
         }
 
-        var children = todoRepository.findByParent(todo.getId());
+        var children = tasksRepository.findByParent(task.getId());
         if (children != null && !children.isEmpty()) {
             response.children(children.stream()
-                    .map(child -> linkTo(TodoController.class).slash(child.getId()).toUri())
+                    .map(child -> linkTo(TasksController.class).slash(child.getId()).toUri())
                     .collect(Collectors.toList()));
         }
 
-        if (todo.getParent() != null) {
-            response.parent(linkTo(TodoController.class).slash(todo.getParent()).toUri());
+        if (task.getParent() != null) {
+            response.parent(linkTo(TasksController.class).slash(task.getParent()).toUri());
         }
 
-        if (todo.getProjectId() != null) {
-            response.project(linkTo(ProjectController.class).slash(todo.getProjectId()).toUri());
+        if (task.getProjectId() != null) {
+            response.project(linkTo(ProjectController.class).slash(task.getProjectId()).toUri());
         }
 
         return response.build();

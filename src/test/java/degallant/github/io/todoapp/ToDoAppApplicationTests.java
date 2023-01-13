@@ -110,15 +110,15 @@ class ToDoAppApplicationTests {
     }
 
     @Test
-    public void oneUserCantSeeOthersUsersTodos() {
+    public void oneUserCantSeeOthersUserstasks() {
 
-        String todoFromUserA = "Take dog for a walk";
-        String todoFromUserB = "Take cat for a walk";
+        String taskFromUserA = "Take dog for a walk";
+        String taskFromUserB = "Take cat for a walk";
 
         //create a task for user A
         authenticate("usera@gmail.com");
-        URI todoFromUserAUri = client.post().uri("/v1/todo")
-                .bodyValue(Map.of("title", todoFromUserA))
+        URI taskFromUserAUri = client.post().uri("/v1/tasks")
+                .bodyValue(Map.of("title", taskFromUserA))
                 .exchange()
                 .expectStatus().isCreated()
                 .expectBody().returnResult()
@@ -126,8 +126,8 @@ class ToDoAppApplicationTests {
 
         //create a task for user B
         authenticate("userb@gmail.com");
-        URI todoFromUserBUri = client.post().uri("/v1/todo")
-                .bodyValue(Map.of("title", todoFromUserB))
+        URI taskFromUserBUri = client.post().uri("/v1/tasks")
+                .bodyValue(Map.of("title", taskFromUserB))
                 .exchange()
                 .expectStatus().isCreated()
                 .expectBody().returnResult()
@@ -135,38 +135,38 @@ class ToDoAppApplicationTests {
 
         //check user A created task and try to see created task from user b
         authenticate("usera@gmail.com");
-        client.get().uri(todoFromUserAUri)
+        client.get().uri(taskFromUserAUri)
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody()
-                .jsonPath("$.title").isEqualTo(todoFromUserA);
-        client.get().uri(todoFromUserBUri)
+                .jsonPath("$.title").isEqualTo(taskFromUserA);
+        client.get().uri(taskFromUserBUri)
                 .exchange()
                 .expectStatus().is5xxServerError();
 
         //check user B created task and try to see created task from user a
         authenticate("userb@gmail.com");
-        client.get().uri(todoFromUserBUri)
+        client.get().uri(taskFromUserBUri)
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody()
-                .jsonPath("$.title").isEqualTo(todoFromUserB);
-        client.get().uri(todoFromUserAUri)
+                .jsonPath("$.title").isEqualTo(taskFromUserB);
+        client.get().uri(taskFromUserAUri)
                 .exchange()
                 .expectStatus().is5xxServerError();
 
     }
 
     @Test
-    public void oneUserCanEditOnlyItsTodos() {
+    public void oneUserCanEditOnlyItstasks() {
 
-        String todoFromUserA = "Take dog for a walk";
-        String todoFromUserB = "Take cat for a walk";
+        String taskFromUserA = "Take dog for a walk";
+        String taskFromUserB = "Take cat for a walk";
 
         //create a task for user A
         authenticate("usera@gmail.com");
-        URI todoFromUserAUri = client.post().uri("/v1/todo")
-                .bodyValue(Map.of("title", todoFromUserA))
+        URI taskFromUserAUri = client.post().uri("/v1/tasks")
+                .bodyValue(Map.of("title", taskFromUserA))
                 .exchange()
                 .expectStatus().isCreated()
                 .expectBody().returnResult()
@@ -174,8 +174,8 @@ class ToDoAppApplicationTests {
 
         //create a task for user B
         authenticate("userb@gmail.com");
-        URI todoFromUserBUri = client.post().uri("/v1/todo")
-                .bodyValue(Map.of("title", todoFromUserB))
+        URI taskFromUserBUri = client.post().uri("/v1/tasks")
+                .bodyValue(Map.of("title", taskFromUserB))
                 .exchange()
                 .expectStatus().isCreated()
                 .expectBody().returnResult()
@@ -183,22 +183,22 @@ class ToDoAppApplicationTests {
 
         //confirm that user A can edit its task, while not being able to edits B's
         authenticate("usera@gmail.com");
-        client.patch().uri(todoFromUserAUri)
+        client.patch().uri(taskFromUserAUri)
                 .bodyValue(Map.of("complete", true))
                 .exchange()
                 .expectStatus().isOk();
-        client.patch().uri(todoFromUserBUri)
+        client.patch().uri(taskFromUserBUri)
                 .bodyValue(Map.of("complete", true))
                 .exchange()
                 .expectStatus().is5xxServerError();
 
         //confirm that user B can edit its task, while not being able to edits A's
         authenticate("userb@gmail.com");
-        client.patch().uri(todoFromUserBUri)
+        client.patch().uri(taskFromUserBUri)
                 .bodyValue(Map.of("complete", true))
                 .exchange()
                 .expectStatus().isOk();
-        client.patch().uri(todoFromUserAUri)
+        client.patch().uri(taskFromUserAUri)
                 .bodyValue(Map.of("complete", true))
                 .exchange()
                 .expectStatus().is5xxServerError();
@@ -206,34 +206,34 @@ class ToDoAppApplicationTests {
     }
 
     @Test
-    public void aUserCanOnlyListItsTodos() throws IOException {
+    public void aUserCanOnlyListItstasks() throws IOException {
 
-        List<String> userATodos = List.of("Take dog for a walk", "Go get milk", "Study for test");
-        List<String> userBTodos = List.of("Take cat for a walk", "Play games");
+        List<String> userAtasks = List.of("Take dog for a walk", "Go get milk", "Study for test");
+        List<String> userBtasks = List.of("Take cat for a walk", "Play games");
 
         authenticate("usera@gmail.com");
-        createTodosForUser(userATodos);
+        createtasksForUser(userAtasks);
         authenticate("userb@gmail.com");
-        createTodosForUser(userBTodos);
+        createtasksForUser(userBtasks);
 
         authenticate("usera@gmail.com");
-        client.get().uri("/v1/todo").exchange()
+        client.get().uri("/v1/tasks").exchange()
                 .expectStatus().isOk()
                 .expectBody()
                 .jsonPath("$.length()").isEqualTo(3)
-                .jsonPath("$[?(@.title == '%s')]", userATodos.get(0)).exists()
-                .jsonPath("$[?(@.title == '%s')]", userATodos.get(1)).exists()
-                .jsonPath("$[?(@.title == '%s')]", userATodos.get(2)).exists()
-                .jsonPath("$[?(@.title == '%s')]", userBTodos.get(0)).doesNotExist();
+                .jsonPath("$[?(@.title == '%s')]", userAtasks.get(0)).exists()
+                .jsonPath("$[?(@.title == '%s')]", userAtasks.get(1)).exists()
+                .jsonPath("$[?(@.title == '%s')]", userAtasks.get(2)).exists()
+                .jsonPath("$[?(@.title == '%s')]", userBtasks.get(0)).doesNotExist();
 
         authenticate("userb@gmail.com");
-        client.get().uri("/v1/todo").exchange()
+        client.get().uri("/v1/tasks").exchange()
                 .expectStatus().isOk()
                 .expectBody()
                 .jsonPath("$.length()").isEqualTo(2)
-                .jsonPath("$[?(@.title == '%s')]", userBTodos.get(0)).exists()
-                .jsonPath("$[?(@.title == '%s')]", userBTodos.get(1)).exists()
-                .jsonPath("$[?(@.title == '%s')]", userATodos.get(0)).doesNotExist();
+                .jsonPath("$[?(@.title == '%s')]", userBtasks.get(0)).exists()
+                .jsonPath("$[?(@.title == '%s')]", userBtasks.get(1)).exists()
+                .jsonPath("$[?(@.title == '%s')]", userAtasks.get(0)).doesNotExist();
 
     }
 
@@ -260,18 +260,18 @@ class ToDoAppApplicationTests {
     }
 
     @Test
-    public void createsAToDoToComplete() throws IOException {
+    public void createsAtaskToComplete() throws IOException {
 
         authenticate();
 
         var title = "Take the dog for a walk";
 
-        client.post().uri("/v1/todo")
+        client.post().uri("/v1/tasks")
                 .bodyValue(Map.of("title", title))
                 .exchange()
                 .expectStatus().isCreated();
 
-        client.get().uri("/v1/todo")
+        client.get().uri("/v1/tasks")
                 .exchange()
                 .expectBody()
                 .jsonPath("$[0].title").isEqualTo(title)
@@ -281,13 +281,13 @@ class ToDoAppApplicationTests {
     }
 
     @Test
-    public void createsAndCompleteTodo() throws IOException {
+    public void createsAndCompletetask() throws IOException {
 
         authenticate();
 
         var title = "Take the dog for a walk";
 
-        URI todoURI = client.post().uri("/v1/todo")
+        URI taskURI = client.post().uri("/v1/tasks")
                 .bodyValue(Map.of("title", title))
                 .exchange()
                 .expectBody()
@@ -295,11 +295,11 @@ class ToDoAppApplicationTests {
                 .getResponseHeaders()
                 .getLocation();
 
-        client.patch().uri(todoURI)
+        client.patch().uri(taskURI)
                 .bodyValue(Map.of("complete", true))
                 .exchange();
 
-        client.get().uri("/v1/todo")
+        client.get().uri("/v1/tasks")
                 .exchange()
                 .expectBody()
                 .jsonPath("$[0].title").isEqualTo(title)
@@ -329,7 +329,7 @@ class ToDoAppApplicationTests {
     }
 
     @Test
-    public void createATodoFullOfDetails() throws IOException {
+    public void createAtaskFullOfDetails() throws IOException {
 
         authenticate();
 
@@ -340,7 +340,7 @@ class ToDoAppApplicationTests {
         var tags = makeTags("daily", "home", "pet");
         var projectId = makeProject("daily tasks");
 
-        URI todoURI = client.post().uri("/v1/todo")
+        URI taskURI = client.post().uri("/v1/tasks")
                 .bodyValue(Map.of(
                         "title", title,
                         "description", description,
@@ -356,7 +356,7 @@ class ToDoAppApplicationTests {
                 .getResponseHeaders()
                 .getLocation();
 
-        client.get().uri(todoURI)
+        client.get().uri(taskURI)
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody()
@@ -379,9 +379,9 @@ class ToDoAppApplicationTests {
 
         authenticate();
 
-        var todoTitle = "Buy some bread";
-        URI todoUri = client.post().uri("/v1/todo")
-                .bodyValue(Map.of("title", todoTitle))
+        var taskTitle = "Buy some bread";
+        URI taskUri = client.post().uri("/v1/tasks")
+                .bodyValue(Map.of("title", taskTitle))
                 .exchange()
                 .expectStatus().isCreated()
                 .expectBody()
@@ -389,11 +389,11 @@ class ToDoAppApplicationTests {
                 .getResponseHeaders()
                 .getLocation();
 
-        String[] parts = todoUri.getPath().split("/");
+        String[] parts = taskUri.getPath().split("/");
         String parentUuid = parts[parts.length - 1];
 
         var subtaskTitle = "Go to store";
-        URI subTaskUri = client.post().uri("/v1/todo")
+        URI subTaskUri = client.post().uri("/v1/tasks")
                 .bodyValue(Map.of(
                         "title", subtaskTitle,
                         "parent", parentUuid
@@ -405,11 +405,11 @@ class ToDoAppApplicationTests {
                 .getResponseHeaders()
                 .getLocation();
 
-        client.get().uri(todoUri)
+        client.get().uri(taskUri)
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody()
-                .jsonPath("$.title").isEqualTo(todoTitle)
+                .jsonPath("$.title").isEqualTo(taskTitle)
                 .jsonPath("$.children[0]").isEqualTo(subTaskUri.toString());
 
         client.get().uri(subTaskUri)
@@ -417,23 +417,23 @@ class ToDoAppApplicationTests {
                 .expectStatus().isOk()
                 .expectBody()
                 .jsonPath("$.title").isEqualTo(subtaskTitle)
-                .jsonPath("$.parent").isEqualTo(todoUri.toString());
+                .jsonPath("$.parent").isEqualTo(taskUri.toString());
 
     }
 
     @Test
-    public void userCanAddCommentToATodo() {
+    public void userCanAddCommentToAtask() {
 
         var comment = "We have to finish this soon";
         authenticate();
 
-        URI todoUri = client.post().uri("/v1/todo")
+        URI taskUri = client.post().uri("/v1/tasks")
                 .bodyValue(Map.of("title", "Walk with dog"))
                 .exchange()
                 .expectStatus().isCreated()
                 .expectBody().returnResult().getResponseHeaders().getLocation();
 
-        URI commentsUri = URI.create(todoUri.toString() + "/comments");
+        URI commentsUri = URI.create(taskUri.toString() + "/comments");
 
         client.post().uri(commentsUri)
                 .bodyValue(Map.of("text", comment))
@@ -449,16 +449,16 @@ class ToDoAppApplicationTests {
     }
 
     @Test
-    public void userCanOnlyCommentOnItsTodos() {
+    public void userCanOnlyCommentOnItstasks() {
 
         authenticate("usera@gmail.com");
-        URI todoUri = client.post().uri("/v1/todo")
+        URI taskUri = client.post().uri("/v1/tasks")
                 .bodyValue(Map.of("title", "Walk with dog"))
                 .exchange()
                 .expectStatus().isCreated()
                 .expectBody().returnResult().getResponseHeaders().getLocation();
 
-        URI commentsUri = URI.create(todoUri.toString() + "/comments");
+        URI commentsUri = URI.create(taskUri.toString() + "/comments");
 
         authenticate("userb@gmail.com");
         client.post().uri(commentsUri)
@@ -473,7 +473,7 @@ class ToDoAppApplicationTests {
     }
 
     @Test
-    public void addATodoToAProject() {
+    public void addAtaskToAProject() {
 
         authenticate();
 
@@ -486,18 +486,18 @@ class ToDoAppApplicationTests {
         String[] parts = projectURI.toString().split("/");
         String projectId = parts[parts.length - 1];
 
-        URI todoUri = client.post().uri("/v1/todo")
+        URI taskUri = client.post().uri("/v1/tasks")
                 .bodyValue(Map.of("title", "Clean up attic"))
                 .exchange()
                 .expectStatus().isCreated()
                 .expectBody().returnResult().getResponseHeaders().getLocation();
 
-        client.patch().uri(todoUri)
+        client.patch().uri(taskUri)
                 .bodyValue(Map.of("project_id", projectId))
                 .exchange()
                 .expectStatus().isOk();
 
-        client.get().uri(todoUri)
+        client.get().uri(taskUri)
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody()
@@ -524,8 +524,6 @@ class ToDoAppApplicationTests {
 
     }
 
-    //todo move everything from todo to task
-
     //todo separate test file
 
     //todo define a standard for yourself for response and endpoint naming
@@ -537,6 +535,10 @@ class ToDoAppApplicationTests {
     //todo make refresh token works
 
     //todo add test for invalid tokens
+
+    //todo better organize routes in one place
+
+    //todo extract authenticate user for easier access
 
     //about date time in java https://reflectoring.io/spring-timezones/
 
@@ -591,10 +593,10 @@ class ToDoAppApplicationTests {
         }
     }
 
-    private void createTodosForUser(List<String> todos) {
-        for (String todo : todos) {
-            client.post().uri("/v1/todo")
-                    .bodyValue(Map.of("title", todo))
+    private void createtasksForUser(List<String> tasks) {
+        for (String task : tasks) {
+            client.post().uri("/v1/tasks")
+                    .bodyValue(Map.of("title", task))
                     .exchange()
                     .expectStatus().isCreated();
         }

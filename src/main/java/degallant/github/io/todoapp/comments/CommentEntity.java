@@ -23,7 +23,7 @@ public class CommentEntity {
     @Column(name = "user_id")
     private UUID userId;
 
-    @Column(name = "todo_id")
-    private UUID todoId;
+    @Column(name = "task_id")
+    private UUID taskId;
 
 }

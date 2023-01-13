@@ -1,4 +1,4 @@
-package degallant.github.io.todoapp.todo;
+package degallant.github.io.todoapp.tasks;
 
 import degallant.github.io.todoapp.tag.TagEntity;
 import jakarta.persistence.*;
@@ -8,14 +8,14 @@ import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
 
-@Entity(name = "todos")
+@Entity(name = "tasks")
 @Builder
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
-public class TodoEntity {
+public class TaskEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -43,8 +43,8 @@ public class TodoEntity {
 
     @ManyToMany
     @JoinTable(
-            name = "todo_tags",
-            joinColumns = @JoinColumn(name = "todo_id"),
+            name = "tasks_tags",
+            joinColumns = @JoinColumn(name = "task_id"),
             inverseJoinColumns = @JoinColumn(name = "tag_id")
     )
     private List<TagEntity> tags;

@@ -16,7 +16,7 @@ CREATE TABLE projects(
             REFERENCES users(id)
 );
 
-CREATE TABLE todos (
+CREATE TABLE tasks (
 	id uuid NOT NULL,
 	title varchar(255) NOT NULL,
 	description varchar(255),
@@ -27,9 +27,9 @@ CREATE TABLE todos (
 	project_id uuid,
 	user_id uuid NOT NULL,
 	PRIMARY KEY (id),
-	CONSTRAINT fk_todo
+	CONSTRAINT fk_task
 	    FOREIGN KEY(parent_id)
-	        REFERENCES todos(id),
+	        REFERENCES tasks(id),
     CONSTRAINT fk_user
         FOREIGN KEY(user_id)
             REFERENCES users(id),
@@ -48,12 +48,12 @@ CREATE TABLE tags(
             REFERENCES users(id)
 );
 
-CREATE TABLE todo_tags(
-    todo_id uuid NOT NULL,
+CREATE TABLE tasks_tags(
+    task_id uuid NOT NULL,
     tag_id uuid NOT NULL,
-    CONSTRAINT fk_todo_id
-        FOREIGN KEY(todo_id)
-            REFERENCES todos(id),
+    CONSTRAINT fk_task_id
+        FOREIGN KEY(task_id)
+            REFERENCES tasks(id),
     CONSTRAINT fk_tag_id
             FOREIGN KEY(tag_id)
                 REFERENCES tags(id)
@@ -63,12 +63,12 @@ CREATE TABLE comments(
     id uuid NOT NULL,
     text varchar(255) NOT NULL,
     user_id uuid NOT NULL,
-    todo_id uuid NOT NULL,
+    task_id uuid NOT NULL,
     PRIMARY KEY (id),
     CONSTRAINT fk_user
         FOREIGN KEY(user_id)
             REFERENCES users(id),
-    CONSTRAINT fk_todo
-            FOREIGN KEY(todo_id)
-                REFERENCES todos(id)
+    CONSTRAINT fk_task
+            FOREIGN KEY(task_id)
+                REFERENCES tasks(id)
 );

@@ -1,6 +1,6 @@
 package degallant.github.io.todoapp.comments;
 
-import degallant.github.io.todoapp.todo.TodoRepository;
+import degallant.github.io.todoapp.tasks.TasksRepository;
 import degallant.github.io.todoapp.user.UserEntity;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -14,10 +14,10 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 
 @RequiredArgsConstructor
 @RestController
-@RequestMapping("/v1/todo/{id}/comments")
+@RequestMapping("/v1/tasks/{id}/comments")
 public class CommentController {
 
-    private final TodoRepository todoRepository;
+    private final TasksRepository tasksRepository;
 
     private final CommentRepository repository;
 
@@ -25,12 +25,12 @@ public class CommentController {
     public ResponseEntity<?> create(@PathVariable UUID id, @RequestBody CommentTdo.Create request, Authentication authentication) {
 
         UUID userId = ((UserEntity) authentication.getPrincipal()).getId();
-        todoRepository.findByIdAndUserId(id, userId).orElseThrow();
+        tasksRepository.findByIdAndUserId(id, userId).orElseThrow();
 
         var entity = CommentEntity.builder()
                 .text(request.getText())
                 .userId(userId)
-                .todoId(id)
+                .taskId(id)
                 .build();
 
         entity = repository.save(entity);
@@ -45,9 +45,9 @@ public class CommentController {
     public List<CommentEntity> index(@PathVariable UUID id, Authentication authentication) {
 
         UUID userId = ((UserEntity) authentication.getPrincipal()).getId();
-        todoRepository.findByIdAndUserId(id, userId).orElseThrow();
+        tasksRepository.findByIdAndUserId(id, userId).orElseThrow();
 
-        return repository.findByTodoIdAndUserId(id, userId);
+        return repository.findByTaskIdAndUserId(id, userId);
 
     }
 

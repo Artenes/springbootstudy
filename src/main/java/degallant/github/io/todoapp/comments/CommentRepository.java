@@ -7,6 +7,6 @@ import java.util.UUID;
 
 public interface CommentRepository extends JpaRepository<CommentEntity, UUID> {
 
-    List<CommentEntity> findByTodoIdAndUserId(UUID todoId, UUID userId);
+    List<CommentEntity> findByTaskIdAndUserId(UUID taskId, UUID userId);
 
 }

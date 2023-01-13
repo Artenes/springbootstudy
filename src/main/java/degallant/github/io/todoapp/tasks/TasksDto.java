@@ -1,4 +1,4 @@
-package degallant.github.io.todoapp.todo;
+package degallant.github.io.todoapp.tasks;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import degallant.github.io.todoapp.tag.TagDto;
@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
-public class TodoDto {
+public class TasksDto {
 
     @Getter
     @NoArgsConstructor
