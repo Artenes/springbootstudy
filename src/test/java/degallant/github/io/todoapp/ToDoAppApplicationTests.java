@@ -524,6 +524,12 @@ class ToDoAppApplicationTests {
 
     }
 
+    //todo move everything from todo to task
+
+    //todo separate test file
+
+    //todo define a standard for yourself for response and endpoint naming
+
     //todo test fail cases
 
     //todo paginate anything that returns a list
