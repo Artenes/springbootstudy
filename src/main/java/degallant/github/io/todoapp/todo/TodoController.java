@@ -1,5 +1,6 @@
 package degallant.github.io.todoapp.todo;
 
+import degallant.github.io.todoapp.projects.ProjectController;
 import degallant.github.io.todoapp.tag.TagDto;
 import degallant.github.io.todoapp.tag.TagEntity;
 import degallant.github.io.todoapp.tag.TagRepository;
@@ -47,6 +48,7 @@ public class TodoController {
                 .tags(tags)
                 .parent(request.getParent())
                 .userId(((UserEntity) authentication.getPrincipal()).getId())
+                .projectId(request.getProject())
                 .build();
 
         todoEntity = todoRepository.save(todoEntity);
@@ -65,11 +67,17 @@ public class TodoController {
     }
 
     @PatchMapping("/{id}")
-    public ResponseEntity<?> patch(@PathVariable UUID id, @RequestBody TodoDto.PatchComplete request, Authentication authentication) {
+    public ResponseEntity<?> patch(@PathVariable UUID id, @RequestBody TodoDto.Update request, Authentication authentication) {
 
         var todoEntity = todoRepository.findByIdAndUserId(id, ((UserEntity) authentication.getPrincipal()).getId()).orElseThrow();
 
-        todoEntity.setComplete(request.complete());
+        if (request.getComplete() != null) {
+            todoEntity.setComplete(request.getComplete());
+        }
+
+        if (request.getProjectId() != null) {
+            todoEntity.setProjectId(request.getProjectId());
+        }
 
         todoRepository.save(todoEntity);
 
@@ -106,6 +114,10 @@ public class TodoController {
 
         if (todo.getParent() != null) {
             response.parent(linkTo(TodoController.class).slash(todo.getParent()).toUri());
+        }
+
+        if (todo.getProjectId() != null) {
+            response.project(linkTo(ProjectController.class).slash(todo.getProjectId()).toUri());
         }
 
         return response.build();

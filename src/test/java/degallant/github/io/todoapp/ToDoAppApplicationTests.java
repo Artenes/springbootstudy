@@ -4,8 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import degallant.github.io.todoapp.openid.OpenIdTokenParser;
 import degallant.github.io.todoapp.openid.OpenIdUser;
 import degallant.github.io.todoapp.user.UserRepository;
-import org.apache.http.client.utils.URIBuilder;
 import org.flywaydb.core.Flyway;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -20,10 +20,7 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 
 import java.io.IOException;
 import java.net.URI;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
@@ -341,6 +338,7 @@ class ToDoAppApplicationTests {
         var dueDate = "2023-01-01T12:50:29.790511-04:00";
         var priority = "P3";
         var tags = makeTags("daily", "home", "pet");
+        var projectId = makeProject("daily tasks");
 
         URI todoURI = client.post().uri("/v1/todo")
                 .bodyValue(Map.of(
@@ -348,7 +346,8 @@ class ToDoAppApplicationTests {
                         "description", description,
                         "due_date", dueDate,
                         "priority", priority,
-                        "tags", tags
+                        "tags", tags,
+                        "project",projectId
                 ))
                 .exchange()
                 .expectStatus().isCreated()
@@ -366,6 +365,7 @@ class ToDoAppApplicationTests {
                 .jsonPath("$.description").isEqualTo(description)
                 .jsonPath("$.due_date").isEqualTo(dueDate)
                 .jsonPath("$.priority").isEqualTo(priority)
+                .jsonPath("$.project").value(Matchers.containsString(projectId))
                 .jsonPath("$.tags[?(@.name == 'daily')]").exists()
                 .jsonPath("$.tags[?(@.name == 'home')]").exists()
                 .jsonPath("$.tags[?(@.name == 'pet')]").exists()
@@ -472,7 +472,57 @@ class ToDoAppApplicationTests {
 
     }
 
-    //todo add support to projects
+    @Test
+    public void addATodoToAProject() {
+
+        authenticate();
+
+        URI projectURI = client.post().uri("/v1/projects")
+                .bodyValue(Map.of("title", "House summer cleanup"))
+                .exchange()
+                .expectStatus().isCreated()
+                .expectBody().returnResult().getResponseHeaders().getLocation();
+
+        String[] parts = projectURI.toString().split("/");
+        String projectId = parts[parts.length - 1];
+
+        URI todoUri = client.post().uri("/v1/todo")
+                .bodyValue(Map.of("title", "Clean up attic"))
+                .exchange()
+                .expectStatus().isCreated()
+                .expectBody().returnResult().getResponseHeaders().getLocation();
+
+        client.patch().uri(todoUri)
+                .bodyValue(Map.of("project_id", projectId))
+                .exchange()
+                .expectStatus().isOk();
+
+        client.get().uri(todoUri)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.project").isEqualTo(projectURI.toString());
+
+    }
+
+    @Test
+    public void userCanOnlySeeItsProjects() {
+
+        authenticate("usera@gmail.com");
+
+        URI projectUri = client.post().uri("/v1/projects")
+                .bodyValue(Map.of("title", "Test project"))
+                .exchange()
+                .expectStatus().isCreated()
+                .expectBody().returnResult()
+                .getResponseHeaders().getLocation();
+
+        authenticate("userb@gmail.com");
+
+        client.get().uri(projectUri).exchange()
+                .expectStatus().is5xxServerError();
+
+    }
 
     //todo test fail cases
 
@@ -550,11 +600,24 @@ class ToDoAppApplicationTests {
         });
     }
 
+    private String makeProject(String title) {
+        URI uri = client.post().uri("/v1/projects")
+                .bodyValue(Map.of("title", title))
+                .exchange()
+                .expectStatus().isCreated()
+                .expectBody().returnResult()
+                .getResponseHeaders().getLocation();
+
+        String[] parts = uri.toString().split("/");
+
+        return parts[parts.length - 1];
+    }
+
     private void show() {
         client = client.mutateWith((builder, httpHandlerBuilder, connector) -> {
             builder.entityExchangeResultConsumer(result -> {
                 URI uri = result.getUrl();
-                System.out.println("Response from " + uri + ": "+ new String(result.getResponseBodyContent()));
+                System.out.println("Response from " + uri + ": " + new String(result.getResponseBodyContent()));
             });
         });
     }

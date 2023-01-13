@@ -26,6 +26,7 @@ public class TodoDto {
         private Priority priority;
         private Set<UUID> tags;
         private UUID parent;
+        private UUID project;
 
     }
 
@@ -43,10 +44,20 @@ public class TodoDto {
         private URI parent;
         private List<URI> children;
         private List<TagDto.Details> tags;
+        private URI project;
 
     }
 
-    public record PatchComplete(boolean complete) {
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class Update {
+
+        private Boolean complete;
+        @JsonProperty("project_id")
+        private UUID projectId;
+
     }
 
 }

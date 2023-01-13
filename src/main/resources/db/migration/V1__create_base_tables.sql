@@ -6,6 +6,16 @@ CREATE TABLE users (
 	PRIMARY KEY (id)
 );
 
+CREATE TABLE projects(
+    id uuid NOT NULL,
+    title varchar(255) NOT NULL,
+    user_id uuid NOT NULL,
+    PRIMARY KEY (id),
+    CONSTRAINT fk_user
+        FOREIGN KEY(user_id)
+            REFERENCES users(id)
+);
+
 CREATE TABLE todos (
 	id uuid NOT NULL,
 	title varchar(255) NOT NULL,
@@ -14,14 +24,18 @@ CREATE TABLE todos (
 	due_date timestamp with time zone,
 	priority varchar(255),
 	parent_id uuid,
+	project_id uuid,
 	user_id uuid NOT NULL,
 	PRIMARY KEY (id),
 	CONSTRAINT fk_todo
 	    FOREIGN KEY(parent_id)
 	        REFERENCES todos(id),
     CONSTRAINT fk_user
-            FOREIGN KEY(user_id)
-                REFERENCES users(id)
+        FOREIGN KEY(user_id)
+            REFERENCES users(id),
+    CONSTRAINT fk_projects
+        FOREIGN KEY(project_id)
+            REFERENCES projects(id)
 );
 
 CREATE TABLE tags(

@@ -35,6 +35,9 @@ public class TodoEntity {
     @Column(name = "parent_id")
     private UUID parent;
 
+    @Column(name = "project_id")
+    private UUID projectId;
+
     @Column(name = "due_date")
     private OffsetDateTime dueDate;
 
