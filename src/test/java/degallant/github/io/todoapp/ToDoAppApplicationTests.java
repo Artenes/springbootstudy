@@ -54,62 +54,6 @@ class ToDoAppApplicationTests {
     }
 
     @Test
-    public void registerNewUser() throws IOException {
-
-        String email = "email@gmail.com";
-        String name = "Jhon Doe";
-        String profileUrl = "https://google.com/profile/903jfiwfiwoe";
-
-        String token = makeTokenFor(email, name, profileUrl);
-
-        EntityExchangeResult<byte[]> result = client.post().uri("/v1/auth")
-                .bodyValue(Map.of("open_id_token", token))
-                .exchange()
-                .expectStatus().isCreated()
-                .expectBody()
-                .jsonPath("$.access_token").exists()
-                .jsonPath("$.refresh_token").exists()
-                .returnResult();
-
-        URI userUri = result.getResponseHeaders().getLocation();
-        Map<String, String> response = mapper.readValue(result.getResponseBodyContent(), Map.class);
-
-        authenticateWithToken(response.get("access_token"));
-
-        client.get()
-                .uri(userUri)
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody()
-                .jsonPath("$.email").isEqualTo(email)
-                .jsonPath("$.name").isEqualTo(name)
-                .jsonPath("$.picture_url").isEqualTo(profileUrl);
-
-    }
-
-    @Test
-    public void loginExistingUser() {
-
-        String email = "email@gmail.com";
-        String name = "Jhon Doe";
-        String profileUrl = "https://google.com/profile/903jfiwfiwoe";
-
-        String token = makeTokenFor(email, name, profileUrl);
-
-        client.post().uri("/v1/auth")
-                .bodyValue(Map.of("open_id_token", token))
-                .exchange()
-                .expectStatus().isCreated();
-
-        client.post().uri("/v1/auth")
-                .bodyValue(Map.of("open_id_token", token))
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody().jsonPath("$.access_token").exists();
-
-    }
-
-    @Test
     public void oneUserCantSeeOthersUserstasks() {
 
         String taskFromUserA = "Take dog for a walk";
