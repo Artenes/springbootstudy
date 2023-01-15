@@ -1,10 +1,10 @@
 package degallant.github.io.todoapp.tasks;
 
-import degallant.github.io.todoapp.projects.ProjectController;
+import degallant.github.io.todoapp.projects.ProjectsController;
 import degallant.github.io.todoapp.tag.TagDto;
 import degallant.github.io.todoapp.tag.TagEntity;
 import degallant.github.io.todoapp.tag.TagRepository;
-import degallant.github.io.todoapp.user.UserEntity;
+import degallant.github.io.todoapp.users.UserEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -60,7 +60,7 @@ public class TasksController {
     }
 
     @GetMapping
-    public List<TaskEntity> index(Authentication authentication) {
+    public List<TaskEntity> list(Authentication authentication) {
 
         return tasksRepository.findByUserId(((UserEntity) authentication.getPrincipal()).getId());
 
@@ -117,7 +117,7 @@ public class TasksController {
         }
 
         if (task.getProjectId() != null) {
-            response.project(linkTo(ProjectController.class).slash(task.getProjectId()).toUri());
+            response.project(linkTo(ProjectsController.class).slash(task.getProjectId()).toUri());
         }
 
         return response.build();

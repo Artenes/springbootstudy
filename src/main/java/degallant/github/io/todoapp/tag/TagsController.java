@@ -1,22 +1,24 @@
 package degallant.github.io.todoapp.tag;
 
-import degallant.github.io.todoapp.user.UserEntity;
+import degallant.github.io.todoapp.users.UserEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URISyntaxException;
+import java.util.Collections;
+import java.util.List;
 import java.util.UUID;
 
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 
 @RestController
-@RequestMapping("/v1/tag")
-public class TagController {
+@RequestMapping("/v1/tags")
+public class TagsController {
 
     private final TagRepository repository;
 
-    public TagController(TagRepository repository) {
+    public TagsController(TagRepository repository) {
         this.repository = repository;
     }
 
@@ -30,7 +32,7 @@ public class TagController {
 
         tagEntity = repository.save(tagEntity);
 
-        var link = linkTo(TagController.class).slash(tagEntity.getId());
+        var link = linkTo(TagsController.class).slash(tagEntity.getId());
 
         return ResponseEntity.created(link.toUri()).build();
 
@@ -45,6 +47,11 @@ public class TagController {
                 .name(tag.getName())
                 .build();
 
+    }
+
+    @GetMapping
+    public List<TagDto.Details> list(Authentication authentication) {
+        return Collections.emptyList();
     }
 
 }

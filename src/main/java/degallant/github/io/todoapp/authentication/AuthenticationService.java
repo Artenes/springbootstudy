@@ -6,10 +6,8 @@ import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import degallant.github.io.todoapp.openid.OpenIdTokenParser;
 import degallant.github.io.todoapp.openid.OpenIdUser;
-import degallant.github.io.todoapp.user.UserEntity;
-import degallant.github.io.todoapp.user.UserRepository;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import degallant.github.io.todoapp.users.UserEntity;
+import degallant.github.io.todoapp.users.UsersRepository;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
@@ -23,7 +21,7 @@ import java.util.UUID;
 @Service
 public class AuthenticationService {
 
-    private final UserRepository repository;
+    private final UsersRepository repository;
 
     private final OpenIdTokenParser openIdTokenParser;
 
@@ -31,7 +29,7 @@ public class AuthenticationService {
 
     private final Algorithm signature;
 
-    public AuthenticationService(UserRepository repository, OpenIdTokenParser openIdTokenParser, AuthenticationConfiguration config) {
+    public AuthenticationService(UsersRepository repository, OpenIdTokenParser openIdTokenParser, AuthenticationConfiguration config) {
         this.repository = repository;
         this.openIdTokenParser = openIdTokenParser;
         this.config = config;

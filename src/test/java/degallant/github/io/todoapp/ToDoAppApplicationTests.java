@@ -3,7 +3,7 @@ package degallant.github.io.todoapp;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import degallant.github.io.todoapp.openid.OpenIdTokenParser;
 import degallant.github.io.todoapp.openid.OpenIdUser;
-import degallant.github.io.todoapp.user.UserRepository;
+import degallant.github.io.todoapp.users.UsersRepository;
 import org.flywaydb.core.Flyway;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.AfterEach;
@@ -46,7 +46,7 @@ class ToDoAppApplicationTests {
     private ObjectMapper mapper;
 
     @Autowired
-    private UserRepository repository;
+    private UsersRepository repository;
 
     @BeforeEach
     public void setUp() {
@@ -241,7 +241,7 @@ class ToDoAppApplicationTests {
     public void aUserCanOnlySeeItsOwnTags() {
 
         authenticate("usera@gmail.com");
-        URI userATag = client.post().uri("/v1/tag")
+        URI userATag = client.post().uri("/v1/tags")
                 .bodyValue(Map.of("name", "house"))
                 .exchange()
                 .expectStatus().isCreated()
@@ -314,7 +314,7 @@ class ToDoAppApplicationTests {
 
         var tag = "house";
 
-        URI tagUri = client.post().uri("/v1/tag")
+        URI tagUri = client.post().uri("/v1/tags")
                 .bodyValue(Map.of("name", tag))
                 .exchange()
                 .expectStatus().isCreated()
@@ -580,7 +580,7 @@ class ToDoAppApplicationTests {
     private Set<String> makeTags(String... names) {
         Set<String> uuids = new HashSet<>();
         for (String name : names) {
-            URI uri = client.post().uri("/v1/tag")
+            URI uri = client.post().uri("/v1/tags")
                     .bodyValue(Map.of("name", name))
                     .exchange()
                     .expectStatus().isCreated()

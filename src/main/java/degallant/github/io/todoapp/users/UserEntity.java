@@ -1,4 +1,4 @@
-package degallant.github.io.todoapp.user;
+package degallant.github.io.todoapp.users;
 
 import jakarta.persistence.*;
 import lombok.*;

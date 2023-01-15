@@ -1,18 +1,20 @@
 package degallant.github.io.todoapp.projects;
 
-import degallant.github.io.todoapp.user.UserEntity;
+import degallant.github.io.todoapp.users.UserEntity;
 import lombok.RequiredArgsConstructor;
 import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/v1/projects")
-public class ProjectController {
+public class ProjectsController {
 
     private final ProjectRepository repository;
 
@@ -26,7 +28,7 @@ public class ProjectController {
 
         entity = repository.save(entity);
 
-        var link = WebMvcLinkBuilder.linkTo(ProjectController.class).slash(entity.getId());
+        var link = WebMvcLinkBuilder.linkTo(ProjectsController.class).slash(entity.getId());
 
         return ResponseEntity.created(link.toUri()).build();
 
@@ -42,6 +44,11 @@ public class ProjectController {
                 .title(entity.getTitle())
                 .build();
 
+    }
+
+    @GetMapping
+    public List<ProjectDto.Details> list(Authentication authentication) {
+        return Collections.emptyList();
     }
 
 }
