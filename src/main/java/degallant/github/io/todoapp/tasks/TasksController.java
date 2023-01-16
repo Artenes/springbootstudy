@@ -1,9 +1,9 @@
 package degallant.github.io.todoapp.tasks;
 
 import degallant.github.io.todoapp.projects.ProjectsController;
-import degallant.github.io.todoapp.tag.TagDto;
-import degallant.github.io.todoapp.tag.TagEntity;
-import degallant.github.io.todoapp.tag.TagRepository;
+import degallant.github.io.todoapp.tags.TagsDto;
+import degallant.github.io.todoapp.tags.TagEntity;
+import degallant.github.io.todoapp.tags.TagsRepository;
 import degallant.github.io.todoapp.users.UserEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -23,11 +23,11 @@ public class TasksController {
 
     private final TasksRepository tasksRepository;
 
-    private final TagRepository tagRepository;
+    private final TagsRepository tagsRepository;
 
-    public TasksController(TasksRepository repository, TagRepository tagRepository) {
+    public TasksController(TasksRepository repository, TagsRepository tagsRepository) {
         this.tasksRepository = repository;
-        this.tagRepository = tagRepository;
+        this.tagsRepository = tagsRepository;
     }
 
     @PostMapping
@@ -37,7 +37,7 @@ public class TasksController {
         //so we just query its instances to then pass in the to do entity below
         List<TagEntity> tags = Collections.emptyList();
         if (request.getTags() != null && !request.getTags().isEmpty()) {
-            tags = tagRepository.findAllById(request.getTags());
+            tags = tagsRepository.findAllById(request.getTags());
         }
 
         var taskEntity = TaskEntity.builder()
@@ -98,9 +98,9 @@ public class TasksController {
 
         if (task.getTags() != null && !task.getTags().isEmpty()) {
             response.tags(task.getTags().stream()
-                    .map(tag -> TagDto.Details.builder()
+                    .map(tag -> TagsDto.Details.builder()
                             .name(tag.getName())
-                            .uuid(tag.getId())
+                            .id(tag.getId())
                             .build())
                     .collect(Collectors.toList()));
         }

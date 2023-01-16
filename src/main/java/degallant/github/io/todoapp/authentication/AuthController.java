@@ -1,7 +1,7 @@
 package degallant.github.io.todoapp.authentication;
 
 import degallant.github.io.todoapp.projects.ProjectsController;
-import degallant.github.io.todoapp.tag.TagsController;
+import degallant.github.io.todoapp.tags.TagsController;
 import degallant.github.io.todoapp.tasks.TasksController;
 import degallant.github.io.todoapp.users.UserEntity;
 import degallant.github.io.todoapp.users.UsersDto;

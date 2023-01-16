@@ -1,7 +1,7 @@
 package degallant.github.io.todoapp.tasks;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import degallant.github.io.todoapp.tag.TagDto;
+import degallant.github.io.todoapp.tags.TagsDto;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -43,7 +43,7 @@ public class TasksDto {
         private Priority priority;
         private URI parent;
         private List<URI> children;
-        private List<TagDto.Details> tags;
+        private List<TagsDto.Details> tags;
         private URI project;
 
     }

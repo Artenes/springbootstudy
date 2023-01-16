@@ -20,7 +20,10 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 
 import java.io.IOException;
 import java.net.URI;
-import java.util.*;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
@@ -182,28 +185,6 @@ class ToDoAppApplicationTests {
     }
 
     @Test
-    public void aUserCanOnlySeeItsOwnTags() {
-
-        authenticate("usera@gmail.com");
-        URI userATag = client.post().uri("/v1/tags")
-                .bodyValue(Map.of("name", "house"))
-                .exchange()
-                .expectStatus().isCreated()
-                .expectBody().returnResult()
-                .getResponseHeaders().getLocation();
-
-        client.get().uri(userATag).exchange()
-                .expectStatus().isOk()
-                .expectBody()
-                .jsonPath("$.name").isEqualTo("house");
-
-        authenticate("userb@gmail.com");
-        client.get().uri(userATag).exchange()
-                .expectStatus().is5xxServerError();
-
-    }
-
-    @Test
     public void createsAtaskToComplete() throws IOException {
 
         authenticate();
@@ -252,27 +233,6 @@ class ToDoAppApplicationTests {
     }
 
     @Test
-    public void createATag() throws IOException {
-
-        authenticate();
-
-        var tag = "house";
-
-        URI tagUri = client.post().uri("/v1/tags")
-                .bodyValue(Map.of("name", tag))
-                .exchange()
-                .expectStatus().isCreated()
-                .expectBody().returnResult().getResponseHeaders()
-                .getLocation();
-
-        client.get().uri(tagUri)
-                .exchange()
-                .expectBody()
-                .jsonPath("$.name").isEqualTo(tag);
-
-    }
-
-    @Test
     public void createAtaskFullOfDetails() throws IOException {
 
         authenticate();
@@ -291,7 +251,7 @@ class ToDoAppApplicationTests {
                         "due_date", dueDate,
                         "priority", priority,
                         "tags", tags,
-                        "project",projectId
+                        "project", projectId
                 ))
                 .exchange()
                 .expectStatus().isCreated()

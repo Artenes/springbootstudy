@@ -1,6 +1,6 @@
 package degallant.github.io.todoapp.tasks;
 
-import degallant.github.io.todoapp.tag.TagEntity;
+import degallant.github.io.todoapp.tags.TagEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
