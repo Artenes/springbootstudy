@@ -1,48 +1,14 @@
 package degallant.github.io.todoapp;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import degallant.github.io.todoapp.openid.OpenIdTokenParser;
-import degallant.github.io.todoapp.openid.OpenIdUser;
-import org.flywaydb.core.Flyway;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.http.HttpHeaders;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.reactive.server.EntityExchangeResult;
-import org.springframework.test.web.reactive.server.WebTestClient;
 
 import java.io.IOException;
 import java.net.URI;
 import java.util.Map;
 
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.when;
-
 /** @noinspection unchecked, ConstantConditions */
-@ActiveProfiles("test")
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-public class AuthTests {
-
-    @Autowired
-    private WebTestClient client;
-
-    @Autowired
-    private Flyway flyway;
-
-    @MockBean
-    private OpenIdTokenParser openIdTokenParser;
-
-    @Autowired
-    private ObjectMapper mapper;
-
-    @BeforeEach
-    public void setUp() {
-        flyway.migrate();
-    }
+public class AuthTests extends IntegrationTest {
 
     @Test
     public void registerNewUser() throws IOException {
@@ -102,24 +68,6 @@ public class AuthTests {
                 .expectStatus().isOk()
                 .expectBody().jsonPath("$.access_token").exists();
 
-    }
-
-    @AfterEach
-    public void tearDown() {
-        flyway.clean();
-    }
-
-    private String makeTokenFor(String email, String name, String profileUrl) {
-        //a dummy token for test purposes
-        String token = email + name + profileUrl;
-        when(openIdTokenParser.extract(eq(token))).thenReturn(new OpenIdUser(email, name, profileUrl));
-        return token;
-    }
-
-    private void authenticateWithToken(String accessToken) {
-        client = client.mutateWith((builder, httpHandlerBuilder, connector) -> {
-            builder.defaultHeader(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken);
-        });
     }
 
 }

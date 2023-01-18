@@ -1,22 +1,7 @@
 package degallant.github.io.todoapp;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import degallant.github.io.todoapp.openid.OpenIdTokenParser;
-import degallant.github.io.todoapp.openid.OpenIdUser;
-import degallant.github.io.todoapp.users.UsersRepository;
-import org.flywaydb.core.Flyway;
 import org.hamcrest.Matchers;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.http.HttpHeaders;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.web.reactive.server.EntityExchangeResult;
-import org.springframework.test.web.reactive.server.WebTestClient;
 
 import java.io.IOException;
 import java.net.URI;
@@ -25,36 +10,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.when;
-
 /**
- * @noinspection ALL
+ * @noinspection ConstantConditions, unchecked
  */
-@ActiveProfiles("test")
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@AutoConfigureWebTestClient(timeout = "36000")
-class ToDoAppApplicationTests {
-
-    @Autowired
-    private WebTestClient client;
-
-    @Autowired
-    private Flyway flyway;
-
-    @MockBean
-    private OpenIdTokenParser openIdTokenParser;
-
-    @Autowired
-    private ObjectMapper mapper;
-
-    @Autowired
-    private UsersRepository repository;
-
-    @BeforeEach
-    public void setUp() {
-        flyway.migrate();
-    }
+class ToDoAppApplicationTests extends IntegrationTest {
 
     @Test
     public void oneUserCantSeeOthersUserstasks() {
@@ -153,7 +112,7 @@ class ToDoAppApplicationTests {
     }
 
     @Test
-    public void aUserCanOnlyListItstasks() throws IOException {
+    public void aUserCanOnlyListItstasks() {
 
         List<String> userAtasks = List.of("Take dog for a walk", "Go get milk", "Study for test");
         List<String> userBtasks = List.of("Take cat for a walk", "Play games");
@@ -185,7 +144,7 @@ class ToDoAppApplicationTests {
     }
 
     @Test
-    public void createsAtaskToComplete() throws IOException {
+    public void createsAtaskToComplete() {
 
         authenticate();
 
@@ -206,7 +165,7 @@ class ToDoAppApplicationTests {
     }
 
     @Test
-    public void createsAndCompletetask() throws IOException {
+    public void createsAndCompletetask() {
 
         authenticate();
 
@@ -233,7 +192,7 @@ class ToDoAppApplicationTests {
     }
 
     @Test
-    public void createAtaskFullOfDetails() throws IOException {
+    public void createAtaskFullOfDetails() {
 
         authenticate();
 
@@ -279,7 +238,7 @@ class ToDoAppApplicationTests {
     }
 
     @Test
-    public void createASubTask() throws IOException {
+    public void createASubTask() {
 
         authenticate();
 
@@ -476,51 +435,22 @@ class ToDoAppApplicationTests {
 
     //API paging https://www.mixmax.com/engineering/api-paging-built-the-right-way
 
-    @AfterEach
-    public void tearDown() {
-        flyway.clean();
-    }
-
     private Set<String> makeTags(String... names) {
         Set<String> uuids = new HashSet<>();
         for (String name : names) {
-            URI uri = client.post().uri("/v1/tags")
+            var result = client.post().uri("/v1/tags")
                     .bodyValue(Map.of("name", name))
                     .exchange()
                     .expectStatus().isCreated()
-                    .expectBody().returnResult().getResponseHeaders()
-                    .getLocation();
-            String[] parts = uri.getPath().split("/");
-            uuids.add(parts[parts.length - 1]);
+                    .expectBody().returnResult();
+            try {
+                Map<String, String> response = mapper.readValue(result.getResponseBodyContent(), Map.class);
+                uuids.add(response.get("id"));
+            } catch (IOException exception) {
+                exception.printStackTrace();
+            }
         }
         return uuids;
-    }
-
-    private String makeTokenFor(String email, String name, String profileUrl) {
-        //a dummy token for test purposes
-        String token = email + name + profileUrl;
-        when(openIdTokenParser.extract(eq(token))).thenReturn(new OpenIdUser(email, name, profileUrl));
-        return token;
-    }
-
-    private void authenticate() {
-        authenticate("email@gmail.com");
-    }
-
-    private void authenticate(String email) {
-        String name = "Jhon Doe";
-        String profileUrl = "https://google.com/profile/903jfiwfiwoe";
-        String token = makeTokenFor(email, name, profileUrl);
-        EntityExchangeResult<byte[]> result = client.post().uri("/v1/auth")
-                .bodyValue(Map.of("open_id_token", token))
-                .exchange()
-                .expectBody().returnResult();
-        try {
-            Map<String, String> response = mapper.readValue(result.getResponseBodyContent(), Map.class);
-            authenticateWithToken(response.get("access_token"));
-        } catch (IOException exception) {
-            throw new RuntimeException(exception);
-        }
     }
 
     private void createtasksForUser(List<String> tasks) {
@@ -530,12 +460,6 @@ class ToDoAppApplicationTests {
                     .exchange()
                     .expectStatus().isCreated();
         }
-    }
-
-    private void authenticateWithToken(String accessToken) {
-        client = client.mutateWith((builder, httpHandlerBuilder, connector) -> {
-            builder.defaultHeader(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken);
-        });
     }
 
     private String makeProject(String title) {
@@ -549,15 +473,6 @@ class ToDoAppApplicationTests {
         String[] parts = uri.toString().split("/");
 
         return parts[parts.length - 1];
-    }
-
-    private void show() {
-        client = client.mutateWith((builder, httpHandlerBuilder, connector) -> {
-            builder.entityExchangeResultConsumer(result -> {
-                URI uri = result.getUrl();
-                System.out.println("Response from " + uri + ": " + new String(result.getResponseBodyContent()));
-            });
-        });
     }
 
 }

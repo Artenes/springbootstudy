@@ -1,5 +1,6 @@
 package degallant.github.io.todoapp.tags;
 
+import com.google.api.client.http.HttpStatusCodes;
 import degallant.github.io.todoapp.users.UserEntity;
 import lombok.RequiredArgsConstructor;
 import org.springframework.hateoas.CollectionModel;
@@ -34,9 +35,9 @@ public class TagsController {
 
         tagEntity = repository.save(tagEntity);
 
-        var link = linkTo(methodOn(getClass()).list(authentication));
-
-        return ResponseEntity.created(link.toUri()).build();
+        return ResponseEntity
+                .status(HttpStatusCodes.STATUS_CODE_CREATED)
+                .body(TagsDto.Details.builder().id(tagEntity.getId()).name(tagEntity.getName()).build());
 
     }
 
