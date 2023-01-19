@@ -2,25 +2,30 @@ package degallant.github.io.todoapp.projects;
 
 import degallant.github.io.todoapp.users.UserEntity;
 import lombok.RequiredArgsConstructor;
-import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder;
+import org.springframework.hateoas.CollectionModel;
+import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.RepresentationModel;
+import org.springframework.hateoas.mediatype.hal.HalModelBuilder;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Collections;
-import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
+
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/v1/projects")
 public class ProjectsController {
 
-    private final ProjectRepository repository;
+    private final ProjectsRepository repository;
 
     @PostMapping
-    public ResponseEntity<?> create(@RequestBody ProjectDto.Create request, Authentication authentication) {
-
+    public ResponseEntity<?> create(@RequestBody ProjectsDto.Create request, Authentication authentication) {
         var entity = ProjectEntity.builder()
                 .title(request.getTitle())
                 .userId(((UserEntity) authentication.getPrincipal()).getId())
@@ -28,27 +33,48 @@ public class ProjectsController {
 
         entity = repository.save(entity);
 
-        var link = WebMvcLinkBuilder.linkTo(ProjectsController.class).slash(entity.getId());
+        var link = linkTo(methodOn(getClass()).details(entity.getId(), authentication)).withSelfRel();
 
         return ResponseEntity.created(link.toUri()).build();
-
     }
 
     @GetMapping("/{id}")
-    public ProjectDto.Details get(@PathVariable UUID id, Authentication authentication) {
-
+    public ResponseEntity<?> details(@PathVariable UUID id, Authentication authentication) {
         var entity = repository.findByIdAndUserId(id, ((UserEntity) authentication.getPrincipal()).getId()).orElseThrow();
 
-        return ProjectDto.Details.builder()
+        var project = ProjectsDto.Details.builder()
                 .id(entity.getId())
                 .title(entity.getTitle())
                 .build();
 
+        var linkSelf = linkTo(methodOn(getClass()).details(id, authentication)).withSelfRel();
+        var linkAll = linkTo(methodOn(getClass()).list(authentication)).withRel("all");
+
+        var response = EntityModel.of(project).add(linkSelf, linkAll);
+
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping
-    public List<ProjectDto.Details> list(Authentication authentication) {
-        return Collections.emptyList();
+    public RepresentationModel<?> list(Authentication authentication) {
+        UUID userId = ((UserEntity) authentication.getPrincipal()).getId();
+
+        var projects = repository.findByUserId(userId).stream()
+                .map(tag -> {
+                    var project = ProjectsDto.Details.builder().title(tag.getTitle()).id(tag.getId()).build();
+                    var linkSelf = linkTo(methodOn(getClass()).details(project.getId(), authentication)).withSelfRel();
+                    return EntityModel.of(project).add(linkSelf);
+                }).collect(Collectors.toList());
+
+        var linkSelf = linkTo(methodOn(getClass()).list(authentication)).withSelfRel();
+
+        if (projects.isEmpty()) {
+            return HalModelBuilder.emptyHalModel()
+                    .embed(Collections.emptyList(), ProjectsDto.Details.class)
+                    .link(linkSelf).build();
+        }
+
+        return CollectionModel.of(projects).add(linkSelf);
     }
 
 }

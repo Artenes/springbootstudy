@@ -11,7 +11,7 @@ import java.util.Map;
 class ProjectsTests extends IntegrationTest {
 
     @Test
-    public void addAtaskToAProject() {
+    public void addATaskToAProject() {
 
         authenticate();
 
@@ -44,7 +44,7 @@ class ProjectsTests extends IntegrationTest {
     }
 
     @Test
-    public void userCanOnlySeeItsProjects() {
+    public void aUserCanOnlySeeItsOwnProjects() {
 
         authenticate("usera@gmail.com");
 
@@ -59,6 +59,28 @@ class ProjectsTests extends IntegrationTest {
 
         client.get().uri(projectUri).exchange()
                 .expectStatus().is5xxServerError();
+
+    }
+
+    @Test
+    public void aUserCanOnlyListItsOwnProjects() {
+
+        authenticate("usera@gmail.com");
+        client.post().uri("/v1/projects")
+                .bodyValue(Map.of("title", "house"))
+                .exchange()
+                .expectStatus().isCreated();
+
+        client.get().uri("/v1/projects").exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$._embedded.projects[0].title").isEqualTo("house");
+
+        authenticate("userb@gmail.com");
+        client.get().uri("/v1/projects").exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$._embedded.projects").isEmpty();
 
     }
 
