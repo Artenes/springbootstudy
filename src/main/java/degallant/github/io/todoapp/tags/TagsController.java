@@ -1,9 +1,9 @@
 package degallant.github.io.todoapp.tags;
 
-import com.google.api.client.http.HttpStatusCodes;
 import degallant.github.io.todoapp.users.UserEntity;
 import lombok.RequiredArgsConstructor;
 import org.springframework.hateoas.CollectionModel;
+import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.RepresentationModel;
 import org.springframework.hateoas.mediatype.hal.HalModelBuilder;
 import org.springframework.http.ResponseEntity;
@@ -27,7 +27,6 @@ public class TagsController {
 
     @PostMapping
     public ResponseEntity<?> create(@RequestBody TagsDto.Create request, Authentication authentication) {
-
         var tagEntity = TagEntity.builder()
                 .name(request.getName())
                 .userId(((UserEntity) authentication.getPrincipal()).getId())
@@ -35,10 +34,26 @@ public class TagsController {
 
         tagEntity = repository.save(tagEntity);
 
-        return ResponseEntity
-                .status(HttpStatusCodes.STATUS_CODE_CREATED)
-                .body(TagsDto.Details.builder().id(tagEntity.getId()).name(tagEntity.getName()).build());
+        var linkCreated = linkTo(methodOn(getClass()).details(tagEntity.getId(), authentication)).withSelfRel();
 
+        return ResponseEntity.created(linkCreated.toUri()).build();
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<?> details(@PathVariable UUID id, Authentication authentication) {
+        var userId = ((UserEntity) authentication.getPrincipal()).getId();
+        var entity = repository.findByIdAndUserId(id, userId).orElseThrow();
+        var linkSelf = linkTo(methodOn(getClass()).details(id, authentication)).withSelfRel();
+        var linkAll = linkTo(methodOn(getClass()).list(authentication)).withRel("all");
+
+        var tag = TagsDto.Details.builder()
+                .id(entity.getId())
+                .name(entity.getName())
+                .build();
+
+        var response = EntityModel.of(tag).add(linkSelf, linkAll);
+
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping

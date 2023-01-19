@@ -2,8 +2,10 @@ package degallant.github.io.todoapp;
 
 import org.junit.jupiter.api.Test;
 
+import java.net.URI;
 import java.util.Map;
 
+/** @noinspection ConstantConditions*/
 public class TagsTests extends IntegrationTest {
 
     @Test
@@ -13,30 +15,28 @@ public class TagsTests extends IntegrationTest {
 
         var tag = "house";
 
-        client.post().uri("/v1/tags")
+        URI uri = client.post().uri("/v1/tags")
                 .bodyValue(Map.of("name", tag))
                 .exchange()
                 .expectStatus().isCreated()
-                .expectBody().returnResult().getResponseHeaders()
-                .getLocation();
+                .expectBody().returnResult()
+                .getResponseHeaders().getLocation();
 
-        client.get().uri("/v1/tags")
+        client.get().uri(uri)
                 .exchange()
                 .expectBody()
-                .jsonPath("$._embedded.tags[0].name").isEqualTo(tag);
+                .jsonPath("$.name").isEqualTo(tag);
 
     }
 
     @Test
-    public void aUserCanOnlySeeItsOwnTags() {
+    public void aUserCanOnlyListItsOwnTags() {
 
         authenticate("usera@gmail.com");
         client.post().uri("/v1/tags")
                 .bodyValue(Map.of("name", "house"))
                 .exchange()
-                .expectStatus().isCreated()
-                .expectBody().returnResult()
-                .getResponseHeaders().getLocation();
+                .expectStatus().isCreated();
 
         client.get().uri("/v1/tags").exchange()
                 .expectStatus().isOk()
@@ -48,6 +48,26 @@ public class TagsTests extends IntegrationTest {
                 .expectStatus().isOk()
                 .expectBody()
                 .jsonPath("$._embedded.tags").isEmpty();
+
+    }
+
+    @Test
+    public void aUserCanOnlySeeTheDetailsOfItsOwnTags() {
+
+        authenticate("usera@gmail.com");
+        URI uri = client.post().uri("/v1/tags")
+                .bodyValue(Map.of("name", "house"))
+                .exchange()
+                .expectStatus().isCreated()
+                .expectBody().returnResult()
+                .getResponseHeaders().getLocation();
+
+        client.get().uri(uri).exchange()
+                .expectStatus().isOk();
+
+        authenticate("userb@gmail.com");
+        client.get().uri(uri).exchange()
+                .expectStatus().is5xxServerError();
 
     }
 

@@ -97,17 +97,15 @@ public abstract class IntegrationTest {
     protected Set<String> makeTags(String... names) {
         Set<String> uuids = new HashSet<>();
         for (String name : names) {
-            var result = client.post().uri("/v1/tags")
+            var tagUri = client.post().uri("/v1/tags")
                     .bodyValue(Map.of("name", name))
                     .exchange()
                     .expectStatus().isCreated()
-                    .expectBody().returnResult();
-            try {
-                Map<String, String> response = mapper.readValue(result.getResponseBodyContent(), Map.class);
-                uuids.add(response.get("id"));
-            } catch (IOException exception) {
-                exception.printStackTrace();
-            }
+                    .expectBody().returnResult()
+                    .getResponseHeaders().getLocation();
+
+            String[] parts = tagUri.toString().split("/");
+            uuids.add(parts[parts.length - 1]);
         }
         return uuids;
     }

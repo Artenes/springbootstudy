@@ -189,7 +189,7 @@ public class TasksTests extends IntegrationTest {
     }
 
     @Test
-    public void createAtaskFullOfDetails() {
+    public void createATaskFullOfDetails() {
 
         authenticate();
 
