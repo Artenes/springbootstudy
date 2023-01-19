@@ -2,7 +2,6 @@ package degallant.github.io.todoapp;
 
 import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
 import java.util.Map;
 
 public class TagsTests extends IntegrationTest {

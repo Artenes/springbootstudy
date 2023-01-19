@@ -17,7 +17,10 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 
 import java.io.IOException;
 import java.net.URI;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
@@ -89,6 +92,46 @@ public abstract class IntegrationTest {
             URI uri = result.getUrl();
             System.out.println("Response from " + uri + ": " + new String(result.getResponseBodyContent()));
         }));
+    }
+
+    protected Set<String> makeTags(String... names) {
+        Set<String> uuids = new HashSet<>();
+        for (String name : names) {
+            var result = client.post().uri("/v1/tags")
+                    .bodyValue(Map.of("name", name))
+                    .exchange()
+                    .expectStatus().isCreated()
+                    .expectBody().returnResult();
+            try {
+                Map<String, String> response = mapper.readValue(result.getResponseBodyContent(), Map.class);
+                uuids.add(response.get("id"));
+            } catch (IOException exception) {
+                exception.printStackTrace();
+            }
+        }
+        return uuids;
+    }
+
+    protected String makeProject(String title) {
+        URI uri = client.post().uri("/v1/projects")
+                .bodyValue(Map.of("title", title))
+                .exchange()
+                .expectStatus().isCreated()
+                .expectBody().returnResult()
+                .getResponseHeaders().getLocation();
+
+        String[] parts = uri.toString().split("/");
+
+        return parts[parts.length - 1];
+    }
+
+    protected void createTasksForUser(List<String> tasks) {
+        for (String task : tasks) {
+            client.post().uri("/v1/tasks")
+                    .bodyValue(Map.of("title", task))
+                    .exchange()
+                    .expectStatus().isCreated();
+        }
     }
 
 }
