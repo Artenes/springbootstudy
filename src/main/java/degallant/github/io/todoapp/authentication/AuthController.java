@@ -24,24 +24,22 @@ public class AuthController {
 
     @PostMapping
     public ResponseEntity<?> authenticate(@RequestBody AuthDto.Authenticate request) {
+        var authenticatedUser = service.authenticateWithOpenId(request.getOpenIdToken());
+        var credentials = (AuthenticationService.TokenPair) authenticatedUser.getCredentials();
+        var isNew = (Boolean) authenticatedUser.getDetails();
 
-        Authentication authenticatedUser = service.authenticateWithOpenId(request.getOpenIdToken());
-        AuthenticationService.TokenPair tokenPair = (AuthenticationService.TokenPair) authenticatedUser.getCredentials();
-        boolean isNew = (Boolean) authenticatedUser.getDetails();
-
-        Link link = linkTo(methodOn(getClass()).profile(authenticatedUser)).withSelfRel();
-        EntityModel<AuthDto.TokenPair> model = EntityModel.of(AuthDto.TokenPair.builder()
-                .accessToken(tokenPair.accessToken())
-                .refreshToken(tokenPair.refreshToken())
-                .build()
-        ).add(link);
+        var tokenPair = AuthDto.TokenPair.builder()
+                .accessToken(credentials.accessToken())
+                .refreshToken(credentials.refreshToken())
+                .build();
+        var linkSelf = linkTo(methodOn(getClass()).profile(authenticatedUser)).withSelfRel();
+        var response = EntityModel.of(tokenPair).add(linkSelf);
 
         if (isNew) {
-            return ResponseEntity.created(link.toUri()).body(model);
+            return ResponseEntity.created(linkSelf.toUri()).body(response);
         }
 
-        return ResponseEntity.ok().body(model);
-
+        return ResponseEntity.ok().body(response);
     }
 
     @GetMapping("/profile")

@@ -37,7 +37,6 @@ public class AuthenticationService {
     }
 
     public Authentication authenticateWithOpenId(String openIdToken) {
-
         OpenIdUser openIdUser = openIdTokenParser.extract(openIdToken);
 
         Optional<UserEntity> user = repository.findByEmail(openIdUser.email());
@@ -76,11 +75,9 @@ public class AuthenticationService {
         );
         authentication.setDetails(isNewUser);
         return authentication;
-
     }
 
     public Authentication authenticateWithJwtToken(String jwtToken) {
-
         JWTVerifier verifier = JWT.require(signature)
                 .withIssuer(config.issuer())
                 .build();
@@ -92,7 +89,6 @@ public class AuthenticationService {
         UserEntity user = repository.findById(userId).orElseThrow();
 
         return new UsernamePasswordAuthenticationToken(user, null, Collections.emptyList());
-
     }
 
     public record TokenPair(String accessToken, String refreshToken) {

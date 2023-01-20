@@ -15,17 +15,13 @@ public class OpenIdTokenParser {
 
     private final GoogleIdTokenVerifier verifier;
 
-    private final OpenIdConfiguration config;
-
     public OpenIdTokenParser(OpenIdConfiguration config) {
-        this.config = config;
         verifier = new GoogleIdTokenVerifier.Builder(new NetHttpTransport(), new GsonFactory())
                 .setAudience(Collections.singletonList(config.googleClientId()))
                 .build();
     }
 
     public OpenIdUser extract(String token) {
-
         GoogleIdToken idToken;
         try {
             idToken = verifier.verify(token);
@@ -43,7 +39,6 @@ public class OpenIdTokenParser {
         String pictureUrl = (String) payload.get("picture");
 
         return new OpenIdUser(email, name, pictureUrl);
-
     }
 
 }
