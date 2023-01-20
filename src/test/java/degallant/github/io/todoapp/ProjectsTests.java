@@ -15,6 +15,7 @@ class ProjectsTests extends IntegrationTest {
 
         authenticate();
 
+        //create project
         URI projectURI = client.post().uri("/v1/projects")
                 .bodyValue(Map.of("title", "House summer cleanup"))
                 .exchange()
@@ -24,22 +25,25 @@ class ProjectsTests extends IntegrationTest {
         String[] parts = projectURI.toString().split("/");
         String projectId = parts[parts.length - 1];
 
+        //create task
         URI taskUri = client.post().uri("/v1/tasks")
                 .bodyValue(Map.of("title", "Clean up attic"))
                 .exchange()
                 .expectStatus().isCreated()
                 .expectBody().returnResult().getResponseHeaders().getLocation();
 
+        //add task to project
         client.patch().uri(taskUri)
                 .bodyValue(Map.of("project_id", projectId))
                 .exchange()
                 .expectStatus().isOk();
 
+        //check if task is in project
         client.get().uri(taskUri)
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody()
-                .jsonPath("$.project").isEqualTo(projectURI.toString());
+                .jsonPath("$._embedded.project._links.self.href").isEqualTo(projectURI.toString());
 
     }
 
