@@ -15,14 +15,14 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/v1/tasks/{id}/comments")
-public class CommentController {
+public class CommentsController {
 
     private final TasksRepository tasksRepository;
 
-    private final CommentRepository repository;
+    private final CommentsRepository repository;
 
     @PostMapping
-    public ResponseEntity<?> create(@PathVariable UUID id, @RequestBody CommentTdo.Create request, Authentication authentication) {
+    public ResponseEntity<?> create(@PathVariable UUID id, @RequestBody CommentsTdo.Create request, Authentication authentication) {
 
         UUID userId = ((UserEntity) authentication.getPrincipal()).getId();
         tasksRepository.findByIdAndUserId(id, userId).orElseThrow();
@@ -35,7 +35,7 @@ public class CommentController {
 
         entity = repository.save(entity);
 
-        var link = linkTo(CommentController.class, id);
+        var link = linkTo(CommentsController.class, id);
 
         return ResponseEntity.created(link.toUri()).build();
 

@@ -5,6 +5,7 @@ import degallant.github.io.todoapp.tags.TagsDto;
 import degallant.github.io.todoapp.tags.TagEntity;
 import degallant.github.io.todoapp.tags.TagsRepository;
 import degallant.github.io.todoapp.users.UserEntity;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -18,17 +19,13 @@ import java.util.stream.Collectors;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/v1/tasks")
 public class TasksController {
 
     private final TasksRepository tasksRepository;
 
     private final TagsRepository tagsRepository;
-
-    public TasksController(TasksRepository repository, TagsRepository tagsRepository) {
-        this.tasksRepository = repository;
-        this.tagsRepository = tagsRepository;
-    }
 
     @PostMapping
     public ResponseEntity<?> create(@RequestBody TasksDto.Create request, Authentication authentication) throws URISyntaxException {
