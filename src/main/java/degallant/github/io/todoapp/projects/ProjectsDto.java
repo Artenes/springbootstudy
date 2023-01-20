@@ -24,7 +24,7 @@ public class ProjectsDto {
     @NoArgsConstructor
     @AllArgsConstructor
     @Builder
-    @Relation(collectionRelation = "projects")
+    @Relation(collectionRelation = "projects", itemRelation = "project")
     public static class Details {
 
         private UUID id;

@@ -88,10 +88,7 @@ public abstract class IntegrationTest {
     }
 
     protected void show() {
-        client = client.mutateWith((builder, httpHandlerBuilder, connector) -> builder.entityExchangeResultConsumer(result -> {
-            URI uri = result.getUrl();
-            System.out.println("Response from " + uri + ": " + new String(result.getResponseBodyContent()));
-        }));
+        client = client.mutateWith((builder, httpHandlerBuilder, connector) -> builder.entityExchangeResultConsumer(System.out::println));
     }
 
     protected Set<String> makeTags(String... names) {

@@ -33,7 +33,7 @@ public class TaskEntity {
     private UUID userId;
 
     @Column(name = "parent_id")
-    private UUID parent;
+    private UUID parentId;
 
     @Column(name = "project_id")
     private UUID projectId;

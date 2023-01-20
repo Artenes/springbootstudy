@@ -6,6 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.springframework.hateoas.server.core.Relation;
 
 import java.net.URI;
 import java.time.OffsetDateTime;
@@ -34,17 +35,55 @@ public class TasksDto {
     @NoArgsConstructor
     @AllArgsConstructor
     @Builder
-    public static class Details {
+    public static class DetailsComplete {
 
         private String title;
         private String description;
         @JsonProperty("due_date")
         private OffsetDateTime dueDate;
         private Priority priority;
-        private URI parent;
-        private List<URI> children;
-        private List<TagsDto.Details> tags;
         private URI project;
+        private boolean complete;
+
+    }
+
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    @Relation(collectionRelation = "tasks")
+    public static class DetailsSimple {
+
+        private UUID id;
+        private String title;
+        private String description;
+        @JsonProperty("due_date")
+        private OffsetDateTime dueDate;
+
+    }
+
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    @Relation(collectionRelation = "subtasks")
+    public static class SubTask {
+
+        private UUID id;
+        private String title;
+        private String description;
+
+    }
+
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    @Relation(itemRelation = "parent")
+    public static class ParentTask {
+
+        private UUID id;
+        private String title;
 
     }
 

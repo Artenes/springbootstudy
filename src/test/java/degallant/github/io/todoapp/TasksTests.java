@@ -1,6 +1,5 @@
 package degallant.github.io.todoapp;
 
-import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
 
 import java.net.URI;
@@ -13,7 +12,7 @@ import java.util.Map;
 public class TasksTests extends IntegrationTest {
 
     @Test
-    public void oneUserCantSeeOthersUserstasks() {
+    public void oneUserCantSeeOthersUsersTasks() {
 
         String taskFromUserA = "Take dog for a walk";
         String taskFromUserB = "Take cat for a walk";
@@ -61,7 +60,7 @@ public class TasksTests extends IntegrationTest {
     }
 
     @Test
-    public void oneUserCanEditOnlyItstasks() {
+    public void oneUserCanEditOnlyItsTasks() {
 
         String taskFromUserA = "Take dog for a walk";
         String taskFromUserB = "Take cat for a walk";
@@ -109,7 +108,7 @@ public class TasksTests extends IntegrationTest {
     }
 
     @Test
-    public void aUserCanOnlyListItstasks() {
+    public void aUserCanOnlyListItsOwnTasks() {
 
         List<String> userAtasks = List.of("Take dog for a walk", "Go get milk", "Study for test");
         List<String> userBtasks = List.of("Take cat for a walk", "Play games");
@@ -123,46 +122,47 @@ public class TasksTests extends IntegrationTest {
         client.get().uri("/v1/tasks").exchange()
                 .expectStatus().isOk()
                 .expectBody()
-                .jsonPath("$.length()").isEqualTo(3)
-                .jsonPath("$[?(@.title == '%s')]", userAtasks.get(0)).exists()
-                .jsonPath("$[?(@.title == '%s')]", userAtasks.get(1)).exists()
-                .jsonPath("$[?(@.title == '%s')]", userAtasks.get(2)).exists()
-                .jsonPath("$[?(@.title == '%s')]", userBtasks.get(0)).doesNotExist();
+                .jsonPath("$._embedded.tasks.length()").isEqualTo(3)
+                .jsonPath("$._embedded.tasks.[?(@.title == '%s')]", userAtasks.get(0)).exists()
+                .jsonPath("$._embedded.tasks.[?(@.title == '%s')]", userAtasks.get(1)).exists()
+                .jsonPath("$._embedded.tasks.[?(@.title == '%s')]", userAtasks.get(2)).exists()
+                .jsonPath("$._embedded.tasks.[?(@.title == '%s')]", userBtasks.get(0)).doesNotExist();
 
         authenticate("userb@gmail.com");
         client.get().uri("/v1/tasks").exchange()
                 .expectStatus().isOk()
                 .expectBody()
-                .jsonPath("$.length()").isEqualTo(2)
-                .jsonPath("$[?(@.title == '%s')]", userBtasks.get(0)).exists()
-                .jsonPath("$[?(@.title == '%s')]", userBtasks.get(1)).exists()
-                .jsonPath("$[?(@.title == '%s')]", userAtasks.get(0)).doesNotExist();
+                .jsonPath("$._embedded.tasks.length()").isEqualTo(2)
+                .jsonPath("$._embedded.tasks[?(@.title == '%s')]", userBtasks.get(0)).exists()
+                .jsonPath("$._embedded.tasks[?(@.title == '%s')]", userBtasks.get(1)).exists()
+                .jsonPath("$._embedded.tasks[?(@.title == '%s')]", userAtasks.get(0)).doesNotExist();
 
     }
 
     @Test
-    public void createsAtaskToComplete() {
+    public void createsATaskToComplete() {
 
         authenticate();
 
         var title = "Take the dog for a walk";
 
-        client.post().uri("/v1/tasks")
+        URI taskUri = client.post().uri("/v1/tasks")
                 .bodyValue(Map.of("title", title))
                 .exchange()
-                .expectStatus().isCreated();
+                .expectStatus().isCreated()
+                .expectBody().returnResult()
+                .getResponseHeaders().getLocation();
 
-        client.get().uri("/v1/tasks")
+        client.get().uri(taskUri)
                 .exchange()
                 .expectBody()
-                .jsonPath("$[0].title").isEqualTo(title)
-                .jsonPath("$[0].complete").isEqualTo(false)
-                .consumeWith(System.out::println);
+                .jsonPath("$.title").isEqualTo(title)
+                .jsonPath("$.complete").isEqualTo(false);
 
     }
 
     @Test
-    public void createsAndCompletetask() {
+    public void createsAndCompleteATask() {
 
         authenticate();
 
@@ -180,11 +180,13 @@ public class TasksTests extends IntegrationTest {
                 .bodyValue(Map.of("complete", true))
                 .exchange();
 
-        client.get().uri("/v1/tasks")
+        show();
+
+        client.get().uri(taskURI)
                 .exchange()
                 .expectBody()
-                .jsonPath("$[0].title").isEqualTo(title)
-                .jsonPath("$[0].complete").isEqualTo(true);
+                .jsonPath("$.title").isEqualTo(title)
+                .jsonPath("$.complete").isEqualTo(true);
 
     }
 
@@ -220,17 +222,16 @@ public class TasksTests extends IntegrationTest {
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody()
-                .consumeWith(System.out::println)
                 .jsonPath("$.title").isEqualTo(title)
                 .jsonPath("$.description").isEqualTo(description)
                 .jsonPath("$.due_date").isEqualTo(dueDate)
                 .jsonPath("$.priority").isEqualTo(priority)
-                .jsonPath("$.project").value(Matchers.containsString(projectId))
-                .jsonPath("$.tags[?(@.name == 'daily')]").exists()
-                .jsonPath("$.tags[?(@.name == 'home')]").exists()
-                .jsonPath("$.tags[?(@.name == 'pet')]").exists()
-                .jsonPath("$.children").isEmpty()
-                .jsonPath("$.parent").isEmpty();
+                .jsonPath("$._embedded.project.id").isEqualTo(projectId)
+                .jsonPath("$._embedded.tags[?(@.name == '%s')]", "daily").exists()
+                .jsonPath("$._embedded.tags[?(@.name == '%s')]", "home").exists()
+                .jsonPath("$._embedded.tags[?(@.name == '%s')]", "pet").exists()
+                .jsonPath("$._embedded.subtasks").doesNotExist()
+                .jsonPath("$._embedded.parent").doesNotExist();
 
     }
 
@@ -270,14 +271,16 @@ public class TasksTests extends IntegrationTest {
                 .expectStatus().isOk()
                 .expectBody()
                 .jsonPath("$.title").isEqualTo(taskTitle)
-                .jsonPath("$.children[0]").isEqualTo(subTaskUri.toString());
+                .jsonPath("$._embedded.subtasks[0].title").isEqualTo(subtaskTitle)
+                .jsonPath("$._embedded.subtasks[0]._links.self.href").isEqualTo(subTaskUri.toString());
 
         client.get().uri(subTaskUri)
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody()
                 .jsonPath("$.title").isEqualTo(subtaskTitle)
-                .jsonPath("$.parent").isEqualTo(taskUri.toString());
+                .jsonPath("$._embedded.parent._links.self.href").isEqualTo(taskUri.toString())
+                .jsonPath("$._embedded.parent.title").isEqualTo(taskTitle);
 
     }
 
