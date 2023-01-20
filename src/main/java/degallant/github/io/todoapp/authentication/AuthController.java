@@ -45,24 +45,22 @@ public class AuthController {
     }
 
     @GetMapping("/profile")
-    public EntityModel<?> profile(Authentication authentication) {
+    public ResponseEntity<?> profile(Authentication authentication) {
+        var entity = (UserEntity) authentication.getPrincipal();
+        var user = UsersDto.Details.builder()
+                .name(entity.getName())
+                .email(entity.getEmail())
+                .pictureUrl(entity.getPictureUrl())
+                .build();
 
-        var user = (UserEntity) authentication.getPrincipal();
         Link selfLink = linkTo(methodOn(getClass()).profile(authentication)).withSelfRel();
         Link tasksLink = linkTo(methodOn(TasksController.class).list(authentication)).withRel("tasks");
         Link tagsLink = linkTo(methodOn(TagsController.class).list(authentication)).withRel("tags");
         Link projectsLink = linkTo(methodOn(ProjectsController.class).list(authentication)).withRel("projects");
 
-        return EntityModel.of(UsersDto.Details.builder()
-                .name(user.getName())
-                .email(user.getEmail())
-                .pictureUrl(user.getPictureUrl())
-                .build())
-                .add(selfLink)
-                .add(tasksLink)
-                .add(tagsLink)
-                .add(projectsLink);
+        var response = EntityModel.of(user).add(selfLink, tasksLink, tagsLink, projectsLink);
 
+        return ResponseEntity.ok(response);
     }
 
 }

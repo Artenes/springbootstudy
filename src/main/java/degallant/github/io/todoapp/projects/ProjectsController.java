@@ -40,17 +40,10 @@ public class ProjectsController {
 
     @GetMapping("/{id}")
     public ResponseEntity<?> details(@PathVariable UUID id, Authentication authentication) {
-        var entity = repository.findByIdAndUserId(id, ((UserEntity) authentication.getPrincipal()).getId()).orElseThrow();
+        var userId = ((UserEntity) authentication.getPrincipal()).getId();
+        var entity = repository.findByIdAndUserId(id, userId).orElseThrow();
 
-        var project = ProjectsDto.Details.builder()
-                .id(entity.getId())
-                .title(entity.getTitle())
-                .build();
-
-        var linkSelf = linkTo(methodOn(getClass()).details(id, authentication)).withSelfRel();
-        var linkAll = linkTo(methodOn(getClass()).list(authentication)).withRel("all");
-
-        var response = EntityModel.of(project).add(linkSelf, linkAll);
+        EntityModel<ProjectsDto.Details> response = toEntityModel(entity, authentication);
 
         return ResponseEntity.ok(response);
     }
@@ -59,12 +52,10 @@ public class ProjectsController {
     public RepresentationModel<?> list(Authentication authentication) {
         UUID userId = ((UserEntity) authentication.getPrincipal()).getId();
 
-        var projects = repository.findByUserId(userId).stream()
-                .map(tag -> {
-                    var project = ProjectsDto.Details.builder().title(tag.getTitle()).id(tag.getId()).build();
-                    var linkSelf = linkTo(methodOn(getClass()).details(project.getId(), authentication)).withSelfRel();
-                    return EntityModel.of(project).add(linkSelf);
-                }).collect(Collectors.toList());
+        var projects = repository.findByUserId(userId)
+                .stream()
+                .map(entity -> toEntityModel(entity, authentication))
+                .collect(Collectors.toList());
 
         var linkSelf = linkTo(methodOn(getClass()).list(authentication)).withSelfRel();
 
@@ -75,6 +66,18 @@ public class ProjectsController {
         }
 
         return CollectionModel.of(projects).add(linkSelf);
+    }
+
+    private EntityModel<ProjectsDto.Details> toEntityModel(ProjectEntity entity, Authentication authentication) {
+        var project = ProjectsDto.Details.builder()
+                .id(entity.getId())
+                .title(entity.getTitle())
+                .build();
+
+        var linkSelf = linkTo(methodOn(getClass()).details(entity.getId(), authentication)).withSelfRel();
+        var linkAll = linkTo(methodOn(getClass()).list(authentication)).withRel("all");
+
+        return EntityModel.of(project).add(linkSelf, linkAll);
     }
 
 }
