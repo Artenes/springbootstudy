@@ -11,7 +11,7 @@ import java.util.Map;
 public class CommentsTests extends IntegrationTest {
 
     @Test
-    public void userCanAddCommentToAtask() {
+    public void userCanAddCommentToATask() {
 
         var comment = "We have to finish this soon";
         authenticate();
@@ -24,21 +24,25 @@ public class CommentsTests extends IntegrationTest {
 
         URI commentsUri = URI.create(taskUri.toString() + "/comments");
 
-        client.post().uri(commentsUri)
+        URI commentUri = client.post().uri(commentsUri)
                 .bodyValue(Map.of("text", comment))
                 .exchange()
-                .expectStatus().isCreated();
+                .expectStatus().isCreated()
+                .expectBody().returnResult()
+                .getResponseHeaders().getLocation();
 
-        client.get().uri(commentsUri)
+        show();
+
+        client.get().uri(commentUri)
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody()
-                .jsonPath("$[0].text").isEqualTo(comment);
+                .jsonPath("$.text").isEqualTo(comment);
 
     }
 
     @Test
-    public void userCanOnlyCommentOnItstasks() {
+    public void userCanOnlyCommentOnItsTasks() {
 
         authenticate("usera@gmail.com");
         URI taskUri = client.post().uri("/v1/tasks")
@@ -51,10 +55,39 @@ public class CommentsTests extends IntegrationTest {
 
         authenticate("userb@gmail.com");
         client.post().uri(commentsUri)
-                .bodyValue(Map.of("comment", "I agree"))
+                .bodyValue(Map.of("text", "I agree"))
                 .exchange()
                 .expectStatus().is5xxServerError();
 
+        client.get().uri(commentsUri)
+                .exchange()
+                .expectStatus().is5xxServerError();
+
+    }
+
+    @Test
+    public void userCanOnlyListItsOwnComments() {
+
+        authenticate("usera@gmail.com");
+        URI taskUri = client.post().uri("/v1/tasks")
+                .bodyValue(Map.of("title", "Walk with dog"))
+                .exchange()
+                .expectStatus().isCreated()
+                .expectBody().returnResult().getResponseHeaders().getLocation();
+
+        URI commentsUri = URI.create(taskUri.toString() + "/comments");
+
+        client.post().uri(commentsUri)
+                .bodyValue(Map.of("text", "I agree"))
+                .exchange()
+                .expectStatus().isCreated();
+
+        client.get().uri(commentsUri).exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$._embedded.comments[0].text").isEqualTo("I agree");
+
+        authenticate("userb@gmail.com");
         client.get().uri(commentsUri)
                 .exchange()
                 .expectStatus().is5xxServerError();

@@ -83,7 +83,7 @@ public class TasksController {
     }
 
     @GetMapping("/{id}")
-    public TasksDto.Details get(@PathVariable UUID id, Authentication authentication) {
+    public TasksDto.Details details(@PathVariable UUID id, Authentication authentication) {
 
         var task = tasksRepository.findByIdAndUserId(id, ((UserEntity) authentication.getPrincipal()).getId()).orElseThrow();
 
