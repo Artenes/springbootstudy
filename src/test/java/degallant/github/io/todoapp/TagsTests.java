@@ -67,7 +67,7 @@ public class TagsTests extends IntegrationTest {
 
         authenticate("userb@gmail.com");
         client.get().uri(uri).exchange()
-                .expectStatus().is5xxServerError();
+                .expectStatus().isNotFound();
 
     }
 

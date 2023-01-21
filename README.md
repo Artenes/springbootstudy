@@ -10,8 +10,6 @@
 
 - add test for invalid tokens
 
-- organize routes in one place
-
 - extract authenticate user for easier access
 
 - add proper exception handling

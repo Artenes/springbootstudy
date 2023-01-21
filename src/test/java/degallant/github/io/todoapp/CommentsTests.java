@@ -51,17 +51,17 @@ public class CommentsTests extends IntegrationTest {
                 .expectStatus().isCreated()
                 .expectBody().returnResult().getResponseHeaders().getLocation();
 
-        URI commentsUri = URI.create(taskUri.toString() + "/comments");
+        URI taskCommentsUri = URI.create(taskUri.toString() + "/comments");
 
         authenticate("userb@gmail.com");
-        client.post().uri(commentsUri)
+        client.post().uri(taskCommentsUri)
                 .bodyValue(Map.of("text", "I agree"))
                 .exchange()
-                .expectStatus().is5xxServerError();
+                .expectStatus().isNotFound();
 
-        client.get().uri(commentsUri)
+        client.get().uri(taskCommentsUri)
                 .exchange()
-                .expectStatus().is5xxServerError();
+                .expectStatus().isNotFound();
 
     }
 
@@ -90,7 +90,7 @@ public class CommentsTests extends IntegrationTest {
         authenticate("userb@gmail.com");
         client.get().uri(commentsUri)
                 .exchange()
-                .expectStatus().is5xxServerError();
+                .expectStatus().isNotFound();
 
     }
 

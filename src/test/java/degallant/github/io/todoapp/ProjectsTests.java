@@ -62,7 +62,7 @@ class ProjectsTests extends IntegrationTest {
         authenticate("userb@gmail.com");
 
         client.get().uri(projectUri).exchange()
-                .expectStatus().is5xxServerError();
+                .expectStatus().isNotFound();
 
     }
 

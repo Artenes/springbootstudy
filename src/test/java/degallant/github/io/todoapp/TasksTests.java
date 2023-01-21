@@ -44,7 +44,7 @@ public class TasksTests extends IntegrationTest {
                 .jsonPath("$.title").isEqualTo(taskFromUserA);
         client.get().uri(taskFromUserBUri)
                 .exchange()
-                .expectStatus().is5xxServerError();
+                .expectStatus().isNotFound();
 
         //check user B created task and try to see created task from user a
         authenticate("userb@gmail.com");
@@ -53,9 +53,10 @@ public class TasksTests extends IntegrationTest {
                 .expectStatus().isOk()
                 .expectBody()
                 .jsonPath("$.title").isEqualTo(taskFromUserB);
+
         client.get().uri(taskFromUserAUri)
                 .exchange()
-                .expectStatus().is5xxServerError();
+                .expectStatus().isNotFound();
 
     }
 
@@ -92,7 +93,7 @@ public class TasksTests extends IntegrationTest {
         client.patch().uri(taskFromUserBUri)
                 .bodyValue(Map.of("complete", true))
                 .exchange()
-                .expectStatus().is5xxServerError();
+                .expectStatus().isNotFound();
 
         //confirm that user B can edit its task, while not being able to edits A's
         authenticate("userb@gmail.com");
@@ -100,42 +101,43 @@ public class TasksTests extends IntegrationTest {
                 .bodyValue(Map.of("complete", true))
                 .exchange()
                 .expectStatus().isOk();
+
         client.patch().uri(taskFromUserAUri)
                 .bodyValue(Map.of("complete", true))
                 .exchange()
-                .expectStatus().is5xxServerError();
+                .expectStatus().isNotFound();
 
     }
 
     @Test
     public void aUserCanOnlyListItsOwnTasks() {
 
-        List<String> userAtasks = List.of("Take dog for a walk", "Go get milk", "Study for test");
-        List<String> userBtasks = List.of("Take cat for a walk", "Play games");
+        List<String> userATasks = List.of("Take dog for a walk", "Go get milk", "Study for test");
+        List<String> userBTasks = List.of("Take cat for a walk", "Play games");
 
         authenticate("usera@gmail.com");
-        createTasksForUser(userAtasks);
+        createTasksForUser(userATasks);
         authenticate("userb@gmail.com");
-        createTasksForUser(userBtasks);
+        createTasksForUser(userBTasks);
 
         authenticate("usera@gmail.com");
         client.get().uri("/v1/tasks").exchange()
                 .expectStatus().isOk()
                 .expectBody()
                 .jsonPath("$._embedded.tasks.length()").isEqualTo(3)
-                .jsonPath("$._embedded.tasks.[?(@.title == '%s')]", userAtasks.get(0)).exists()
-                .jsonPath("$._embedded.tasks.[?(@.title == '%s')]", userAtasks.get(1)).exists()
-                .jsonPath("$._embedded.tasks.[?(@.title == '%s')]", userAtasks.get(2)).exists()
-                .jsonPath("$._embedded.tasks.[?(@.title == '%s')]", userBtasks.get(0)).doesNotExist();
+                .jsonPath("$._embedded.tasks.[?(@.title == '%s')]", userATasks.get(0)).exists()
+                .jsonPath("$._embedded.tasks.[?(@.title == '%s')]", userATasks.get(1)).exists()
+                .jsonPath("$._embedded.tasks.[?(@.title == '%s')]", userATasks.get(2)).exists()
+                .jsonPath("$._embedded.tasks.[?(@.title == '%s')]", userBTasks.get(0)).doesNotExist();
 
         authenticate("userb@gmail.com");
         client.get().uri("/v1/tasks").exchange()
                 .expectStatus().isOk()
                 .expectBody()
                 .jsonPath("$._embedded.tasks.length()").isEqualTo(2)
-                .jsonPath("$._embedded.tasks[?(@.title == '%s')]", userBtasks.get(0)).exists()
-                .jsonPath("$._embedded.tasks[?(@.title == '%s')]", userBtasks.get(1)).exists()
-                .jsonPath("$._embedded.tasks[?(@.title == '%s')]", userAtasks.get(0)).doesNotExist();
+                .jsonPath("$._embedded.tasks[?(@.title == '%s')]", userBTasks.get(0)).exists()
+                .jsonPath("$._embedded.tasks[?(@.title == '%s')]", userBTasks.get(1)).exists()
+                .jsonPath("$._embedded.tasks[?(@.title == '%s')]", userATasks.get(0)).doesNotExist();
 
     }
 

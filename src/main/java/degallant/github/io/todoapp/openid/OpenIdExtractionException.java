@@ -9,5 +9,4 @@ public class OpenIdExtractionException extends RuntimeException {
     public OpenIdExtractionException(String message) {
         super(message);
     }
-
 }
