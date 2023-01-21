@@ -12,10 +12,6 @@
 
 - extract authenticate user for easier access
 
-- add proper exception handling
-
-- deal with internationalization
-
 - deal with users roles
 
 - check about caching - Cache-Control header
@@ -47,3 +43,9 @@
 - HATEOAS https://stateless.co/hal_specification.html https://restfulapi.net/hateoas/
 
 - API paging https://www.mixmax.com/engineering/api-paging-built-the-right-way
+
+- Error response standards https://www.rfc-editor.org/rfc/rfc7807.html
+
+- Exception handling tutorial https://reflectoring.io/spring-boot-exception-handling/
+
+- Internationalization tutorial https://reflectoring.io/spring-boot-internationalization/
