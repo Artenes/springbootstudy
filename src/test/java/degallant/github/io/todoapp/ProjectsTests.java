@@ -11,6 +11,15 @@ import java.util.Map;
 class ProjectsTests extends IntegrationTest {
 
     @Test
+    public void failsCreationWithEmptyBody() {
+        authenticate();
+
+        client.post().uri("/v1/projects")
+                .bodyValue(Map.of()).exchange()
+                .expectStatus().isBadRequest();
+    }
+
+    @Test
     public void addATaskToAProject() {
 
         authenticate();

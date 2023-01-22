@@ -1,6 +1,7 @@
 package degallant.github.io.todoapp.projects;
 
 import degallant.github.io.todoapp.users.UserEntity;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
@@ -25,7 +26,7 @@ public class ProjectsController {
     private final ProjectsRepository repository;
 
     @PostMapping
-    public ResponseEntity<?> create(@RequestBody ProjectsDto.Create request, Authentication authentication) {
+    public ResponseEntity<?> create(@Valid @RequestBody ProjectsDto.Create request, Authentication authentication) {
         var entity = ProjectEntity.builder()
                 .title(request.getTitle())
                 .userId(((UserEntity) authentication.getPrincipal()).getId())

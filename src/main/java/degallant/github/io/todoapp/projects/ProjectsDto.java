@@ -1,5 +1,6 @@
 package degallant.github.io.todoapp.projects;
 
+import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -16,6 +17,7 @@ public class ProjectsDto {
     @Builder
     public static class Create {
 
+        @NotBlank
         private String title;
 
     }
