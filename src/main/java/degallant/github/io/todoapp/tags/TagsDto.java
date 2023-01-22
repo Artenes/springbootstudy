@@ -1,5 +1,6 @@
 package degallant.github.io.todoapp.tags;
 
+import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -14,6 +15,7 @@ public class TagsDto {
     @NoArgsConstructor
     public static class Create {
 
+        @NotBlank
         private String name;
 
     }

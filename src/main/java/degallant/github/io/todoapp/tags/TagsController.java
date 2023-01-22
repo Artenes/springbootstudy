@@ -1,6 +1,7 @@
 package degallant.github.io.todoapp.tags;
 
 import degallant.github.io.todoapp.users.UserEntity;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
@@ -8,6 +9,7 @@ import org.springframework.hateoas.RepresentationModel;
 import org.springframework.hateoas.mediatype.hal.HalModelBuilder;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Collections;
@@ -25,15 +27,17 @@ public class TagsController {
     private final TagsRepository repository;
 
     @PostMapping
-    public ResponseEntity<?> create(@RequestBody TagsDto.Create request, Authentication authentication) {
-        var tagEntity = TagEntity.builder()
+    public ResponseEntity<?> create(@Valid @RequestBody TagsDto.Create request, Authentication authentication) {
+        var userId = ((UserEntity) authentication.getPrincipal()).getId();
+
+        var entity = TagEntity.builder()
                 .name(request.getName())
-                .userId(((UserEntity) authentication.getPrincipal()).getId())
+                .userId(userId)
                 .build();
 
-        tagEntity = repository.save(tagEntity);
+        entity = repository.save(entity);
 
-        var linkCreated = linkTo(methodOn(getClass()).details(tagEntity.getId(), authentication)).withSelfRel();
+        var linkCreated = linkTo(methodOn(getClass()).details(entity.getId(), authentication)).withSelfRel();
 
         return ResponseEntity.created(linkCreated.toUri()).build();
     }

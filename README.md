@@ -49,3 +49,5 @@
 - Exception handling tutorial https://reflectoring.io/spring-boot-exception-handling/
 
 - Internationalization tutorial https://reflectoring.io/spring-boot-internationalization/
+
+- Validation tutorial https://reflectoring.io/bean-validation-with-spring-boot

@@ -9,6 +9,17 @@ import java.util.Map;
 public class TagsTests extends IntegrationTest {
 
     @Test
+    public void failsCreationWithEmptyBody() {
+
+        authenticate();
+        client.post().uri("/v1/tags")
+                .bodyValue(Map.of())
+                .exchange()
+                .expectStatus().isBadRequest();
+
+    }
+
+    @Test
     public void createATag() {
 
         authenticate();
