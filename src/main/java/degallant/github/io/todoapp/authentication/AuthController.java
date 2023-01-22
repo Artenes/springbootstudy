@@ -5,6 +5,7 @@ import degallant.github.io.todoapp.tags.TagsController;
 import degallant.github.io.todoapp.tasks.TasksController;
 import degallant.github.io.todoapp.users.UserEntity;
 import degallant.github.io.todoapp.users.UsersDto;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.Link;
@@ -23,7 +24,7 @@ public class AuthController {
     private final AuthenticationService service;
 
     @PostMapping
-    public ResponseEntity<?> authenticate(@RequestBody AuthDto.Authenticate request) {
+    public ResponseEntity<?> authenticate(@Valid @RequestBody AuthDto.Authenticate request) {
         var authenticatedUser = service.authenticateWithOpenId(request.getOpenIdToken());
         var credentials = (AuthenticationService.TokenPair) authenticatedUser.getCredentials();
         var isNew = (Boolean) authenticatedUser.getDetails();

@@ -11,6 +11,14 @@ import java.util.Map;
 public class AuthTests extends IntegrationTest {
 
     @Test
+    public void failsAuthenticationWithoutToken() {
+        client.post().uri("/v1/auth")
+                .bodyValue(Map.of()).exchange()
+                .expectStatus().isBadRequest()
+                .expectBody().consumeWith(System.out::println);
+    }
+
+    @Test
     public void registerNewUser() throws IOException {
 
         String email = "email@gmail.com";

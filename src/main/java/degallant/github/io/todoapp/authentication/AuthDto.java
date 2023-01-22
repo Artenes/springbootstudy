@@ -1,6 +1,8 @@
 package degallant.github.io.todoapp.authentication;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.validation.OverridesAttribute;
+import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -12,6 +14,7 @@ public class AuthDto {
     @NoArgsConstructor
     public static class Authenticate {
 
+        @NotBlank
         @JsonProperty("open_id_token")
         private String openIdToken;
 
