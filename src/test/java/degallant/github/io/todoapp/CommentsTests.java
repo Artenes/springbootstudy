@@ -11,6 +11,17 @@ import java.util.Map;
 public class CommentsTests extends IntegrationTest {
 
     @Test
+    public void failsCreationWithEmptyBody() {
+        authenticate();
+
+        URI taskCommentsUri = createATaskToComment("Go for a walk");
+
+        client.post().uri(taskCommentsUri)
+                .bodyValue(Map.of()).exchange()
+                .expectStatus().isBadRequest();
+    }
+
+    @Test
     public void userCanAddCommentToATask() {
 
         var comment = "We have to finish this soon";
@@ -93,5 +104,16 @@ public class CommentsTests extends IntegrationTest {
                 .expectStatus().isNotFound();
 
     }
+
+    private URI createATaskToComment(String task) {
+        URI taskUri = client.post().uri("/v1/tasks")
+                .bodyValue(Map.of("title", task))
+                .exchange()
+                .expectStatus().isCreated()
+                .expectBody().returnResult().getResponseHeaders().getLocation();
+
+        return URI.create(taskUri.toString() + "/comments");
+    }
+
 
 }

@@ -1,5 +1,6 @@
 package degallant.github.io.todoapp.comments;
 
+import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -14,6 +15,7 @@ public class CommentsDto {
     @NoArgsConstructor
     public static class Create {
 
+        @NotBlank
         private String text;
 
     }

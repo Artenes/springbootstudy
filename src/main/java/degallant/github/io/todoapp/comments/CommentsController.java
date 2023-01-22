@@ -3,6 +3,7 @@ package degallant.github.io.todoapp.comments;
 import degallant.github.io.todoapp.tasks.TasksController;
 import degallant.github.io.todoapp.tasks.TasksRepository;
 import degallant.github.io.todoapp.users.UserEntity;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
@@ -29,7 +30,7 @@ public class CommentsController {
     private final CommentsRepository commentsRepository;
 
     @PostMapping
-    public ResponseEntity<?> create(@PathVariable UUID id, @RequestBody CommentsDto.Create request, Authentication authentication) {
+    public ResponseEntity<?> create(@PathVariable UUID id, @Valid @RequestBody CommentsDto.Create request, Authentication authentication) {
         var userId = ((UserEntity) authentication.getPrincipal()).getId();
 
         //guard

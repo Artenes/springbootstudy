@@ -28,6 +28,8 @@
 
 - check about relationships in hibernate for lazy loading relationships
 
+- add support to check style
+
 # References
 
 - about date time in java https://reflectoring.io/spring-timezones/
