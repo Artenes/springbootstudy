@@ -9,6 +9,7 @@ import degallant.github.io.todoapp.tags.TagsDto;
 import degallant.github.io.todoapp.tags.TagEntity;
 import degallant.github.io.todoapp.tags.TagsRepository;
 import degallant.github.io.todoapp.users.UserEntity;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
@@ -18,7 +19,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
-import java.net.URISyntaxException;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
@@ -37,12 +37,12 @@ public class TasksController {
     private final ProjectsRepository projectsRepository;
 
     @PostMapping
-    public ResponseEntity<?> create(@RequestBody TasksDto.Create request, Authentication authentication) throws URISyntaxException {
+    public ResponseEntity<?> create(@Valid @RequestBody TasksDto.Create request, Authentication authentication) {
         //tags are created beforehand
         //so we just query its instances to then pass in the to do entity below
         List<TagEntity> tags = Collections.emptyList();
-        if (request.getTags() != null && !request.getTags().isEmpty()) {
-            tags = tagsRepository.findAllById(request.getTags());
+        if (request.getTagsIds() != null && !request.getTagsIds().isEmpty()) {
+            tags = tagsRepository.findAllById(request.getTagsIds());
         }
 
         var userId = ((UserEntity) authentication.getPrincipal()).getId();
@@ -53,9 +53,9 @@ public class TasksController {
                 .dueDate(request.getDueDate())
                 .priority(request.getPriority())
                 .tags(tags)
-                .parentId(request.getParent())
+                .parentId(request.getParentId())
                 .userId(userId)
-                .projectId(request.getProject())
+                .projectId(request.getProjectId())
                 .build();
 
         entity = tasksRepository.save(entity);
@@ -63,6 +63,24 @@ public class TasksController {
         var link = linkTo(methodOn(getClass()).details(entity.getId(), authentication)).withSelfRel();
 
         return ResponseEntity.created(link.toUri()).build();
+    }
+
+    @PatchMapping("/{id}")
+    public ResponseEntity<?> patch(@PathVariable UUID id, @RequestBody TasksDto.Update request, Authentication authentication) {
+        UUID userId = ((UserEntity) authentication.getPrincipal()).getId();
+        var entity = tasksRepository.findByIdAndUserId(id, userId).orElseThrow();
+
+        if (request.getComplete() != null) {
+            entity.setComplete(request.getComplete());
+        }
+
+        if (request.getProjectId() != null) {
+            entity.setProjectId(request.getProjectId());
+        }
+
+        tasksRepository.save(entity);
+
+        return ResponseEntity.ok().build();
     }
 
     @GetMapping
@@ -150,24 +168,6 @@ public class TasksController {
         response.entity(task.build());
 
         return ResponseEntity.ok(response.build());
-    }
-
-    @PatchMapping("/{id}")
-    public ResponseEntity<?> patch(@PathVariable UUID id, @RequestBody TasksDto.Update request, Authentication authentication) {
-        UUID userId = ((UserEntity) authentication.getPrincipal()).getId();
-        var entity = tasksRepository.findByIdAndUserId(id, userId).orElseThrow();
-
-        if (request.getComplete() != null) {
-            entity.setComplete(request.getComplete());
-        }
-
-        if (request.getProjectId() != null) {
-            entity.setProjectId(request.getProjectId());
-        }
-
-        tasksRepository.save(entity);
-
-        return ResponseEntity.ok().build();
     }
 
     private EntityModel<TasksDto.SubTask> toEntityModel(TaskEntity entity, Authentication authentication) {

@@ -1,5 +1,8 @@
 package degallant.github.io.todoapp.exceptions;
 
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.exc.InvalidFormatException;
+import com.fasterxml.jackson.databind.exc.MismatchedInputException;
 import degallant.github.io.todoapp.internationalization.Messages;
 import degallant.github.io.todoapp.openid.OpenIdExtractionException;
 import org.springframework.beans.factory.annotation.Value;
@@ -11,11 +14,13 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
-import java.util.List;
-import java.util.NoSuchElementException;
+import java.lang.reflect.Field;
+import java.util.*;
 import java.util.stream.Collectors;
 
-/** @noinspection unused, ClassCanBeRecord */
+/**
+ * @noinspection unused, ClassCanBeRecord, unchecked
+ */
 @ControllerAdvice
 public class AppExceptionHandler {
 
@@ -31,7 +36,7 @@ public class AppExceptionHandler {
     public ErrorResponse handleValidationException(MethodArgumentNotValidException exception) {
 
         List<FieldAndError> errors = exception.getFieldErrors().stream().map(
-                fieldError -> new FieldAndError(fieldError.getField(), fieldError.getDefaultMessage())
+                fieldError -> new FieldAndError(toSnakeCase(fieldError.getField()), fieldError.getDefaultMessage())
         ).collect(Collectors.toList());
 
         return ErrorResponseBuilder.from(exception)
@@ -61,11 +66,19 @@ public class AppExceptionHandler {
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ErrorResponse handleHttpMessageNotReadableException(HttpMessageNotReadableException exception) {
 
+        var fieldNames = getFieldNamesFromNotReadableException(exception);
+        var defaultErrorMessage = messages.get("validation.invalid.message");
+
+        var errors = fieldNames.stream()
+                .map(fieldName -> new FieldAndError(fieldName, defaultErrorMessage))
+                .collect(Collectors.toList());
+
         return ErrorResponseBuilder.from(exception)
-                .withTitle(messages.get("error.unprocessable.title"))
-                .withDetail(messages.get("error.unprocessable.detail"))
-                .withStatus(HttpStatus.UNPROCESSABLE_ENTITY)
-                .withType(ErrorType.UNPROCESSABLE_REQUEST)
+                .withTitle(messages.get("error.invalidrequest.title"))
+                .withDetail(messages.get("error.invalidrequest.detail"))
+                .withStatus(HttpStatus.BAD_REQUEST)
+                .withType(ErrorType.INVALID_REQUEST)
+                .withProperty("errors", errors)
                 .withDebug(debug)
                 .build();
 
@@ -99,6 +112,27 @@ public class AppExceptionHandler {
 
     private record FieldAndError(String field, String error) {
 
+    }
+
+    private String toSnakeCase(String camelCase) {
+        return camelCase.replaceAll("(?<!^)([A-Z][a-z])", "_$1").toLowerCase(Locale.ROOT);
+    }
+
+    private Set<String> getFieldNamesFromNotReadableException(HttpMessageNotReadableException exception) {
+        try {
+            Field pathField = null;
+            var cause = exception.getCause();
+            if (cause instanceof InvalidFormatException) {
+                pathField = cause.getClass().getSuperclass().getSuperclass().getDeclaredField("_path");
+            } else {
+                pathField = cause.getClass().getSuperclass().getDeclaredField("_path");
+            }
+            pathField.setAccessible(true);
+            var field = (LinkedList<JsonMappingException.Reference>) pathField.get(cause);
+            return field.stream().map(JsonMappingException.Reference::getFieldName).collect(Collectors.toSet());
+        } catch (NullPointerException | NoSuchFieldException | IllegalAccessException | ClassCastException e) {
+            return Collections.emptySet();
+        }
     }
 
 }

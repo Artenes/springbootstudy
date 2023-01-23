@@ -12,6 +12,44 @@ import java.util.Map;
 public class TasksTests extends IntegrationTest {
 
     @Test
+    public void taskCannotBeCreatedWithInvalidData() {
+        authenticate();
+        client.post().uri("/v1/tasks").bodyValue(Map.of(
+                "title", ""
+        )).exchange().expectStatus().isBadRequest();
+
+        client.post().uri("/v1/tasks").bodyValue(Map.of(
+                "title", "Title",
+                "description", ""
+        )).exchange().expectStatus().isBadRequest();
+
+        client.post().uri("/v1/tasks").bodyValue(Map.of(
+                "title", "Title",
+                "due_date", "invalid"
+        )).exchange().expectStatus().isBadRequest().expectBody().consumeWith(System.out::println);
+
+        client.post().uri("/v1/tasks").bodyValue(Map.of(
+                "title", "Title",
+                "priority", "invalid"
+        )).exchange().expectStatus().isBadRequest();
+
+        client.post().uri("/v1/tasks").bodyValue(Map.of(
+                "title", "Title",
+                "tags_ids", "invalid"
+        )).exchange().expectStatus().isBadRequest();
+
+        client.post().uri("/v1/tasks").bodyValue(Map.of(
+                "title", "Title",
+                "parent_id", "invalid"
+        )).exchange().expectStatus().isBadRequest();
+
+        client.post().uri("/v1/tasks").bodyValue(Map.of(
+                "title", "Title",
+                "project_id", "invalid"
+        )).exchange().expectStatus().isBadRequest();
+    }
+
+    @Test
     public void oneUserCantSeeOthersUsersTasks() {
 
         String taskFromUserA = "Take dog for a walk";
@@ -199,7 +237,7 @@ public class TasksTests extends IntegrationTest {
 
         var title = "Take the dog for a walk";
         var description = "This is very important, dog needs to walk or it will not behave";
-        var dueDate = "2023-01-01T12:50:29.790511-04:00";
+        var dueDate = "2030-01-01T12:50:29.790511-04:00";
         var priority = "P3";
         var tags = makeTags("daily", "home", "pet");
         var projectId = makeProject("daily tasks");
@@ -210,8 +248,8 @@ public class TasksTests extends IntegrationTest {
                         "description", description,
                         "due_date", dueDate,
                         "priority", priority,
-                        "tags", tags,
-                        "project", projectId
+                        "tags_ids", tags,
+                        "project_id", projectId
                 ))
                 .exchange()
                 .expectStatus().isCreated()
@@ -259,7 +297,7 @@ public class TasksTests extends IntegrationTest {
         URI subTaskUri = client.post().uri("/v1/tasks")
                 .bodyValue(Map.of(
                         "title", subtaskTitle,
-                        "parent", parentUuid
+                        "parent_id", parentUuid
                 ))
                 .exchange()
                 .expectStatus().isCreated()
