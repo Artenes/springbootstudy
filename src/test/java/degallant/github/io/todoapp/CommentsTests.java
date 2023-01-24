@@ -42,8 +42,6 @@ public class CommentsTests extends IntegrationTest {
                 .expectBody().returnResult()
                 .getResponseHeaders().getLocation();
 
-        show();
-
         client.get().uri(commentUri)
                 .exchange()
                 .expectStatus().isOk()

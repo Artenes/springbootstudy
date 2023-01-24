@@ -14,8 +14,7 @@ public class AuthTests extends IntegrationTest {
     public void failsAuthenticationWithoutToken() {
         client.post().uri("/v1/auth")
                 .bodyValue(Map.of()).exchange()
-                .expectStatus().isBadRequest()
-                .expectBody().consumeWith(System.out::println);
+                .expectStatus().isBadRequest();
     }
 
     @Test

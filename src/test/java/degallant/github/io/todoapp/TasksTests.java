@@ -1,9 +1,12 @@
 package degallant.github.io.todoapp;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.google.gson.JsonObject;
+import org.json.JSONObject;
 import org.junit.jupiter.api.Test;
 
+import java.io.IOException;
 import java.net.URI;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -150,32 +153,32 @@ public class TasksTests extends IntegrationTest {
     @Test
     public void aUserCanOnlyListItsOwnTasks() {
 
-        List<String> userATasks = List.of("Take dog for a walk", "Go get milk", "Study for test");
-        List<String> userBTasks = List.of("Take cat for a walk", "Play games");
+        String[] userATasks = new String[]{"Take dog for a walk", "Go get milk", "Study for test"};
+        String[] userBTasks = new String[]{"Take cat for a walk", "Play games"};
 
         authenticate("usera@gmail.com");
-        createTasksForUser(userATasks);
+        createTasks(userATasks);
         authenticate("userb@gmail.com");
-        createTasksForUser(userBTasks);
+        createTasks(userBTasks);
 
         authenticate("usera@gmail.com");
         client.get().uri("/v1/tasks").exchange()
                 .expectStatus().isOk()
                 .expectBody()
                 .jsonPath("$._embedded.tasks.length()").isEqualTo(3)
-                .jsonPath("$._embedded.tasks.[?(@.title == '%s')]", userATasks.get(0)).exists()
-                .jsonPath("$._embedded.tasks.[?(@.title == '%s')]", userATasks.get(1)).exists()
-                .jsonPath("$._embedded.tasks.[?(@.title == '%s')]", userATasks.get(2)).exists()
-                .jsonPath("$._embedded.tasks.[?(@.title == '%s')]", userBTasks.get(0)).doesNotExist();
+                .jsonPath("$._embedded.tasks.[?(@.title == '%s')]", userATasks[0]).exists()
+                .jsonPath("$._embedded.tasks.[?(@.title == '%s')]", userATasks[1]).exists()
+                .jsonPath("$._embedded.tasks.[?(@.title == '%s')]", userATasks[2]).exists()
+                .jsonPath("$._embedded.tasks.[?(@.title == '%s')]", userBTasks[0]).doesNotExist();
 
         authenticate("userb@gmail.com");
         client.get().uri("/v1/tasks").exchange()
                 .expectStatus().isOk()
                 .expectBody()
                 .jsonPath("$._embedded.tasks.length()").isEqualTo(2)
-                .jsonPath("$._embedded.tasks[?(@.title == '%s')]", userBTasks.get(0)).exists()
-                .jsonPath("$._embedded.tasks[?(@.title == '%s')]", userBTasks.get(1)).exists()
-                .jsonPath("$._embedded.tasks[?(@.title == '%s')]", userATasks.get(0)).doesNotExist();
+                .jsonPath("$._embedded.tasks[?(@.title == '%s')]", userBTasks[0]).exists()
+                .jsonPath("$._embedded.tasks[?(@.title == '%s')]", userBTasks[1]).exists()
+                .jsonPath("$._embedded.tasks[?(@.title == '%s')]", userATasks[0]).doesNotExist();
 
     }
 
@@ -219,8 +222,6 @@ public class TasksTests extends IntegrationTest {
         client.patch().uri(taskURI)
                 .bodyValue(Map.of("complete", true))
                 .exchange();
-
-        show();
 
         client.get().uri(taskURI)
                 .exchange()
@@ -322,6 +323,69 @@ public class TasksTests extends IntegrationTest {
                 .jsonPath("$._embedded.parent._links.self.href").isEqualTo(taskUri.toString())
                 .jsonPath("$._embedded.parent.title").isEqualTo(taskTitle);
 
+    }
+
+    @Test
+    public void listTasksWithPaginationInformation() {
+        authenticate();
+        createTasks("Task", 15);
+
+        var responseInBytes = client.get().uri("/v1/tasks")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$._embedded.tasks.length()").isEqualTo(10)
+                .jsonPath("$.count").isEqualTo(10)
+                .jsonPath("$.pages").isEqualTo(2)
+                .jsonPath("$.total").isEqualTo(15)
+                .jsonPath("$._links.next").exists()
+                .jsonPath("$._links.previous").doesNotExist()
+                .jsonPath("$._links.first").exists()
+                .jsonPath("$._links.last").exists()
+                .returnResult().getResponseBodyContent();
+
+        JsonNode response = parseResponse(responseInBytes);
+        String url = response.get("_links").get("next").get("href").asText();
+        var nextURI = URI.create(url);
+
+        show(client.get().uri(nextURI)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$._embedded.tasks.length()").isEqualTo(5)
+                .jsonPath("$.count").isEqualTo(5)
+                .jsonPath("$.pages").isEqualTo(2)
+                .jsonPath("$.total").isEqualTo(15)
+                .jsonPath("$._links.next").doesNotExist()
+                .jsonPath("$._links.previous").exists()
+                .jsonPath("$._links.first").exists()
+                .jsonPath("$._links.last").exists());
+    }
+
+    @Test
+    public void listPaginationInformationWithouTasks() {
+        //TODO
+    }
+
+    @Test
+    public void taskCannotBeUpdatedWithInvalidData() {
+        //TODO
+    }
+
+    protected void createTasks(String prefix, int amount) {
+        for (int count = 1; count <= amount; count++) {
+            String task = prefix + " " + count;
+            createTasks(task);
+        }
+    }
+
+    protected void createTasks(String... tasks) {
+        for (String task : tasks) {
+            client.post().uri("/v1/tasks")
+                    .bodyValue(Map.of("title", task))
+                    .exchange()
+                    .expectStatus().isCreated();
+        }
     }
 
 }

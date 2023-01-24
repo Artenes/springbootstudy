@@ -1,5 +1,6 @@
 package degallant.github.io.todoapp;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import degallant.github.io.todoapp.openid.OpenIdTokenParser;
 import degallant.github.io.todoapp.openid.OpenIdUser;
@@ -87,6 +88,14 @@ public abstract class IntegrationTest {
                 -> builder.defaultHeader(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken));
     }
 
+    protected void show(WebTestClient.ResponseSpec spec) {
+        spec.expectBody().consumeWith(System.out::println);
+    }
+
+    protected void show(WebTestClient.BodyContentSpec spec) {
+        spec.consumeWith(System.out::println);
+    }
+
     protected void show() {
         client = client.mutateWith((builder, httpHandlerBuilder, connector) -> builder.entityExchangeResultConsumer(System.out::println));
     }
@@ -120,12 +129,11 @@ public abstract class IntegrationTest {
         return parts[parts.length - 1];
     }
 
-    protected void createTasksForUser(List<String> tasks) {
-        for (String task : tasks) {
-            client.post().uri("/v1/tasks")
-                    .bodyValue(Map.of("title", task))
-                    .exchange()
-                    .expectStatus().isCreated();
+    protected JsonNode parseResponse(byte[] response) {
+        try {
+            return mapper.readValue(response, JsonNode.class);
+        } catch (IOException exception) {
+            throw new RuntimeException(exception);
         }
     }
 

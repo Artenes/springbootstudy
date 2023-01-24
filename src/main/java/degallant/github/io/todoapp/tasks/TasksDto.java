@@ -140,4 +140,16 @@ public class TasksDto {
 
     }
 
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class Page {
+
+        private int count;
+        private long total;
+        private int pages;
+
+    }
+
 }

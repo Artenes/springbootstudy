@@ -1,5 +1,7 @@
 package degallant.github.io.todoapp.tasks;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -14,6 +16,6 @@ public interface TasksRepository extends JpaRepository<TaskEntity, UUID> {
 
     Optional<TaskEntity> findByIdAndUserId(UUID id, UUID userId);
 
-    List<TaskEntity> findByUserId(UUID userId);
+    Page<TaskEntity> findByUserId(UUID userId, Pageable pageable);
 
 }

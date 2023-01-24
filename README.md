@@ -1,7 +1,5 @@
 # TO DO
 
-- test fail cases
-
 - add pagination to some endpoints
 
 - add sorting, filtering, search and embeds in some endpoints

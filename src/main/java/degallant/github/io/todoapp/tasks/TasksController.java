@@ -4,16 +4,16 @@ import degallant.github.io.todoapp.comments.CommentsController;
 import degallant.github.io.todoapp.projects.ProjectsController;
 import degallant.github.io.todoapp.projects.ProjectsDto;
 import degallant.github.io.todoapp.projects.ProjectsRepository;
+import degallant.github.io.todoapp.tags.TagEntity;
 import degallant.github.io.todoapp.tags.TagsController;
 import degallant.github.io.todoapp.tags.TagsDto;
-import degallant.github.io.todoapp.tags.TagEntity;
 import degallant.github.io.todoapp.tags.TagsRepository;
 import degallant.github.io.todoapp.users.UserEntity;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.hateoas.CollectionModel;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.hateoas.EntityModel;
-import org.springframework.hateoas.RepresentationModel;
+import org.springframework.hateoas.Link;
 import org.springframework.hateoas.mediatype.hal.HalModelBuilder;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -84,9 +84,37 @@ public class TasksController {
     }
 
     @GetMapping
-    public RepresentationModel<?> list(Authentication authentication) {
+    public ResponseEntity<?> list(@RequestParam(name = "p", defaultValue = "1", required = false) int pageNumber, Authentication authentication) {
+
+        var response = HalModelBuilder.emptyHalModel();
         var userId = ((UserEntity) authentication.getPrincipal()).getId();
-        var tasks = tasksRepository.findByUserId(userId)
+
+        var pageRequest = PageRequest.of(pageNumber - 1, 10);
+        var page = tasksRepository.findByUserId(userId, pageRequest);
+
+        response.entity(TasksDto.Page.builder()
+                .count(page.getNumberOfElements())
+                .pages(page.getTotalPages())
+                .total(page.getTotalElements())
+                .build());
+
+        var href = linkTo(methodOn(getClass()).list(pageNumber, authentication)).withSelfRel().getHref().split("\\?")[0];
+        response.link(Link.of(href).withSelfRel());
+
+        if (page.hasNext()) {
+            response.link(linkTo(methodOn(getClass()).list(pageNumber + 1, authentication)).withRel("next"));
+        }
+
+        if (page.hasPrevious()) {
+            response.link(linkTo(methodOn(getClass()).list(pageNumber - 1, authentication)).withRel("previous"));
+        }
+
+        if (!page.isEmpty()) {
+            response.link(linkTo(methodOn(getClass()).list(1, authentication)).withRel("first"));
+            response.link(linkTo(methodOn(getClass()).list(page.getTotalPages(), authentication)).withRel("last"));
+        }
+
+        var tasks = page
                 .stream()
                 .map(entity -> {
                     var task = TasksDto.DetailsSimple.builder()
@@ -101,15 +129,9 @@ public class TasksController {
                 })
                 .collect(Collectors.toList());
 
-        var linkSelf=  linkTo(methodOn(getClass()).list(authentication)).withSelfRel();
+        response.embed(tasks, TasksDto.DetailsSimple.class);
 
-        if (tasks.isEmpty()) {
-            return HalModelBuilder.emptyHalModel()
-                    .embed(Collections.emptyList(), TasksDto.DetailsSimple.class)
-                    .link(linkSelf).build();
-        }
-
-        return CollectionModel.of(tasks).add(linkSelf);
+        return ResponseEntity.ok(response.build());
     }
 
     @GetMapping("/{id}")
