@@ -1,11 +1,8 @@
 package degallant.github.io.todoapp;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.google.gson.JsonObject;
-import org.json.JSONObject;
 import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
 import java.net.URI;
 import java.util.Map;
 
@@ -363,7 +360,31 @@ public class TasksTests extends IntegrationTest {
     }
 
     @Test
-    public void listPaginationInformationWithouTasks() {
+    public void listPaginationInformationWithoutTasks() {
+
+        authenticate();
+        client.get().uri("/v1/tasks")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$._embedded.tasks.length()").isEqualTo(0)
+                .jsonPath("$.count").isEqualTo(0)
+                .jsonPath("$.pages").isEqualTo(0)
+                .jsonPath("$.total").isEqualTo(0)
+                .jsonPath("$._links.next").doesNotExist()
+                .jsonPath("$._links.previous").doesNotExist()
+                .jsonPath("$._links.first").doesNotExist()
+                .jsonPath("$._links.last").doesNotExist();
+
+    }
+
+    @Test
+    public void sortTaskList() {
+        //TODO
+    }
+
+    @Test
+    public void filterTaskList() {
         //TODO
     }
 

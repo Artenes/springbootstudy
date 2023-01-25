@@ -30,6 +30,8 @@
 
 # References
 
+- rest api design https://stackoverflow.blog/2020/03/02/best-practices-for-rest-api-design/
+
 - about date time in java https://reflectoring.io/spring-timezones/
 
 - retardedly, you can't have enums in the database and bring them to hibernate, maybe this can help: https://docs.jboss.org/hibernate/orm/6.1/userguide/html_single/Hibernate_User_Guide.html#basic-enums
@@ -51,3 +53,9 @@
 - Internationalization tutorial https://reflectoring.io/spring-boot-internationalization/
 
 - Validation tutorial https://reflectoring.io/bean-validation-with-spring-boot
+
+- Removing query args from url https://github.com/spring-projects/spring-hateoas/issues/535
+
+- Examples on how to use uri building https://github.com/spring-projects/spring-hateoas/blob/0.23.0.RELEASE/src/test/java/org/springframework/hateoas/mvc/ControllerLinkBuilderUnitTest.java#L57
+
+- HAL pagination https://apigility.org/documentation/api-primer/halprimer
