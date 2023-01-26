@@ -2,7 +2,7 @@ package degallant.github.io.todoapp.exceptions;
 
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.exc.InvalidFormatException;
-import com.fasterxml.jackson.databind.exc.MismatchedInputException;
+import degallant.github.io.todoapp.common.SortParsingException;
 import degallant.github.io.todoapp.internationalization.Messages;
 import degallant.github.io.todoapp.openid.OpenIdExtractionException;
 import org.springframework.beans.factory.annotation.Value;
@@ -92,6 +92,32 @@ public class AppExceptionHandler {
                 .withDetail(messages.get("error.nosuchelement.detail"))
                 .withStatus(HttpStatus.NOT_FOUND)
                 .withType(ErrorType.NO_SUCH_ELEMENT)
+                .withDebug(debug)
+                .build();
+
+    }
+
+    @ExceptionHandler(SortParsingException.class)
+    public ErrorResponse handleSortParsingException(SortParsingException exception) {
+
+        var details = "";
+
+        if (exception instanceof SortParsingException.InvalidAttribute) {
+            var attribute = ((SortParsingException.InvalidAttribute) exception).getAttribute();
+            details = messages.get("error.invalid_sort_attribute.detail", attribute);
+        } else if (exception instanceof SortParsingException.InvalidDirection) {
+            var direction = ((SortParsingException.InvalidDirection) exception).getDirection();
+            details = messages.get("error.invalid_sort_direction.detail", direction);
+        } else if (exception instanceof SortParsingException.InvalidQuery) {
+            var query = ((SortParsingException.InvalidQuery) exception).getQuery();
+            details = messages.get("error.invalid_sort_query.detail", query);
+        }
+
+        return ErrorResponseBuilder.from(exception)
+                .withTitle(messages.get("error.invalid_sort_title"))
+                .withDetail(details)
+                .withStatus(HttpStatus.BAD_REQUEST)
+                .withType(ErrorType.INVALID_SORT)
                 .withDebug(debug)
                 .build();
 

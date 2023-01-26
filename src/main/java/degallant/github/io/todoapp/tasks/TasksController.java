@@ -1,6 +1,6 @@
 package degallant.github.io.todoapp.tasks;
 
-import degallant.github.io.todoapp.comments.CommentsController;
+import degallant.github.io.todoapp.common.SortingParser;
 import degallant.github.io.todoapp.projects.ProjectsController;
 import degallant.github.io.todoapp.projects.ProjectsDto;
 import degallant.github.io.todoapp.projects.ProjectsRepository;
@@ -13,7 +13,6 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.hateoas.EntityModel;
-import org.springframework.hateoas.Link;
 import org.springframework.hateoas.mediatype.hal.HalModelBuilder;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -24,6 +23,8 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import static degallant.github.io.todoapp.common.LinkBuilder.makeLink;
+import static degallant.github.io.todoapp.common.LinkBuilder.makeLinkTo;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
@@ -35,6 +36,7 @@ public class TasksController {
     private final TasksRepository tasksRepository;
     private final TagsRepository tagsRepository;
     private final ProjectsRepository projectsRepository;
+    private final SortingParser sortingParser;
 
     @PostMapping
     public ResponseEntity<?> create(@Valid @RequestBody TasksDto.Create request, Authentication authentication) {
@@ -84,12 +86,18 @@ public class TasksController {
     }
 
     @GetMapping
-    public ResponseEntity<?> list(@RequestParam(name = "p", defaultValue = "1", required = false) int pageNumber, Authentication authentication) {
+    public ResponseEntity<?> list(
+            @RequestParam(name = "p", defaultValue = "1") int pageNumber,
+            @RequestParam(name = "s", required = false) String sort,
+            Authentication authentication
+    ) {
 
         var response = HalModelBuilder.emptyHalModel();
         var userId = ((UserEntity) authentication.getPrincipal()).getId();
 
-        var pageRequest = PageRequest.of(pageNumber - 1, 10);
+        var linkBuilder = makeLink("v1", "tasks").addSort(sort);
+        var sortInformation = sortingParser.parse(sort, "title", "due_date");
+        var pageRequest = PageRequest.of(pageNumber - 1, 10, sortInformation);
         var page = tasksRepository.findByUserId(userId, pageRequest);
 
         response.entity(TasksDto.Page.builder()
@@ -98,20 +106,19 @@ public class TasksController {
                 .total(page.getTotalElements())
                 .build());
 
-        var href = linkTo(methodOn(getClass()).list(pageNumber, authentication)).withSelfRel().getHref().split("\\?")[0];
-        response.link(Link.of(href).withSelfRel());
+        response.link(linkBuilder.addPage(pageNumber).build().withSelfRel());
 
         if (page.hasNext()) {
-            response.link(linkTo(methodOn(getClass()).list(pageNumber + 1, authentication)).withRel("next"));
+            response.link(linkBuilder.addPage(pageNumber + 1).build().withRel("next"));
         }
 
         if (page.hasPrevious()) {
-            response.link(linkTo(methodOn(getClass()).list(pageNumber - 1, authentication)).withRel("previous"));
+            response.link(linkBuilder.addPage(pageNumber - 1).build().withRel("previous"));
         }
 
         if (!page.isEmpty()) {
-            response.link(linkTo(methodOn(getClass()).list(1, authentication)).withRel("first"));
-            response.link(linkTo(methodOn(getClass()).list(page.getTotalPages(), authentication)).withRel("last"));
+            response.link(linkBuilder.addPage(1).build().withRel("first"));
+            response.link(linkBuilder.addPage(page.getTotalPages()).build().withRel("last"));
         }
 
         var tasks = page
@@ -123,8 +130,8 @@ public class TasksController {
                             .description(entity.getDescription())
                             .dueDate(entity.getDueDate())
                             .build();
-                    var linkSelf = linkTo(methodOn(getClass()).details(entity.getId(), authentication)).withSelfRel();
-                    var linkComments = linkTo(methodOn(CommentsController.class).list(entity.getId(), authentication)).withRel("comments");
+                    var linkSelf = makeLinkTo("v1", "tasks", entity.getId()).withSelfRel();
+                    var linkComments = makeLinkTo("v1", "tasks", entity.getId(), "comments").withRel("comments");
                     return EntityModel.of(task).add(linkSelf, linkComments);
                 })
                 .collect(Collectors.toList());

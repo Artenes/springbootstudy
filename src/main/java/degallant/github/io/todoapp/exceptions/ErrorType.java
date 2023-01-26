@@ -6,8 +6,8 @@ public enum ErrorType {
 
     INVALID_REQUEST("invalid-request"),
     INVALID_TOKEN("invalid-token"),
-    UNPROCESSABLE_REQUEST("unprocessable-request"),
     NO_SUCH_ELEMENT("no-such-element"),
+    INVALID_SORT("invalid-sort"),
     INTERNAL_SERVER_ERROR("internal-server-error");
 
     private final URI uri;

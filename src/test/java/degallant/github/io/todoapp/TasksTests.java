@@ -345,7 +345,7 @@ public class TasksTests extends IntegrationTest {
         String url = response.get("_links").get("next").get("href").asText();
         var nextURI = URI.create(url);
 
-        show(client.get().uri(nextURI)
+        client.get().uri(nextURI)
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody()
@@ -356,7 +356,7 @@ public class TasksTests extends IntegrationTest {
                 .jsonPath("$._links.next").doesNotExist()
                 .jsonPath("$._links.previous").exists()
                 .jsonPath("$._links.first").exists()
-                .jsonPath("$._links.last").exists());
+                .jsonPath("$._links.last").exists();
     }
 
     @Test
@@ -380,7 +380,56 @@ public class TasksTests extends IntegrationTest {
 
     @Test
     public void sortTaskList() {
-        //TODO
+
+        authenticate();
+
+        createTasks("Task B", "Task D", "Task C", "Task A");
+        client.get().uri("/v1/tasks?s=title:asc").exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$._embedded.tasks[0].title").isEqualTo("Task A")
+                .jsonPath("$._embedded.tasks[1].title").isEqualTo("Task B")
+                .jsonPath("$._embedded.tasks[2].title").isEqualTo("Task C")
+                .jsonPath("$._embedded.tasks[3].title").isEqualTo("Task D");
+
+        client.get().uri("/v1/tasks?s=title:desc").exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$._embedded.tasks[0].title").isEqualTo("Task D")
+                .jsonPath("$._embedded.tasks[1].title").isEqualTo("Task C")
+                .jsonPath("$._embedded.tasks[2].title").isEqualTo("Task B")
+                .jsonPath("$._embedded.tasks[3].title").isEqualTo("Task A");
+
+        client.get().uri("/v1/tasks").exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$._embedded.tasks[0].title").isEqualTo("Task B")
+                .jsonPath("$._embedded.tasks[1].title").isEqualTo("Task D")
+                .jsonPath("$._embedded.tasks[2].title").isEqualTo("Task C")
+                .jsonPath("$._embedded.tasks[3].title").isEqualTo("Task A");
+
+    }
+
+    @Test
+    public void failsWithInvalidSortQuery() {
+
+        authenticate();
+
+        client.get().uri("/v1/tasks?s=title:invalid").exchange()
+                .expectStatus().isBadRequest()
+                .expectBody()
+                .jsonPath("$.type").isEqualTo("https://todoapp.com/invalid-sort");
+
+        client.get().uri("/v1/tasks?s=invalid:desc").exchange()
+                .expectStatus().isBadRequest()
+                .expectBody()
+                .jsonPath("$.type").isEqualTo("https://todoapp.com/invalid-sort");
+
+        client.get().uri("/v1/tasks?s=title:desc,due_date").exchange()
+                .expectStatus().isBadRequest()
+                .expectBody()
+                .jsonPath("$.type").isEqualTo("https://todoapp.com/invalid-sort");
+
     }
 
     @Test

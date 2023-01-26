@@ -53,7 +53,7 @@ public class AuthController {
                 .build();
 
         Link selfLink = linkTo(methodOn(getClass()).profile(authentication)).withSelfRel();
-        Link tasksLink = linkTo(methodOn(TasksController.class).list(0, authentication)).withRel("tasks");
+        Link tasksLink = linkTo(methodOn(TasksController.class).list(0,null, authentication)).withRel("tasks");
         Link tagsLink = linkTo(methodOn(TagsController.class).list(authentication)).withRel("tags");
         Link projectsLink = linkTo(methodOn(ProjectsController.class).list(authentication)).withRel("projects");
 
