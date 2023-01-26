@@ -1,5 +1,6 @@
 package degallant.github.io.todoapp.common;
 
+import com.google.common.base.CaseFormat;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
 
@@ -43,7 +44,7 @@ public class SortingParser {
                 throw new SortParsingException.InvalidAttribute(name);
             }
 
-            var propertySort = Sort.by(name);
+            var propertySort = Sort.by(toCamelCase(name));
             if ("asc".equals(type)) {
                 propertySort = propertySort.ascending();
             } else {
@@ -58,6 +59,10 @@ public class SortingParser {
         }
 
         return sort;
+    }
+
+    private String toCamelCase(String snakeCase) {
+        return CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL, snakeCase);
     }
 
 }

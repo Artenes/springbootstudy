@@ -26,7 +26,9 @@ public class TasksTests extends IntegrationTest {
         client.post().uri("/v1/tasks").bodyValue(Map.of(
                 "title", "Title",
                 "due_date", "invalid"
-        )).exchange().expectStatus().isBadRequest().expectBody().consumeWith(System.out::println);
+        )).exchange().expectStatus().isBadRequest()
+                .expectBody()
+                .jsonPath("$.errors[0].field").isEqualTo("due_date");
 
         client.post().uri("/v1/tasks").bodyValue(Map.of(
                 "title", "Title",
@@ -407,6 +409,35 @@ public class TasksTests extends IntegrationTest {
                 .jsonPath("$._embedded.tasks[1].title").isEqualTo("Task D")
                 .jsonPath("$._embedded.tasks[2].title").isEqualTo("Task C")
                 .jsonPath("$._embedded.tasks[3].title").isEqualTo("Task A");
+
+    }
+
+    @Test
+    public void sortTaskByDueDate() {
+
+        authenticate();
+
+        client.post().uri("/v1/tasks")
+                .bodyValue(Map.of("title", "Task A", "due_date", "2030-01-01T12:50:29.790511-04:00"))
+                .exchange()
+                .expectStatus().isCreated();
+
+        client.post().uri("/v1/tasks")
+                .bodyValue(Map.of("title", "Task B", "due_date", "2030-02-01T12:50:29.790511-04:00"))
+                .exchange()
+                .expectStatus().isCreated();
+
+        client.get().uri("/v1/tasks?s=due_date:asc").exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$._embedded.tasks[0].title").isEqualTo("Task A")
+                .jsonPath("$._embedded.tasks[1].title").isEqualTo("Task B");
+
+        client.get().uri("/v1/tasks?s=due_date:desc").exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$._embedded.tasks[0].title").isEqualTo("Task B")
+                .jsonPath("$._embedded.tasks[1].title").isEqualTo("Task A");
 
     }
 

@@ -2,6 +2,7 @@ package degallant.github.io.todoapp.exceptions;
 
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.exc.InvalidFormatException;
+import com.google.common.base.CaseFormat;
 import degallant.github.io.todoapp.common.SortParsingException;
 import degallant.github.io.todoapp.internationalization.Messages;
 import degallant.github.io.todoapp.openid.OpenIdExtractionException;
@@ -141,7 +142,7 @@ public class AppExceptionHandler {
     }
 
     private String toSnakeCase(String camelCase) {
-        return camelCase.replaceAll("(?<!^)([A-Z][a-z])", "_$1").toLowerCase(Locale.ROOT);
+        return CaseFormat.LOWER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, camelCase);
     }
 
     private Set<String> getFieldNamesFromNotReadableException(HttpMessageNotReadableException exception) {
