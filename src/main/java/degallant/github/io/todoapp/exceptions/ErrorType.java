@@ -8,7 +8,8 @@ public enum ErrorType {
     INVALID_TOKEN("invalid-token"),
     NO_SUCH_ELEMENT("no-such-element"),
     INVALID_SORT("invalid-sort"),
-    INTERNAL_SERVER_ERROR("internal-server-error");
+    INTERNAL_SERVER_ERROR("internal-server-error"),
+    INVALID_QUERY_PARAM("internal-query-param");
 
     private final URI uri;
 

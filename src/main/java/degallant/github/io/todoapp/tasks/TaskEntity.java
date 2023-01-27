@@ -25,7 +25,7 @@ public class TaskEntity {
 
     private String description;
 
-    private boolean complete;
+    private Boolean complete;
 
     private Priority priority;
 

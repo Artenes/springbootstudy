@@ -47,6 +47,8 @@ public class TasksDto {
         @JsonProperty("project_id")
         private String projectId;
 
+        private Boolean complete;
+
         public Priority getPriority() {
             if (priority == null) {
                 return null;
@@ -100,6 +102,7 @@ public class TasksDto {
         private String description;
         @JsonProperty("due_date")
         private OffsetDateTime dueDate;
+        private Boolean complete;
 
     }
 

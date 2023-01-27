@@ -465,7 +465,34 @@ public class TasksTests extends IntegrationTest {
 
     @Test
     public void filterTaskList() {
-        //TODO
+
+        authenticate();
+
+        createTask("Take dog for walk", false, "2030-01-01T12:50:29.790511-04:00");
+        createTask("Go shopping", true, "2030-01-02T12:50:29.790511-04:00");
+        createTask("Clean room", true, "2030-01-04T12:50:29.790511-04:00");
+        createTask("Paint wall", false, "2030-01-04T12:50:29.790511-04:00");
+
+        client.get().uri("/v1/tasks?title=shopping").exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$._embedded.tasks.length()").isEqualTo(1)
+                .jsonPath("$._embedded.tasks[0].title").isEqualTo("Go shopping");
+
+        client.get().uri("/v1/tasks?complete=false").exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$._embedded.tasks.length()").isEqualTo(2)
+                .jsonPath("$._embedded.tasks[0].title").isEqualTo("Take dog for walk")
+                .jsonPath("$._embedded.tasks[1].title").isEqualTo("Paint wall");
+
+        client.get().uri("/v1/tasks?due_date=2030-01-04").exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$._embedded.tasks.length()").isEqualTo(2)
+                .jsonPath("$._embedded.tasks[0].title").isEqualTo("Clean room")
+                .jsonPath("$._embedded.tasks[1].title").isEqualTo("Paint wall");
+
     }
 
     @Test
@@ -487,6 +514,14 @@ public class TasksTests extends IntegrationTest {
                     .exchange()
                     .expectStatus().isCreated();
         }
+    }
+
+    protected void createTask(String title, boolean complete, String dueDate) {
+        client.post().uri("/v1/tasks").bodyValue(Map.of(
+                "title", title,
+                "complete", complete,
+                "due_date", dueDate
+        )).exchange().expectStatus().isCreated();
     }
 
 }

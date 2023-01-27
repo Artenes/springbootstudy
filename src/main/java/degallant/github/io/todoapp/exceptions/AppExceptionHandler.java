@@ -7,6 +7,7 @@ import degallant.github.io.todoapp.common.SortParsingException;
 import degallant.github.io.todoapp.internationalization.Messages;
 import degallant.github.io.todoapp.openid.OpenIdExtractionException;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.convert.ConversionFailedException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.ErrorResponse;
@@ -85,8 +86,34 @@ public class AppExceptionHandler {
 
     }
 
-    @ExceptionHandler({NoSuchElementException.class, MethodArgumentTypeMismatchException.class})
-    public ErrorResponse handleNoSuchElementException(Exception exception) {
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ErrorResponse handleMethodArgumentTypeMismatchException(MethodArgumentTypeMismatchException exception) {
+
+        //TODO standardize how exceptions are handled for validation
+        if (exception.getCause() instanceof ConversionFailedException) {
+            var invalidValue = ((ConversionFailedException) exception.getCause()).getValue();
+            return ErrorResponseBuilder.from(exception)
+                    .withTitle(messages.get("error.invalid_query.title"))
+                    .withDetail(messages.get("error.invalid_query.detail", invalidValue))
+                    .withStatus(HttpStatus.BAD_REQUEST)
+                    .withType(ErrorType.INVALID_QUERY_PARAM)
+                    .withDebug(debug)
+                    .build();
+        }
+
+        //this is for IllegalArgumentException, i.e. when invalid values are passed down in the url path
+        return ErrorResponseBuilder.from(exception)
+                .withTitle(messages.get("error.nosuchelement.title"))
+                .withDetail(messages.get("error.nosuchelement.detail"))
+                .withStatus(HttpStatus.NOT_FOUND)
+                .withType(ErrorType.NO_SUCH_ELEMENT)
+                .withDebug(debug)
+                .build();
+
+    }
+
+    @ExceptionHandler(NoSuchElementException.class)
+    public ErrorResponse handleNoSuchElementException(NoSuchElementException exception) {
 
         return ErrorResponseBuilder.from(exception)
                 .withTitle(messages.get("error.nosuchelement.title"))
