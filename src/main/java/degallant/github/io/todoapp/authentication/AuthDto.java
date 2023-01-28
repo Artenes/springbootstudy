@@ -14,7 +14,6 @@ public class AuthDto {
     @NoArgsConstructor
     public static class Authenticate {
 
-        @NotBlank
         @JsonProperty("open_id_token")
         private String openIdToken;
 

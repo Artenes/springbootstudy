@@ -3,7 +3,8 @@ package degallant.github.io.todoapp.comments;
 import degallant.github.io.todoapp.tasks.TasksController;
 import degallant.github.io.todoapp.tasks.TasksRepository;
 import degallant.github.io.todoapp.users.UserEntity;
-import jakarta.validation.Valid;
+import degallant.github.io.todoapp.validation.ValidationRules;
+import degallant.github.io.todoapp.validation.Validator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
@@ -17,20 +18,28 @@ import java.util.Collections;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import static degallant.github.io.todoapp.validation.Validation.field;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
+/** @noinspection ClassCanBeRecord*/
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/v1/tasks/{id}/comments")
 public class CommentsController {
 
     private final TasksRepository tasksRepository;
-
     private final CommentsRepository commentsRepository;
+    private final Validator validator;
+    private final ValidationRules rules;
 
     @PostMapping
-    public ResponseEntity<?> create(@PathVariable UUID id, @Valid @RequestBody CommentsDto.Create request, Authentication authentication) {
+    public ResponseEntity<?> create(@PathVariable UUID id, @RequestBody CommentsDto.Create request, Authentication authentication) {
+
+        validator.validate(
+                field("text", request.getText(), rules.isNotEmpty(), true)
+        );
+
         var userId = ((UserEntity) authentication.getPrincipal()).getId();
 
         //guard

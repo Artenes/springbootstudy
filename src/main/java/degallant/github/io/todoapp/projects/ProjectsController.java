@@ -1,7 +1,8 @@
 package degallant.github.io.todoapp.projects;
 
 import degallant.github.io.todoapp.users.UserEntity;
-import jakarta.validation.Valid;
+import degallant.github.io.todoapp.validation.ValidationRules;
+import degallant.github.io.todoapp.validation.Validator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
@@ -15,18 +16,27 @@ import java.util.Collections;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import static degallant.github.io.todoapp.validation.Validation.field;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
+/** @noinspection ClassCanBeRecord*/
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/v1/projects")
 public class ProjectsController {
 
     private final ProjectsRepository repository;
+    private final Validator validator;
+    private final ValidationRules rules;
 
     @PostMapping
-    public ResponseEntity<?> create(@Valid @RequestBody ProjectsDto.Create request, Authentication authentication) {
+    public ResponseEntity<?> create(@RequestBody ProjectsDto.Create request, Authentication authentication) {
+
+        validator.validate(
+                field("title", request.getTitle(), rules.isNotEmpty(), true)
+        );
+
         var entity = ProjectEntity.builder()
                 .title(request.getTitle())
                 .userId(((UserEntity) authentication.getPrincipal()).getId())

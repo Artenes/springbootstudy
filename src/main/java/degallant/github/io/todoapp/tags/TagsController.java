@@ -1,7 +1,8 @@
 package degallant.github.io.todoapp.tags;
 
 import degallant.github.io.todoapp.users.UserEntity;
-import jakarta.validation.Valid;
+import degallant.github.io.todoapp.validation.ValidationRules;
+import degallant.github.io.todoapp.validation.Validator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
@@ -9,25 +10,35 @@ import org.springframework.hateoas.RepresentationModel;
 import org.springframework.hateoas.mediatype.hal.HalModelBuilder;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Collections;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import static degallant.github.io.todoapp.validation.Validation.field;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
+/**
+ * @noinspection ClassCanBeRecord
+ */
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/v1/tags")
 public class TagsController {
 
     private final TagsRepository repository;
+    private final Validator validator;
+    private final ValidationRules rules;
 
     @PostMapping
-    public ResponseEntity<?> create(@Valid @RequestBody TagsDto.Create request, Authentication authentication) {
+    public ResponseEntity<?> create(@RequestBody TagsDto.Create request, Authentication authentication) {
+
+        validator.validate(
+                field("name", request.getName(), rules.isNotEmpty(), true)
+        );
+
         var userId = ((UserEntity) authentication.getPrincipal()).getId();
 
         var entity = TagEntity.builder()

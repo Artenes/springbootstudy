@@ -12,9 +12,9 @@ public class AuthTests extends IntegrationTest {
 
     @Test
     public void failsAuthenticationWithoutToken() {
-        client.post().uri("/v1/auth")
+        show(client.post().uri("/v1/auth")
                 .bodyValue(Map.of()).exchange()
-                .expectStatus().isBadRequest();
+                .expectStatus().isBadRequest());
     }
 
     @Test
