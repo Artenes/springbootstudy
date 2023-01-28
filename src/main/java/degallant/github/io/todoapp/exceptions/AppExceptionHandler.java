@@ -29,6 +29,8 @@ public class AppExceptionHandler {
     @ExceptionHandler(InvalidRequestException.class)
     public ErrorResponse handleInvalidRequestException(InvalidRequestException exception) {
 
+        printStack(exception);
+
         return ErrorResponseBuilder.from(exception)
                 .withTitle(messages.get("error.invalidrequest.title"))
                 .withDetail(messages.get("error.invalidrequest.detail"))
@@ -43,6 +45,8 @@ public class AppExceptionHandler {
     @ExceptionHandler(OpenIdExtractionException.class)
     public ErrorResponse handleOpenIdExtractionException(OpenIdExtractionException exception) {
 
+        printStack(exception);
+
         return ErrorResponseBuilder.from(exception)
                 .withTitle(messages.get("error.invalidtoken.title"))
                 .withDetail(messages.get("error.invalidtoken.detail"))
@@ -56,6 +60,8 @@ public class AppExceptionHandler {
     @ExceptionHandler(NoSuchElementException.class)
     public ErrorResponse handleNoSuchElementException(NoSuchElementException exception) {
 
+        printStack(exception);
+
         return ErrorResponseBuilder.from(exception)
                 .withTitle(messages.get("error.nosuchelement.title"))
                 .withDetail(messages.get("error.nosuchelement.detail"))
@@ -68,6 +74,8 @@ public class AppExceptionHandler {
 
     @ExceptionHandler(SortParsingException.class)
     public ErrorResponse handleSortParsingException(SortParsingException exception) {
+
+        printStack(exception);
 
         var details = "";
 
@@ -99,6 +107,8 @@ public class AppExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ErrorResponse handleException(Exception exception) {
 
+        printStack(exception);
+
         return ErrorResponseBuilder.from(exception)
                 .withTitle(messages.get("error.server.title"))
                 .withDetail(messages.get("error.server.detail"))
@@ -107,6 +117,12 @@ public class AppExceptionHandler {
                 .withDebug(debug)
                 .build();
 
+    }
+
+    private void printStack(Exception exception) {
+        if (debug) {
+            exception.printStackTrace();
+        }
     }
 
 }

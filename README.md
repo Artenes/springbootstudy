@@ -30,6 +30,8 @@
 
 - fix timestamp handling, needs to save as +0 and retrieve in -4
 
+- see how to do stress test on spring boot app
+
 - practice regex?
 
 # References

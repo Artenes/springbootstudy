@@ -542,6 +542,15 @@ public class TasksTests extends IntegrationTest {
         //TODO
     }
 
+    @Test
+    public void failsToReturnDetailsWhenIdIsInvalid() {
+
+        authenticate();
+        client.get().uri("/v1/tasks/invalid").exchange()
+                .expectStatus().isNotFound();
+
+    }
+
     protected void createTasks(String prefix, int amount) {
         for (int count = 1; count <= amount; count++) {
             String task = prefix + " " + count;

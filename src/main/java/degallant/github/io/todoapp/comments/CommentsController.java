@@ -96,7 +96,7 @@ public class CommentsController {
         var comment = CommentsDto.Details.builder().id(entity.getId()).text(entity.getText()).build();
         var linkSelf = linkTo(methodOn(getClass()).details(entity.getTaskId(), entity.getId(), authentication)).withSelfRel();
         var linkAll = linkTo(methodOn(getClass()).list(entity.getTaskId(), authentication)).withRel("all");
-        var linkTask = linkTo(methodOn(TasksController.class).details(entity.getTaskId(), authentication)).withRel("task");
+        var linkTask = linkTo(methodOn(TasksController.class).details(entity.getTaskId().toString(), authentication)).withRel("task");
         return EntityModel.of(comment).add(linkSelf, linkAll, linkTask);
     }
 
