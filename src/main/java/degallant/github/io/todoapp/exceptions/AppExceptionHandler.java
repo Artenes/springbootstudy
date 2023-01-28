@@ -6,6 +6,7 @@ import com.google.common.base.CaseFormat;
 import degallant.github.io.todoapp.common.SortParsingException;
 import degallant.github.io.todoapp.internationalization.Messages;
 import degallant.github.io.todoapp.openid.OpenIdExtractionException;
+import degallant.github.io.todoapp.validation.InvalidRequestException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.convert.ConversionFailedException;
 import org.springframework.http.HttpStatus;
@@ -32,6 +33,20 @@ public class AppExceptionHandler {
     public AppExceptionHandler(Messages messages, @Value("${app.debug:false}") boolean debug) {
         this.messages = messages;
         this.debug = debug;
+    }
+
+    @ExceptionHandler(InvalidRequestException.class)
+    public ErrorResponse handleInvalidRequestException(InvalidRequestException exception) {
+
+        return ErrorResponseBuilder.from(exception)
+                .withTitle(messages.get("error.invalidrequest.title"))
+                .withDetail(messages.get("error.invalidrequest.detail"))
+                .withStatus(HttpStatus.BAD_REQUEST)
+                .withType(ErrorType.INVALID_REQUEST)
+                .withProperty("errors", exception.getErrors())
+                .withDebug(debug)
+                .build();
+
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

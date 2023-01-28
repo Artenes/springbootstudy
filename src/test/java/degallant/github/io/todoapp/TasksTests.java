@@ -464,6 +464,36 @@ public class TasksTests extends IntegrationTest {
     }
 
     @Test
+    public void failsWithInvalidQueryParams() {
+        authenticate();
+        client.get().uri("/v1/tasks?p=invalid").exchange()
+                .expectStatus().isBadRequest()
+                .expectBody()
+                .jsonPath("$.errors[0].field").isEqualTo("p");
+
+        client.get().uri("/v1/tasks?s=").exchange()
+                .expectStatus().isBadRequest()
+                .expectBody()
+                .jsonPath("$.errors[0].field").isEqualTo("s");
+
+        client.get().uri("/v1/tasks?title=").exchange()
+                .expectStatus().isBadRequest()
+                .expectBody()
+                .jsonPath("$.errors[0].field").isEqualTo("title");
+
+        client.get().uri("/v1/tasks?due_date=invalid").exchange()
+                .expectStatus().isBadRequest()
+                .expectBody()
+                .jsonPath("$.errors[0].field").isEqualTo("due_date");
+
+        client.get().uri("/v1/tasks?complete=invalid").exchange()
+                .expectStatus().isBadRequest()
+                .expectBody()
+                .jsonPath("$.errors[0].field").isEqualTo("complete");
+    }
+
+
+    @Test
     public void filterTaskList() {
 
         authenticate();
