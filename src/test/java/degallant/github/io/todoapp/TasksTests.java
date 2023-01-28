@@ -16,39 +16,51 @@ public class TasksTests extends IntegrationTest {
         authenticate();
         client.post().uri("/v1/tasks").bodyValue(Map.of(
                 "title", ""
-        )).exchange().expectStatus().isBadRequest();
+        )).exchange().expectStatus().isBadRequest().expectBody()
+                .jsonPath("$.errors.length()").isEqualTo(1)
+                .jsonPath("$.errors[0].field").isEqualTo("title");
 
         client.post().uri("/v1/tasks").bodyValue(Map.of(
                 "title", "Title",
                 "description", ""
-        )).exchange().expectStatus().isBadRequest();
+        )).exchange().expectStatus().isBadRequest().expectBody()
+                .jsonPath("$.errors.length()").isEqualTo(1)
+                .jsonPath("$.errors[0].field").isEqualTo("description");
 
         client.post().uri("/v1/tasks").bodyValue(Map.of(
                 "title", "Title",
                 "due_date", "invalid"
-        )).exchange().expectStatus().isBadRequest()
-                .expectBody()
+        )).exchange().expectStatus().isBadRequest().expectBody()
+                .jsonPath("$.errors.length()").isEqualTo(1)
                 .jsonPath("$.errors[0].field").isEqualTo("due_date");
 
         client.post().uri("/v1/tasks").bodyValue(Map.of(
                 "title", "Title",
                 "priority", "invalid"
-        )).exchange().expectStatus().isBadRequest();
+        )).exchange().expectStatus().isBadRequest().expectBody()
+                .jsonPath("$.errors.length()").isEqualTo(1)
+                .jsonPath("$.errors[0].field").isEqualTo("priority");
 
         client.post().uri("/v1/tasks").bodyValue(Map.of(
                 "title", "Title",
                 "tags_ids", "invalid"
-        )).exchange().expectStatus().isBadRequest();
+        )).exchange().expectStatus().isBadRequest().expectBody()
+                .jsonPath("$.errors.length()").isEqualTo(1)
+                .jsonPath("$.errors[0].field").isEqualTo("tags_ids");
 
         client.post().uri("/v1/tasks").bodyValue(Map.of(
                 "title", "Title",
                 "parent_id", "invalid"
-        )).exchange().expectStatus().isBadRequest();
+        )).exchange().expectStatus().isBadRequest().expectBody()
+                .jsonPath("$.errors.length()").isEqualTo(1)
+                .jsonPath("$.errors[0].field").isEqualTo("parent_id");
 
         client.post().uri("/v1/tasks").bodyValue(Map.of(
                 "title", "Title",
                 "project_id", "invalid"
-        )).exchange().expectStatus().isBadRequest();
+        )).exchange().expectStatus().isBadRequest().expectBody()
+                .jsonPath("$.errors.length()").isEqualTo(1)
+                .jsonPath("$.errors[0].field").isEqualTo("project_id");
     }
 
     @Test

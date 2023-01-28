@@ -3,6 +3,7 @@ package degallant.github.io.todoapp.validation;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
+/** @noinspection BooleanMethodIsAlwaysInverted*/
 @RequiredArgsConstructor
 @Getter
 public class Validation {
@@ -31,7 +32,7 @@ public class Validation {
         return value != null;
     }
 
-    public boolean field() {
+    public ValidationStatus isValid() {
         return rule.isValid(value);
     }
 

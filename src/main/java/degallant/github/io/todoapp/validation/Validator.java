@@ -6,9 +6,10 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
-/** @noinspection ClassCanBeRecord*/
+/**
+ * @noinspection ClassCanBeRecord
+ */
 @Component
 @RequiredArgsConstructor
 public class Validator {
@@ -16,27 +17,27 @@ public class Validator {
     private final Messages messages;
 
     public void validate(Validation... validations) {
-        List<Validation> invalids = new ArrayList<>();
-
+        List<FieldAndError> errors = new ArrayList<>();
         for (Validation validation : validations) {
             if (!validation.isRequired() && !validation.isPresent()) {
                 continue;
             }
 
-            if (!validation.isPresent() || !validation.field()) {
-                invalids.add(validation);
+            if (!validation.isPresent()) {
+                errors.add(new FieldAndError(validation.getField(), messages.get("validation.is_required", validation.getField())));
+                continue;
+            }
+
+            var status = validation.isValid();
+
+            if (!status.isValid()) {
+                errors.add(new FieldAndError(validation.getField(), status.getErrorMessage()));
             }
         }
 
-        if (invalids.isEmpty()) {
+        if (errors.isEmpty()) {
             return;
         }
-
-        List<FieldAndError> errors = invalids.stream().map(item -> {
-            var message = messages.get(item.getRule().messageId());
-            return new FieldAndError(item.getField(), message);
-        }).collect(Collectors.toList());
-
         throw new InvalidRequestException(errors);
     }
 

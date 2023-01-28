@@ -1,5 +1,6 @@
 package degallant.github.io.todoapp;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import degallant.github.io.todoapp.openid.OpenIdTokenParser;
@@ -100,7 +101,7 @@ public abstract class IntegrationTest {
         client = client.mutateWith((builder, httpHandlerBuilder, connector) -> builder.entityExchangeResultConsumer(System.out::println));
     }
 
-    protected Set<String> makeTags(String... names) {
+    protected String makeTags(String... names) {
         Set<String> uuids = new HashSet<>();
         for (String name : names) {
             var tagUri = client.post().uri("/v1/tags")
@@ -113,7 +114,11 @@ public abstract class IntegrationTest {
             String[] parts = tagUri.toString().split("/");
             uuids.add(parts[parts.length - 1]);
         }
-        return uuids;
+        try {
+            return mapper.writeValueAsString(uuids);
+        } catch (JsonProcessingException exception) {
+            throw new RuntimeException(exception);
+        }
     }
 
     protected String makeProject(String title) {

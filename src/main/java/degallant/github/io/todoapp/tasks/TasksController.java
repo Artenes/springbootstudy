@@ -9,9 +9,9 @@ import degallant.github.io.todoapp.tags.TagsController;
 import degallant.github.io.todoapp.tags.TagsDto;
 import degallant.github.io.todoapp.tags.TagsRepository;
 import degallant.github.io.todoapp.users.UserEntity;
+import degallant.github.io.todoapp.validation.ValidationRules;
 import degallant.github.io.todoapp.validation.Validator;
 import jakarta.persistence.criteria.Predicate;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.domain.Specification;
@@ -19,7 +19,6 @@ import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.mediatype.hal.HalModelBuilder;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.OffsetDateTime;
@@ -33,7 +32,6 @@ import java.util.stream.Collectors;
 import static degallant.github.io.todoapp.common.LinkBuilder.makeLink;
 import static degallant.github.io.todoapp.common.LinkBuilder.makeLinkTo;
 import static degallant.github.io.todoapp.validation.Validation.field;
-import static degallant.github.io.todoapp.validation.ValidationRules.*;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
@@ -42,7 +40,6 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
  */
 @RestController
 @RequiredArgsConstructor
-@Validated
 @RequestMapping("/v1/tasks")
 public class TasksController {
 
@@ -51,14 +48,27 @@ public class TasksController {
     private final ProjectsRepository projectsRepository;
     private final SortingParser sortingParser;
     private final Validator validator;
+    private final ValidationRules rules;
 
     @PostMapping
-    public ResponseEntity<?> create(@Valid @RequestBody TasksDto.Create request, Authentication authentication) {
+    public ResponseEntity<?> create(@RequestBody TasksDto.Create request, Authentication authentication) {
+
+        validator.validate(
+                field("title", request.getTitle(), rules.isNotEmpty(), true),
+                field("description", request.getDescription(), rules.isNotEmpty()),
+                field("due_date", request.getDueDate(), rules.isPresentOrFuture()),
+                field("priority", request.getPriority(), rules.isPriority()),
+                field("tags_ids", request.getTagsIds(), rules.areUuids()),
+                field("parent_id", request.getParentId(), rules.isUuid()),
+                field("project_id", request.getProjectId(), rules.isUuid()),
+                field("complete", request.getComplete(), rules.isBoolean())
+        );
+
         //tags are created beforehand
         //so we just query its instances to then pass in the to do entity below
         List<TagEntity> tags = Collections.emptyList();
         if (request.getTagsIds() != null && !request.getTagsIds().isEmpty()) {
-            tags = tagsRepository.findAllById(request.getTagsIds());
+            tags = tagsRepository.findAllById(request.getTagsIdsAsUUID());
         }
 
         var userId = ((UserEntity) authentication.getPrincipal()).getId();
@@ -66,13 +76,13 @@ public class TasksController {
         var entity = TaskEntity.builder()
                 .title(request.getTitle())
                 .description(request.getDescription())
-                .dueDate(request.getDueDate())
-                .priority(request.getPriority())
+                .dueDate(request.getDueDateAsOffsetDateTime())
+                .priority(request.getPriorityAsEnum())
                 .tags(tags)
-                .parentId(request.getParentId())
+                .parentId(request.getParentIdAsUUID())
                 .userId(userId)
-                .projectId(request.getProjectId())
-                .complete(request.getComplete() != null && request.getComplete())
+                .projectId(request.getProjectIdAsUUID())
+                .complete(request.getCompleteAsBoolean())
                 .build();
 
         entity = tasksRepository.save(entity);
@@ -114,11 +124,11 @@ public class TasksController {
     ) {
 
         validator.validate(
-                field("p", requestedPageNumber, isPositive()),
-                field("s", sort, isNotEmpty()),
-                field("title", title, isNotEmpty()),
-                field("due_date", dueDate, isDate()),
-                field("complete", requestedComplete, isBoolean())
+                field("p", requestedPageNumber, rules.isPositive()),
+                field("s", sort, rules.isNotEmpty()),
+                field("title", title, rules.isNotEmpty()),
+                field("due_date", dueDate, rules.isDate()),
+                field("complete", requestedComplete, rules.isBoolean())
         );
 
         var pageNumber = Integer.parseInt(requestedPageNumber);

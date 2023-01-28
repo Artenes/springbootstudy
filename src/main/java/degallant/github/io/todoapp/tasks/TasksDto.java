@@ -1,8 +1,8 @@
 package degallant.github.io.todoapp.tasks;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import degallant.github.io.todoapp.tags.TagsDto;
-import jakarta.validation.constraints.*;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -11,10 +11,8 @@ import org.springframework.hateoas.server.core.Relation;
 
 import java.net.URI;
 import java.time.OffsetDateTime;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class TasksDto {
 
@@ -22,34 +20,27 @@ public class TasksDto {
     @NoArgsConstructor
     public static class Create {
 
-        @NotBlank
         private String title;
 
-        @Size(min = 1, message = "{validation.notempty.message}")
         private String description;
 
         @JsonProperty("due_date")
-        @FutureOrPresent
-        private OffsetDateTime dueDate;
+        private String dueDate;
 
-        @Pattern(regexp = "^[Pp]1|[Pp]2|[Pp]3$", message = "{validation.priority.message}")
         private String priority;
 
-        @Size(min = 1, message = "{validation.notempty.message}")
         @JsonProperty("tags_ids")
-        private Set<UUID> tagsIds;
+        private String tagsIds;
 
-        @Pattern(regexp = "^[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}$", message = "{validation.uuid.message}")
         @JsonProperty("parent_id")
         private String parentId;
 
-        @Pattern(regexp = "^[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}$", message = "{validation.uuid.message}")
         @JsonProperty("project_id")
         private String projectId;
 
-        private Boolean complete;
+        private String complete;
 
-        public Priority getPriority() {
+        public Priority getPriorityAsEnum() {
             if (priority == null) {
                 return null;
             }
@@ -58,18 +49,39 @@ public class TasksDto {
                     .findFirst().orElseThrow();
         }
 
-        public UUID getParentId() {
+        public UUID getParentIdAsUUID() {
             if (parentId == null) {
                 return null;
             }
             return UUID.fromString(parentId);
         }
 
-        public UUID getProjectId() {
+        public UUID getProjectIdAsUUID() {
             if (projectId == null) {
                 return null;
             }
             return UUID.fromString(projectId);
+        }
+
+        public boolean getCompleteAsBoolean() {
+            return Boolean.parseBoolean(complete);
+        }
+
+        public List<UUID> getTagsIdsAsUUID() {
+            try {
+                var mapper = new ObjectMapper();
+                var collection = mapper.readValue(tagsIds, String[].class);
+                return Arrays.stream(collection).map(UUID::fromString).collect(Collectors.toList());
+            } catch (JsonProcessingException exception) {
+                return Collections.emptyList();
+            }
+        }
+
+        public OffsetDateTime getDueDateAsOffsetDateTime() {
+            if (dueDate == null) {
+                return null;
+            }
+            return OffsetDateTime.parse(dueDate);
         }
 
     }
