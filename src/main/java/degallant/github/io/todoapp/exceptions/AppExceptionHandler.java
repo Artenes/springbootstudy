@@ -102,6 +102,7 @@ public class AppExceptionHandler {
 
     public void handle() {
         //TODO add cases for when content type is invalid, we accept only json content as body
+        //TODO add case for empty body
     }
 
     @ExceptionHandler(Exception.class)

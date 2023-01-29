@@ -16,7 +16,7 @@ public class Validator {
 
     private final Messages messages;
 
-    public void validate(Validation... validations) {
+    public void validate(Validation... validations) throws InvalidRequestException {
         List<FieldAndError> errors = new ArrayList<>();
         for (Validation validation : validations) {
             if (!validation.isRequired() && !validation.isPresent()) {
@@ -39,6 +39,10 @@ public class Validator {
             return;
         }
         throw new InvalidRequestException(errors);
+    }
+
+    public void throwErrorForField(String field, String message) throws InvalidRequestException {
+        throw new InvalidRequestException(List.of(new FieldAndError(field, message)));
     }
 
 }

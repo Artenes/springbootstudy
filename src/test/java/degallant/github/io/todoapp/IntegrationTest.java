@@ -15,6 +15,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpHeaders;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.reactive.server.EntityExchangeResult;
+import org.springframework.test.web.reactive.server.StatusAssertions;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
 import java.io.IOException;
@@ -132,6 +133,14 @@ public abstract class IntegrationTest {
         String[] parts = uri.toString().split("/");
 
         return parts[parts.length - 1];
+    }
+
+    protected JsonNode parseResponse(WebTestClient.ResponseSpec statusAssertions) {
+        try {
+            return mapper.readValue(statusAssertions.expectBody().returnResult().getResponseBodyContent(), JsonNode.class);
+        } catch (IOException exception) {
+            throw new RuntimeException(exception);
+        }
     }
 
     protected JsonNode parseResponse(byte[] response) {

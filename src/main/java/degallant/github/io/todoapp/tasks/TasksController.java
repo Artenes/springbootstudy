@@ -1,13 +1,10 @@
 package degallant.github.io.todoapp.tasks;
 
-import degallant.github.io.todoapp.users.UserEntity;
 import lombok.RequiredArgsConstructor;
 import org.springframework.hateoas.RepresentationModel;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.UUID;
 
 /**
  * @noinspection ClassCanBeRecord
@@ -17,10 +14,10 @@ import java.util.UUID;
 @RequestMapping("/v1/tasks")
 public class TasksController {
 
-    private final TasksRepository tasksRepository;
     private final ListTasksService listService;
     private final DetailsTaskService detailService;
     private final CreateTasksService createService;
+    private final PatchTasksService patchService;
 
     @PostMapping
     public ResponseEntity<?> create(@RequestBody TasksDto.Create request, Authentication authentication) {
@@ -32,21 +29,12 @@ public class TasksController {
     }
 
     @PatchMapping("/{id}")
-    public ResponseEntity<?> patch(@PathVariable UUID id, @RequestBody TasksDto.Update request, Authentication authentication) {
-        UUID userId = ((UserEntity) authentication.getPrincipal()).getId();
-        var entity = tasksRepository.findByIdAndUserId(id, userId).orElseThrow();
+    public ResponseEntity<?> patch(@PathVariable String id, @RequestBody TasksDto.Create request, Authentication authentication) {
 
-        if (request.getComplete() != null) {
-            entity.setComplete(request.getComplete());
-        }
-
-        if (request.getProjectId() != null) {
-            entity.setProjectId(request.getProjectId());
-        }
-
-        tasksRepository.save(entity);
+        patchService.patch(id, request, authentication);
 
         return ResponseEntity.ok().build();
+
     }
 
     @GetMapping

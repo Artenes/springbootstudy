@@ -147,18 +147,6 @@ public class TasksDto {
     @NoArgsConstructor
     @AllArgsConstructor
     @Builder
-    public static class Update {
-
-        private Boolean complete;
-        @JsonProperty("project_id")
-        private UUID projectId;
-
-    }
-
-    @Getter
-    @NoArgsConstructor
-    @AllArgsConstructor
-    @Builder
     public static class Page {
 
         private int count;

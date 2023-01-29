@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 
 import java.net.URI;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * @noinspection ConstantConditions
@@ -61,6 +62,9 @@ public class TasksTests extends IntegrationTest {
         )).exchange().expectStatus().isBadRequest().expectBody()
                 .jsonPath("$.errors.length()").isEqualTo(1)
                 .jsonPath("$.errors[0].field").isEqualTo("project_id");
+
+        //TODO add checks for valid uuids that does not exists
+
     }
 
     @Test
@@ -504,7 +508,6 @@ public class TasksTests extends IntegrationTest {
                 .jsonPath("$.errors[0].field").isEqualTo("complete");
     }
 
-
     @Test
     public void filterTaskList() {
 
@@ -539,7 +542,71 @@ public class TasksTests extends IntegrationTest {
 
     @Test
     public void taskCannotBeUpdatedWithInvalidData() {
-        //TODO
+
+        authenticate();
+
+        URI uri = client.post().uri("/v1/tasks")
+                .bodyValue(Map.of("title", "Go for shopping")).exchange()
+                .expectStatus().isCreated()
+                .expectBody().returnResult().getResponseHeaders().getLocation();
+
+        client.patch().uri(uri)
+                .bodyValue(Map.of("complete", "invalid")).exchange()
+                .expectStatus().isBadRequest()
+                .expectBody().jsonPath("$.errors[0].field").isEqualTo("complete");
+
+        client.patch().uri(uri)
+                .bodyValue(Map.of("project_id", UUID.randomUUID())).exchange()
+                .expectStatus().isBadRequest()
+                .expectBody().jsonPath("$.errors[0].field").isEqualTo("project_id");
+
+        client.patch().uri(uri)
+                .bodyValue(Map.of("project_id", "invalid")).exchange()
+                .expectStatus().isBadRequest()
+                .expectBody().jsonPath("$.errors[0].field").isEqualTo("project_id");
+
+        client.patch().uri(uri)
+                .bodyValue(Map.of("due_date", "invalid")).exchange()
+                .expectStatus().isBadRequest()
+                .expectBody().jsonPath("$.errors[0].field").isEqualTo("due_date");
+
+        client.patch().uri(uri)
+                .bodyValue(Map.of("priority", "invalid")).exchange()
+                .expectStatus().isBadRequest()
+                .expectBody().jsonPath("$.errors[0].field").isEqualTo("priority");
+
+        client.patch().uri(uri)
+                .bodyValue(Map.of("tags_ids", "invalid")).exchange()
+                .expectStatus().isBadRequest()
+                .expectBody().jsonPath("$.errors[0].field").isEqualTo("tags_ids");
+
+        client.patch().uri(uri)
+                .bodyValue(Map.of("parent_id", "invalid")).exchange()
+                .expectStatus().isBadRequest()
+                .expectBody().jsonPath("$.errors[0].field").isEqualTo("parent_id");
+
+    }
+
+    @Test
+    public void taskUpdateFailsWithInvalidId() {
+
+        authenticate();
+
+        URI uri = client.post().uri("/v1/tasks")
+                .bodyValue(Map.of("title", "Go for shopping")).exchange()
+                .expectStatus().isCreated()
+                .expectBody().returnResult().getResponseHeaders().getLocation();
+
+        client.patch().uri(uri)
+                .bodyValue(Map.of("tags_ids", "[\""+UUID.randomUUID()+"\",\""+UUID.randomUUID()+"\"]")).exchange()
+                .expectStatus().isBadRequest()
+                .expectBody().jsonPath("$.errors[0].field").isEqualTo("tags_ids");
+
+    }
+
+    @Test
+    public void updateTasksTags() {
+        //TODO check how tag update behaves
     }
 
     @Test
