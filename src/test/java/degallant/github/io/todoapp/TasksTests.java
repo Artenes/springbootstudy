@@ -598,7 +598,7 @@ public class TasksTests extends IntegrationTest {
                 .expectBody().returnResult().getResponseHeaders().getLocation();
 
         client.patch().uri(uri)
-                .bodyValue(Map.of("tags_ids", "[\""+UUID.randomUUID()+"\",\""+UUID.randomUUID()+"\"]")).exchange()
+                .bodyValue(Map.of("tags_ids", "[\"" + UUID.randomUUID() + "\",\"" + UUID.randomUUID() + "\"]")).exchange()
                 .expectStatus().isBadRequest()
                 .expectBody().jsonPath("$.errors[0].field").isEqualTo("tags_ids");
 
@@ -607,6 +607,18 @@ public class TasksTests extends IntegrationTest {
     @Test
     public void updateTasksTags() {
         //TODO check how tag update behaves
+    }
+
+    @Test
+    public void failsWhenRequestBodyIsInvalid() {
+
+        authenticate();
+        client.post().uri("/v1/tasks").bodyValue("").exchange()
+                .expectStatus().isBadRequest();
+
+        client.post().uri("/v1/tasks").exchange()
+                .expectStatus().isBadRequest();
+
     }
 
     @Test

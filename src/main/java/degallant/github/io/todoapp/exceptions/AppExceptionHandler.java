@@ -6,7 +6,9 @@ import degallant.github.io.todoapp.openid.OpenIdExtractionException;
 import degallant.github.io.todoapp.validation.InvalidRequestException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.ErrorResponse;
+import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
@@ -100,9 +102,19 @@ public class AppExceptionHandler {
 
     }
 
-    public void handle() {
-        //TODO add cases for when content type is invalid, we accept only json content as body
-        //TODO add case for empty body
+    @ExceptionHandler({HttpMediaTypeNotSupportedException.class, HttpMessageNotReadableException.class})
+    public ErrorResponse handleInvalidRequestException(Exception exception) {
+
+        printStack(exception);
+
+        return ErrorResponseBuilder.from(exception)
+                .withTitle(messages.get("error.invalidrequesttype.title"))
+                .withDetail(messages.get("error.invalidrequesttype.detail"))
+                .withStatus(HttpStatus.BAD_REQUEST)
+                .withType(ErrorType.INVALID_REQUEST_TYPE)
+                .withDebug(debug)
+                .build();
+
     }
 
     @ExceptionHandler(Exception.class)
