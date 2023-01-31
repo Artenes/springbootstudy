@@ -12,6 +12,18 @@ import static org.hamcrest.Matchers.containsString;
 public class TasksPatchTests extends IntegrationTest {
 
     @Test
+    public void user_cantPatchOtherUsersTasks() {
+        var uri = makeTaskAsUser("another@gmail.com", "Task A").uri();
+        request.asUser(DEFAULT_USER).to(uri).patch().isNotFound();
+    }
+
+    @Test
+    public void failToFindInvalidId() {
+        request.asUser(DEFAULT_USER).to("tasks/invalid").patch().isNotFound();
+        request.asUser(DEFAULT_USER).to("tasks/" + UUID.randomUUID()).patch().isNotFound();
+    }
+
+    @Test
     public void taskPatched_patchAllFields() {
 
         var title = "Take the dog for a walk";

@@ -23,6 +23,11 @@ public class ExecutedRequest {
         return this;
     }
 
+    public ExecutedRequest isNotFound() {
+        responseSpec = responseSpec.expectStatus().isNotFound();
+        return this;
+    }
+
     public ExecutedRequest isCreated() {
         responseSpec = responseSpec.expectStatus().isCreated();
         return this;

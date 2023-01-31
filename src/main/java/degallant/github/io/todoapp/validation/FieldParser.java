@@ -102,9 +102,13 @@ public class FieldParser {
     }
 
     public TaskEntity toTask(String id, UUID userId) throws NoSuchElementException {
-        var taskId = UUID.fromString(id);
-        var example = TaskEntity.belongsTo(taskId, userId);
-        return tasksRepository.findOne(example).orElseThrow();
+        try {
+            var taskId = UUID.fromString(id);
+            var example = TaskEntity.belongsTo(taskId, userId);
+            return tasksRepository.findOne(example).orElseThrow();
+        } catch (IllegalArgumentException exception) {
+            throw new NoSuchElementException(exception);
+        }
     }
 
     public List<UUID> toUUIDList(String value) throws InvalidValueException {

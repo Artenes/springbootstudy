@@ -5,7 +5,6 @@ import org.junit.jupiter.api.Test;
 
 import java.net.URI;
 import java.util.Map;
-import java.util.UUID;
 
 import static org.hamcrest.Matchers.containsString;
 
@@ -13,58 +12,6 @@ import static org.hamcrest.Matchers.containsString;
  * @noinspection ConstantConditions
  */
 public class TasksTests extends IntegrationTest {
-
-    @Test
-    public void taskCannotBeUpdatedWithInvalidData() {
-
-        authenticate();
-
-        URI uri = client.post().uri("/v1/tasks")
-                .bodyValue(Map.of("title", "Go for shopping")).exchange()
-                .expectStatus().isCreated()
-                .expectBody().returnResult().getResponseHeaders().getLocation();
-
-        client.patch().uri(uri)
-                .bodyValue(Map.of("complete", "invalid")).exchange()
-                .expectStatus().isBadRequest()
-                .expectBody().jsonPath("$.errors[0].field").isEqualTo("complete");
-
-        client.patch().uri(uri)
-                .bodyValue(Map.of("project_id", UUID.randomUUID())).exchange()
-                .expectStatus().isBadRequest()
-                .expectBody().jsonPath("$.errors[0].field").isEqualTo("project_id");
-
-        client.patch().uri(uri)
-                .bodyValue(Map.of("project_id", "invalid")).exchange()
-                .expectStatus().isBadRequest()
-                .expectBody().jsonPath("$.errors[0].field").isEqualTo("project_id");
-
-        client.patch().uri(uri)
-                .bodyValue(Map.of("due_date", "invalid")).exchange()
-                .expectStatus().isBadRequest()
-                .expectBody().jsonPath("$.errors[0].field").isEqualTo("due_date");
-
-        client.patch().uri(uri)
-                .bodyValue(Map.of("priority", "invalid")).exchange()
-                .expectStatus().isBadRequest()
-                .expectBody().jsonPath("$.errors[0].field").isEqualTo("priority");
-
-        client.patch().uri(uri)
-                .bodyValue(Map.of("tags_ids", "invalid")).exchange()
-                .expectStatus().isBadRequest()
-                .expectBody().jsonPath("$.errors[0].field").isEqualTo("tags_ids");
-
-        client.patch().uri(uri)
-                .bodyValue(Map.of("tags_ids", String.format("[\"%s\", \"%s\"]", UUID.randomUUID(), UUID.randomUUID()))).exchange()
-                .expectStatus().isBadRequest()
-                .expectBody().jsonPath("$.errors[0].field").isEqualTo("tags_ids");
-
-        client.patch().uri(uri)
-                .bodyValue(Map.of("parent_id", "invalid")).exchange()
-                .expectStatus().isBadRequest()
-                .expectBody().jsonPath("$.errors[0].field").isEqualTo("parent_id");
-
-    }
 
     @Test
     public void oneUserCantSeeOthersUsersTasks() {
@@ -116,55 +63,6 @@ public class TasksTests extends IntegrationTest {
     }
 
     @Test
-    public void oneUserCanEditOnlyItsTasks() {
-
-        String taskFromUserA = "Take dog for a walk";
-        String taskFromUserB = "Take cat for a walk";
-
-        //create a task for user A
-        authenticate("usera@gmail.com");
-        URI taskFromUserAUri = client.post().uri("/v1/tasks")
-                .bodyValue(Map.of("title", taskFromUserA))
-                .exchange()
-                .expectStatus().isCreated()
-                .expectBody().returnResult()
-                .getResponseHeaders().getLocation();
-
-        //create a task for user B
-        authenticate("userb@gmail.com");
-        URI taskFromUserBUri = client.post().uri("/v1/tasks")
-                .bodyValue(Map.of("title", taskFromUserB))
-                .exchange()
-                .expectStatus().isCreated()
-                .expectBody().returnResult()
-                .getResponseHeaders().getLocation();
-
-        //confirm that user A can edit its task, while not being able to edits B's
-        authenticate("usera@gmail.com");
-        client.patch().uri(taskFromUserAUri)
-                .bodyValue(Map.of("complete", true))
-                .exchange()
-                .expectStatus().isOk();
-        client.patch().uri(taskFromUserBUri)
-                .bodyValue(Map.of("complete", true))
-                .exchange()
-                .expectStatus().isNotFound();
-
-        //confirm that user B can edit its task, while not being able to edits A's
-        authenticate("userb@gmail.com");
-        client.patch().uri(taskFromUserBUri)
-                .bodyValue(Map.of("complete", true))
-                .exchange()
-                .expectStatus().isOk();
-
-        client.patch().uri(taskFromUserAUri)
-                .bodyValue(Map.of("complete", true))
-                .exchange()
-                .expectStatus().isNotFound();
-
-    }
-
-    @Test
     public void aUserCanOnlyListItsOwnTasks() {
 
         String[] userATasks = new String[]{"Take dog for a walk", "Go get milk", "Study for test"};
@@ -193,55 +91,6 @@ public class TasksTests extends IntegrationTest {
                 .jsonPath("$._embedded.tasks[?(@.title == '%s')]", userBTasks[0]).exists()
                 .jsonPath("$._embedded.tasks[?(@.title == '%s')]", userBTasks[1]).exists()
                 .jsonPath("$._embedded.tasks[?(@.title == '%s')]", userATasks[0]).doesNotExist();
-
-    }
-
-    @Test
-    public void createsATaskToComplete() {
-
-        authenticate();
-
-        var title = "Take the dog for a walk";
-
-        URI taskUri = client.post().uri("/v1/tasks")
-                .bodyValue(Map.of("title", title))
-                .exchange()
-                .expectStatus().isCreated()
-                .expectBody().returnResult()
-                .getResponseHeaders().getLocation();
-
-        client.get().uri(taskUri)
-                .exchange()
-                .expectBody()
-                .jsonPath("$.title").isEqualTo(title)
-                .jsonPath("$.complete").isEqualTo(false);
-
-    }
-
-    @Test
-    public void createsAndCompleteATask() {
-
-        authenticate();
-
-        var title = "Take the dog for a walk";
-
-        URI taskURI = client.post().uri("/v1/tasks")
-                .bodyValue(Map.of("title", title))
-                .exchange()
-                .expectBody()
-                .returnResult()
-                .getResponseHeaders()
-                .getLocation();
-
-        client.patch().uri(taskURI)
-                .bodyValue(Map.of("complete", true))
-                .exchange();
-
-        client.get().uri(taskURI)
-                .exchange()
-                .expectBody()
-                .jsonPath("$.title").isEqualTo(title)
-                .jsonPath("$.complete").isEqualTo(true);
 
     }
 
@@ -541,28 +390,6 @@ public class TasksTests extends IntegrationTest {
     }
 
     @Test
-    public void taskUpdateFailsWithInvalidId() {
-
-        authenticate();
-
-        URI uri = client.post().uri("/v1/tasks")
-                .bodyValue(Map.of("title", "Go for shopping")).exchange()
-                .expectStatus().isCreated()
-                .expectBody().returnResult().getResponseHeaders().getLocation();
-
-        client.patch().uri(uri)
-                .bodyValue(Map.of("tags_ids", "[\"" + UUID.randomUUID() + "\",\"" + UUID.randomUUID() + "\"]")).exchange()
-                .expectStatus().isBadRequest()
-                .expectBody().jsonPath("$.errors[0].field").isEqualTo("tags_ids");
-
-    }
-
-    @Test
-    public void updateTasksTags() {
-        //TODO check how tag update behaves
-    }
-
-    @Test
     public void failsWhenRequestBodyIsInvalid() {
 
         authenticate();
@@ -605,20 +432,6 @@ public class TasksTests extends IntegrationTest {
                 "complete", complete,
                 "due_date", dueDate
         )).exchange().expectStatus().isCreated();
-    }
-
-    /**
-     * @noinspection SameParameterValue
-     */
-    private void createTaskAsUserForError(String email, String field, Object value) {
-        var request = field.equalsIgnoreCase("title") ? Map.of(field, value) : Map.of(
-                "title", "Title",
-                field, value
-        );
-        postAsUser(email, "tasks").bodyValue(request)
-                .exchange().expectStatus().isBadRequest().expectBody()
-                .jsonPath("$.errors.length()").isEqualTo(1)
-                .jsonPath("$.errors[0].field").isEqualTo(field);
     }
 
 }
