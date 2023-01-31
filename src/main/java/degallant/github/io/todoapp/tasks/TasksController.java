@@ -1,5 +1,6 @@
 package degallant.github.io.todoapp.tasks;
 
+import degallant.github.io.todoapp.users.UserEntity;
 import lombok.RequiredArgsConstructor;
 import org.springframework.hateoas.RepresentationModel;
 import org.springframework.http.ResponseEntity;
@@ -7,7 +8,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 /**
- * @noinspection ClassCanBeRecord
+ * @noinspection ClassCanBeRecord, unused
  */
 @RestController
 @RequiredArgsConstructor
@@ -22,7 +23,7 @@ public class TasksController {
     @PostMapping
     public ResponseEntity<?> create(@RequestBody TasksDto.Create request, Authentication authentication) {
 
-        var uri = createService.create(request, authentication);
+        var uri = createService.create(request, (UserEntity) authentication.getPrincipal());
 
         return ResponseEntity.created(uri).build();
 
@@ -31,7 +32,7 @@ public class TasksController {
     @PatchMapping("/{id}")
     public ResponseEntity<?> patch(@PathVariable String id, @RequestBody TasksDto.Create request, Authentication authentication) {
 
-        patchService.patch(id, request, authentication);
+        patchService.patch(id, request, (UserEntity) authentication.getPrincipal());
 
         return ResponseEntity.ok().build();
 
@@ -53,7 +54,7 @@ public class TasksController {
                 title,
                 dueDate,
                 requestedComplete,
-                authentication
+                (UserEntity) authentication.getPrincipal()
         );
 
         return ResponseEntity.ok(response);

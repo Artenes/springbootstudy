@@ -7,63 +7,62 @@ import java.net.URI;
 import java.util.Map;
 import java.util.UUID;
 
+import static org.hamcrest.Matchers.containsString;
+
 /**
  * @noinspection ConstantConditions
  */
 public class TasksTests extends IntegrationTest {
 
     @Test
-    public void taskCannotBeCreatedWithInvalidData() {
+    public void taskCannotBeUpdatedWithInvalidData() {
+
         authenticate();
-        client.post().uri("/v1/tasks").bodyValue(Map.of(
-                "title", ""
-        )).exchange().expectStatus().isBadRequest().expectBody()
-                .jsonPath("$.errors.length()").isEqualTo(1)
-                .jsonPath("$.errors[0].field").isEqualTo("title");
 
-        client.post().uri("/v1/tasks").bodyValue(Map.of(
-                "title", "Title",
-                "description", ""
-        )).exchange().expectStatus().isBadRequest().expectBody()
-                .jsonPath("$.errors.length()").isEqualTo(1)
-                .jsonPath("$.errors[0].field").isEqualTo("description");
+        URI uri = client.post().uri("/v1/tasks")
+                .bodyValue(Map.of("title", "Go for shopping")).exchange()
+                .expectStatus().isCreated()
+                .expectBody().returnResult().getResponseHeaders().getLocation();
 
-        client.post().uri("/v1/tasks").bodyValue(Map.of(
-                "title", "Title",
-                "due_date", "invalid"
-        )).exchange().expectStatus().isBadRequest().expectBody()
-                .jsonPath("$.errors.length()").isEqualTo(1)
-                .jsonPath("$.errors[0].field").isEqualTo("due_date");
+        client.patch().uri(uri)
+                .bodyValue(Map.of("complete", "invalid")).exchange()
+                .expectStatus().isBadRequest()
+                .expectBody().jsonPath("$.errors[0].field").isEqualTo("complete");
 
-        client.post().uri("/v1/tasks").bodyValue(Map.of(
-                "title", "Title",
-                "priority", "invalid"
-        )).exchange().expectStatus().isBadRequest().expectBody()
-                .jsonPath("$.errors.length()").isEqualTo(1)
-                .jsonPath("$.errors[0].field").isEqualTo("priority");
+        client.patch().uri(uri)
+                .bodyValue(Map.of("project_id", UUID.randomUUID())).exchange()
+                .expectStatus().isBadRequest()
+                .expectBody().jsonPath("$.errors[0].field").isEqualTo("project_id");
 
-        client.post().uri("/v1/tasks").bodyValue(Map.of(
-                "title", "Title",
-                "tags_ids", "invalid"
-        )).exchange().expectStatus().isBadRequest().expectBody()
-                .jsonPath("$.errors.length()").isEqualTo(1)
-                .jsonPath("$.errors[0].field").isEqualTo("tags_ids");
+        client.patch().uri(uri)
+                .bodyValue(Map.of("project_id", "invalid")).exchange()
+                .expectStatus().isBadRequest()
+                .expectBody().jsonPath("$.errors[0].field").isEqualTo("project_id");
 
-        client.post().uri("/v1/tasks").bodyValue(Map.of(
-                "title", "Title",
-                "parent_id", "invalid"
-        )).exchange().expectStatus().isBadRequest().expectBody()
-                .jsonPath("$.errors.length()").isEqualTo(1)
-                .jsonPath("$.errors[0].field").isEqualTo("parent_id");
+        client.patch().uri(uri)
+                .bodyValue(Map.of("due_date", "invalid")).exchange()
+                .expectStatus().isBadRequest()
+                .expectBody().jsonPath("$.errors[0].field").isEqualTo("due_date");
 
-        client.post().uri("/v1/tasks").bodyValue(Map.of(
-                "title", "Title",
-                "project_id", "invalid"
-        )).exchange().expectStatus().isBadRequest().expectBody()
-                .jsonPath("$.errors.length()").isEqualTo(1)
-                .jsonPath("$.errors[0].field").isEqualTo("project_id");
+        client.patch().uri(uri)
+                .bodyValue(Map.of("priority", "invalid")).exchange()
+                .expectStatus().isBadRequest()
+                .expectBody().jsonPath("$.errors[0].field").isEqualTo("priority");
 
-        //TODO add checks for valid uuids that does not exists
+        client.patch().uri(uri)
+                .bodyValue(Map.of("tags_ids", "invalid")).exchange()
+                .expectStatus().isBadRequest()
+                .expectBody().jsonPath("$.errors[0].field").isEqualTo("tags_ids");
+
+        client.patch().uri(uri)
+                .bodyValue(Map.of("tags_ids", String.format("[\"%s\", \"%s\"]", UUID.randomUUID(), UUID.randomUUID()))).exchange()
+                .expectStatus().isBadRequest()
+                .expectBody().jsonPath("$.errors[0].field").isEqualTo("tags_ids");
+
+        client.patch().uri(uri)
+                .bodyValue(Map.of("parent_id", "invalid")).exchange()
+                .expectStatus().isBadRequest()
+                .expectBody().jsonPath("$.errors[0].field").isEqualTo("parent_id");
 
     }
 
@@ -255,8 +254,8 @@ public class TasksTests extends IntegrationTest {
         var description = "This is very important, dog needs to walk or it will not behave";
         var dueDate = "2030-01-01T12:50:29.790511-04:00";
         var priority = "P3";
-        var tags = makeTags("daily", "home", "pet");
-        var projectId = makeProject("daily tasks");
+        var tags = makeTagsAsUser(DEFAULT_USER, "daily", "home", "pet");
+        var projectId = makeProjectAsUser(DEFAULT_USER, "daily tasks");
 
         URI taskURI = client.post().uri("/v1/tasks")
                 .bodyValue(Map.of(
@@ -349,6 +348,7 @@ public class TasksTests extends IntegrationTest {
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody()
+                .consumeWith(System.out::println)
                 .jsonPath("$._embedded.tasks.length()").isEqualTo(10)
                 .jsonPath("$.count").isEqualTo(10)
                 .jsonPath("$.pages").isEqualTo(2)
@@ -465,17 +465,17 @@ public class TasksTests extends IntegrationTest {
         client.get().uri("/v1/tasks?s=title:invalid").exchange()
                 .expectStatus().isBadRequest()
                 .expectBody()
-                .jsonPath("$.type").isEqualTo("https://todoapp.com/invalid-sort");
+                .jsonPath("$.errors[0].type").value(containsString("error.invalid_sort_direction.detail"));
 
         client.get().uri("/v1/tasks?s=invalid:desc").exchange()
                 .expectStatus().isBadRequest()
                 .expectBody()
-                .jsonPath("$.type").isEqualTo("https://todoapp.com/invalid-sort");
+                .jsonPath("$.errors[0].type").value(containsString("error.invalid_sort_attribute.detail"));
 
         client.get().uri("/v1/tasks?s=title:desc,due_date").exchange()
                 .expectStatus().isBadRequest()
                 .expectBody()
-                .jsonPath("$.type").isEqualTo("https://todoapp.com/invalid-sort");
+                .jsonPath("$.errors[0].type").value(containsString("error.invalid_sort_query.detail"));
 
     }
 
@@ -537,53 +537,6 @@ public class TasksTests extends IntegrationTest {
                 .jsonPath("$._embedded.tasks.length()").isEqualTo(2)
                 .jsonPath("$._embedded.tasks[0].title").isEqualTo("Clean room")
                 .jsonPath("$._embedded.tasks[1].title").isEqualTo("Paint wall");
-
-    }
-
-    @Test
-    public void taskCannotBeUpdatedWithInvalidData() {
-
-        authenticate();
-
-        URI uri = client.post().uri("/v1/tasks")
-                .bodyValue(Map.of("title", "Go for shopping")).exchange()
-                .expectStatus().isCreated()
-                .expectBody().returnResult().getResponseHeaders().getLocation();
-
-        client.patch().uri(uri)
-                .bodyValue(Map.of("complete", "invalid")).exchange()
-                .expectStatus().isBadRequest()
-                .expectBody().jsonPath("$.errors[0].field").isEqualTo("complete");
-
-        client.patch().uri(uri)
-                .bodyValue(Map.of("project_id", UUID.randomUUID())).exchange()
-                .expectStatus().isBadRequest()
-                .expectBody().jsonPath("$.errors[0].field").isEqualTo("project_id");
-
-        client.patch().uri(uri)
-                .bodyValue(Map.of("project_id", "invalid")).exchange()
-                .expectStatus().isBadRequest()
-                .expectBody().jsonPath("$.errors[0].field").isEqualTo("project_id");
-
-        client.patch().uri(uri)
-                .bodyValue(Map.of("due_date", "invalid")).exchange()
-                .expectStatus().isBadRequest()
-                .expectBody().jsonPath("$.errors[0].field").isEqualTo("due_date");
-
-        client.patch().uri(uri)
-                .bodyValue(Map.of("priority", "invalid")).exchange()
-                .expectStatus().isBadRequest()
-                .expectBody().jsonPath("$.errors[0].field").isEqualTo("priority");
-
-        client.patch().uri(uri)
-                .bodyValue(Map.of("tags_ids", "invalid")).exchange()
-                .expectStatus().isBadRequest()
-                .expectBody().jsonPath("$.errors[0].field").isEqualTo("tags_ids");
-
-        client.patch().uri(uri)
-                .bodyValue(Map.of("parent_id", "invalid")).exchange()
-                .expectStatus().isBadRequest()
-                .expectBody().jsonPath("$.errors[0].field").isEqualTo("parent_id");
 
     }
 
@@ -652,6 +605,20 @@ public class TasksTests extends IntegrationTest {
                 "complete", complete,
                 "due_date", dueDate
         )).exchange().expectStatus().isCreated();
+    }
+
+    /**
+     * @noinspection SameParameterValue
+     */
+    private void createTaskAsUserForError(String email, String field, Object value) {
+        var request = field.equalsIgnoreCase("title") ? Map.of(field, value) : Map.of(
+                "title", "Title",
+                field, value
+        );
+        postAsUser(email, "tasks").bodyValue(request)
+                .exchange().expectStatus().isBadRequest().expectBody()
+                .jsonPath("$.errors.length()").isEqualTo(1)
+                .jsonPath("$.errors[0].field").isEqualTo(field);
     }
 
 }

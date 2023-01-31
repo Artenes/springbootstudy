@@ -3,6 +3,8 @@ package degallant.github.io.todoapp.exceptions;
 import degallant.github.io.todoapp.common.SortParsingException;
 import degallant.github.io.todoapp.internationalization.Messages;
 import degallant.github.io.todoapp.openid.OpenIdExtractionException;
+import degallant.github.io.todoapp.validation.FieldAndErrorMessage;
+import degallant.github.io.todoapp.validation.FieldAndErrorType;
 import degallant.github.io.todoapp.validation.InvalidRequestException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -13,6 +15,7 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
 import java.util.NoSuchElementException;
+import java.util.stream.Collectors;
 
 /**
  * @noinspection unused, ClassCanBeRecord
@@ -38,7 +41,7 @@ public class AppExceptionHandler {
                 .withDetail(messages.get("error.invalidrequest.detail"))
                 .withStatus(HttpStatus.BAD_REQUEST)
                 .withType(ErrorType.INVALID_REQUEST)
-                .withProperty("errors", exception.getErrors())
+                .withProperty("errors", exception.getErrors().stream().map(this::toFieldAndErrorType).collect(Collectors.toList()))
                 .withDebug(debug)
                 .build();
 
@@ -136,6 +139,14 @@ public class AppExceptionHandler {
         if (debug) {
             exception.printStackTrace();
         }
+    }
+
+    private FieldAndErrorType toFieldAndErrorType(FieldAndErrorMessage error) {
+        return new FieldAndErrorType(
+                error.field(),
+                "https://todoapp.com/" + error.errorId(),
+                messages.get(error.errorId(), error.errorArgs())
+        );
     }
 
 }

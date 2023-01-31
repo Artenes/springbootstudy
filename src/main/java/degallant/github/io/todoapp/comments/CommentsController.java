@@ -3,8 +3,8 @@ package degallant.github.io.todoapp.comments;
 import degallant.github.io.todoapp.tasks.TasksController;
 import degallant.github.io.todoapp.tasks.TasksRepository;
 import degallant.github.io.todoapp.users.UserEntity;
-import degallant.github.io.todoapp.validation.ValidationRules;
-import degallant.github.io.todoapp.validation.Validator;
+import degallant.github.io.todoapp.validation.FieldValidator;
+import degallant.github.io.todoapp.validation.Sanitizer;
 import lombok.RequiredArgsConstructor;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
@@ -18,11 +18,12 @@ import java.util.Collections;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import static degallant.github.io.todoapp.validation.Validation.field;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
-/** @noinspection ClassCanBeRecord*/
+/**
+ * @noinspection ClassCanBeRecord
+ */
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/v1/tasks/{id}/comments")
@@ -30,14 +31,17 @@ public class CommentsController {
 
     private final TasksRepository tasksRepository;
     private final CommentsRepository commentsRepository;
-    private final Validator validator;
-    private final ValidationRules rules;
+    private final Sanitizer sanitizer;
+    private final FieldValidator rules;
 
     @PostMapping
     public ResponseEntity<?> create(@PathVariable UUID id, @RequestBody CommentsDto.Create request, Authentication authentication) {
 
-        validator.validate(
-                field("text", request.getText(), rules.isNotEmpty(), true)
+        var result = sanitizer.sanitize(
+                sanitizer.field("text").withRequiredValue(request.getText()).sanitize(value -> {
+                    rules.isNotEmpty(value);
+                    return value;
+                })
         );
 
         var userId = ((UserEntity) authentication.getPrincipal()).getId();
@@ -46,7 +50,7 @@ public class CommentsController {
         tasksRepository.findByIdAndUserId(id, userId).orElseThrow();
 
         var entity = CommentEntity.builder()
-                .text(request.getText())
+                .text(result.get("text").value())
                 .userId(userId)
                 .taskId(id)
                 .build();

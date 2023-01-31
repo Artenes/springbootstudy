@@ -3,6 +3,9 @@ package degallant.github.io.todoapp;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import degallant.github.io.todoapp.common.Authenticator;
+import degallant.github.io.todoapp.common.ClientProxy;
+import degallant.github.io.todoapp.common.Request;
 import degallant.github.io.todoapp.openid.OpenIdTokenParser;
 import degallant.github.io.todoapp.openid.OpenIdUser;
 import org.flywaydb.core.Flyway;
@@ -15,13 +18,11 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpHeaders;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.reactive.server.EntityExchangeResult;
-import org.springframework.test.web.reactive.server.StatusAssertions;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
 import java.io.IOException;
 import java.net.URI;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -36,6 +37,8 @@ import static org.mockito.Mockito.when;
 @AutoConfigureWebTestClient(timeout = "36000")
 public abstract class IntegrationTest {
 
+    protected static final String DEFAULT_USER = "default@gmail.com";
+
     @Autowired
     protected WebTestClient client;
 
@@ -48,8 +51,17 @@ public abstract class IntegrationTest {
     @Autowired
     protected ObjectMapper mapper;
 
+    protected Request request;
+
+    private Authenticator authenticator;
+
+    private ClientProxy proxy;
+
     @BeforeEach
     public void setUp() {
+        proxy = new ClientProxy(client);
+        authenticator = new Authenticator(proxy, openIdTokenParser, mapper);
+        request = new Request(proxy, authenticator, mapper);
         flyway.migrate();
     }
 
@@ -59,7 +71,7 @@ public abstract class IntegrationTest {
     }
 
     protected void authenticate() {
-        authenticate("email@gmail.com");
+        authenticate(DEFAULT_USER);
     }
 
     protected void authenticate(String email) {
@@ -102,10 +114,10 @@ public abstract class IntegrationTest {
         client = client.mutateWith((builder, httpHandlerBuilder, connector) -> builder.entityExchangeResultConsumer(System.out::println));
     }
 
-    protected String makeTags(String... names) {
+    protected String makeTagsAsUser(String email, String... names) {
         Set<String> uuids = new HashSet<>();
         for (String name : names) {
-            var tagUri = client.post().uri("/v1/tags")
+            var tagUri = postAsUser(email, "tags")
                     .bodyValue(Map.of("name", name))
                     .exchange()
                     .expectStatus().isCreated()
@@ -122,8 +134,21 @@ public abstract class IntegrationTest {
         }
     }
 
-    protected String makeProject(String title) {
-        URI uri = client.post().uri("/v1/projects")
+    protected String makeProjectAsUser(String email, String title) {
+        URI uri = postAsUser(email, "projects")
+                .bodyValue(Map.of("title", title))
+                .exchange()
+                .expectStatus().isCreated()
+                .expectBody().returnResult()
+                .getResponseHeaders().getLocation();
+
+        String[] parts = uri.toString().split("/");
+
+        return parts[parts.length - 1];
+    }
+
+    protected String makeTaskAsUser(String email, String title) {
+        URI uri = postAsUser(email, "tasks")
                 .bodyValue(Map.of("title", title))
                 .exchange()
                 .expectStatus().isCreated()
@@ -149,6 +174,19 @@ public abstract class IntegrationTest {
         } catch (IOException exception) {
             throw new RuntimeException(exception);
         }
+    }
+
+    protected String list(Object... items) {
+        try {
+            return mapper.writeValueAsString(items);
+        } catch (JsonProcessingException exception) {
+            throw new RuntimeException(exception);
+        }
+    }
+
+    protected WebTestClient.RequestBodySpec postAsUser(String email, String path) {
+        authenticate(email);
+        return client.post().uri("/v1/" + path);
     }
 
 }

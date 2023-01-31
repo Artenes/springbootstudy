@@ -8,9 +8,9 @@ import java.util.List;
 @Getter
 public class InvalidRequestException extends RuntimeException {
 
-    private final List<FieldAndError> errors;
+    private final List<FieldAndErrorMessage> errors;
 
-    public InvalidRequestException(List<FieldAndError> errors) {
+    public InvalidRequestException(List<FieldAndErrorMessage> errors) {
         super(Arrays.toString(errors.toArray()));
         this.errors = errors;
     }

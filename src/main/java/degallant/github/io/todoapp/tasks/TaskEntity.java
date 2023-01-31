@@ -3,6 +3,7 @@ package degallant.github.io.todoapp.tasks;
 import degallant.github.io.todoapp.tags.TagEntity;
 import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.data.domain.Example;
 
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -48,5 +49,9 @@ public class TaskEntity {
             inverseJoinColumns = @JoinColumn(name = "tag_id")
     )
     private List<TagEntity> tags;
+
+    public static Example<TaskEntity> belongsTo(UUID id, UUID userId) {
+        return Example.of(TaskEntity.builder().id(id).userId(userId).build());
+    }
 
 }

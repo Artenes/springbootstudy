@@ -1,8 +1,8 @@
 package degallant.github.io.todoapp.tags;
 
 import degallant.github.io.todoapp.users.UserEntity;
-import degallant.github.io.todoapp.validation.ValidationRules;
-import degallant.github.io.todoapp.validation.Validator;
+import degallant.github.io.todoapp.validation.FieldValidator;
+import degallant.github.io.todoapp.validation.Sanitizer;
 import lombok.RequiredArgsConstructor;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
@@ -16,7 +16,6 @@ import java.util.Collections;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import static degallant.github.io.todoapp.validation.Validation.field;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
@@ -29,20 +28,23 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 public class TagsController {
 
     private final TagsRepository repository;
-    private final Validator validator;
-    private final ValidationRules rules;
+    private final Sanitizer sanitizer;
+    private final FieldValidator rules;
 
     @PostMapping
     public ResponseEntity<?> create(@RequestBody TagsDto.Create request, Authentication authentication) {
 
-        validator.validate(
-                field("name", request.getName(), rules.isNotEmpty(), true)
+        var result = sanitizer.sanitize(
+                sanitizer.field("name").withRequiredValue(request.getName()).sanitize(value -> {
+                    rules.isNotEmpty(value);
+                    return value;
+                })
         );
 
         var userId = ((UserEntity) authentication.getPrincipal()).getId();
 
         var entity = TagEntity.builder()
-                .name(request.getName())
+                .name(result.get("name").value())
                 .userId(userId)
                 .build();
 

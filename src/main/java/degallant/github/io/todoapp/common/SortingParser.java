@@ -19,10 +19,6 @@ public class SortingParser {
      * @throws SortParsingException in case of an invalid sort is provided
      */
     public Sort parse(String query, String... attributes) throws SortParsingException {
-        if (query == null || query.isEmpty()) {
-            return Sort.unsorted();
-        }
-
         Sort sort = null;
         Set<String> validAttributes = Set.of(attributes);
         var properties = query.split(",");

@@ -5,10 +5,8 @@ import degallant.github.io.todoapp.tags.TagsController;
 import degallant.github.io.todoapp.tasks.TasksController;
 import degallant.github.io.todoapp.users.UserEntity;
 import degallant.github.io.todoapp.users.UsersDto;
-import degallant.github.io.todoapp.validation.Validation;
-import degallant.github.io.todoapp.validation.ValidationRules;
-import degallant.github.io.todoapp.validation.Validator;
-import jakarta.validation.Valid;
+import degallant.github.io.todoapp.validation.FieldValidator;
+import degallant.github.io.todoapp.validation.Sanitizer;
 import lombok.RequiredArgsConstructor;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.Link;
@@ -16,7 +14,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
-import static degallant.github.io.todoapp.validation.Validation.field;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
@@ -26,17 +23,20 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 public class AuthController {
 
     private final AuthenticationService service;
-    private final Validator validator;
-    private final ValidationRules rules;
+    private final Sanitizer sanitizer;
+    private final FieldValidator rules;
 
     @PostMapping
     public ResponseEntity<?> authenticate(@RequestBody AuthDto.Authenticate request) {
 
-        validator.validate(
-                field("open_id_token", request.getOpenIdToken(), rules.isNotEmpty(), true)
+        var result = sanitizer.sanitize(
+                sanitizer.field("open_id_token").withRequiredValue(request.getOpenIdToken()).sanitize(value -> {
+                    rules.isNotEmpty(value);
+                    return value;
+                })
         );
 
-        var authenticatedUser = service.authenticateWithOpenId(request.getOpenIdToken());
+        var authenticatedUser = service.authenticateWithOpenId(result.get("open_id_token").value());
         var credentials = (AuthenticationService.TokenPair) authenticatedUser.getCredentials();
         var isNew = (Boolean) authenticatedUser.getDetails();
 
@@ -64,7 +64,7 @@ public class AuthController {
                 .build();
 
         Link selfLink = linkTo(methodOn(getClass()).profile(authentication)).withSelfRel();
-        Link tasksLink = linkTo(methodOn(TasksController.class).list(null,null, null, null, null, authentication)).withRel("tasks");
+        Link tasksLink = linkTo(methodOn(TasksController.class).list(null, null, null, null, null, authentication)).withRel("tasks");
         Link tagsLink = linkTo(methodOn(TagsController.class).list(authentication)).withRel("tags");
         Link projectsLink = linkTo(methodOn(ProjectsController.class).list(authentication)).withRel("projects");
 

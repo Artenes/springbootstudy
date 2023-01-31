@@ -1,22 +1,16 @@
 package degallant.github.io.todoapp.tasks;
 
-import degallant.github.io.todoapp.internationalization.Messages;
-import degallant.github.io.todoapp.projects.ProjectsRepository;
 import degallant.github.io.todoapp.tags.TagsRepository;
 import degallant.github.io.todoapp.users.UserEntity;
-import degallant.github.io.todoapp.validation.PathValidator;
-import degallant.github.io.todoapp.validation.ValidationRules;
-import degallant.github.io.todoapp.validation.Validator;
+import degallant.github.io.todoapp.validation.FieldParser;
+import degallant.github.io.todoapp.validation.FieldValidator;
+import degallant.github.io.todoapp.validation.SanitizedField;
+import degallant.github.io.todoapp.validation.Sanitizer;
 import lombok.RequiredArgsConstructor;
-import org.apache.logging.log4j.util.Strings;
-import org.springframework.data.domain.Example;
-import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
+import java.util.Map;
 import java.util.UUID;
-import java.util.stream.Collectors;
-
-import static degallant.github.io.todoapp.validation.Validation.field;
 
 /**
  * @noinspection ClassCanBeRecord
@@ -26,84 +20,76 @@ import static degallant.github.io.todoapp.validation.Validation.field;
 public class PatchTasksService {
 
     private final TasksRepository tasksRepository;
-    private final ProjectsRepository projectsRepository;
     private final TagsRepository tagsRepository;
-    private final Validator validator;
-    private final ValidationRules rules;
-    private final Messages messages;
+    private final Sanitizer sanitizer;
+    private final FieldValidator rules;
+    private final FieldParser parser;
 
-    public void patch(String id, TasksDto.Create request, Authentication authentication) {
+    public void patch(String id, TasksDto.Create request, UserEntity user) {
 
-        UUID taskId = PathValidator.parseUUIDOrFail(id);
-        UUID userId = ((UserEntity) authentication.getPrincipal()).getId();
+        var entity = parser.toTask(id, user.getId());
+        var result = sanitizeRequest(request, user.getId());
 
-        validator.validate(
-                field("title", request.getTitle(), rules.isNotEmpty()),
-                field("description", request.getDescription(), rules.isNotEmpty()),
-                field("due_date", request.getDueDate(), rules.isPresentOrFuture()),
-                field("priority", request.getPriority(), rules.isPriority()),
-                field("tags_ids", request.getTagsIds(), rules.areUuids()),
-                field("parent_id", request.getParentId(), rules.isUuid()),
-                field("project_id", request.getProjectId(), rules.isUuid()),
-                field("complete", request.getComplete(), rules.isBoolean())
-        );
+        entity.setTitle(result.get("title").ifNull(entity.getTitle()));
+        entity.setDescription(result.get("description").ifNull(entity.getDescription()));
+        entity.setDueDate(result.get("due_date").ifNull(entity.getDueDate()));
+        entity.setPriority(result.get("priority").ifNull(entity.getPriority()));
+        entity.setComplete(result.get("complete").ifNull(entity.getComplete()));
+        entity.setParentId(result.get("parent_id").ifNull(entity.getParentId()));
+        entity.setProjectId(result.get("project_id").ifNull(entity.getProjectId()));
 
-        var example = Example.of(
-                TaskEntity.builder()
-                        .id(taskId)
-                        .userId(userId)
-                        .build()
-        );
-
-        var entity = tasksRepository.findOne(example).orElseThrow();
-
-        if (request.getTitle() != null) {
-            entity.setTitle(request.getTitle());
-        }
-
-        if (request.getDescription() != null) {
-            entity.setDescription(request.getDescription());
-        }
-
-        if (request.getDueDate() != null) {
-            entity.setDueDate(request.getDueDateAsOffsetDateTime());
-        }
-
-        if (request.getPriority() != null) {
-            entity.setPriority(request.getPriorityAsEnum());
-        }
-
-        if (request.getTagsIds() != null) {
-            var tags = tagsRepository.findAllById(request.getTagsIdsAsUUID());
-            var notFound = request.getTagsIdsAsUUID().stream()
-                    .filter(tagId -> tags.stream().filter(tag -> tag.getId() == tagId).findFirst().isEmpty())
-                    .collect(Collectors.toList());
-            if (!notFound.isEmpty()) {
-                validator.throwErrorForField("tags_ids", messages.get("validation.do_not_exist_list", Strings.join(notFound, ',')));
-            }
-            entity.setTags(tags);
-        }
-
-        if (request.getComplete() != null) {
-            entity.setComplete(request.getCompleteAsBoolean());
-        }
-
-        if (request.getParentId() != null) {
-            if (!tasksRepository.existsById(request.getParentIdAsUUID())) {
-                validator.throwErrorForField("parent_id", messages.get("validation.do_not_exist", request.getProjectId()));
-            }
-            entity.setParentId(request.getParentIdAsUUID());
-        }
-
-        if (request.getProjectId() != null) {
-            if (!projectsRepository.existsById(request.getProjectIdAsUUID())) {
-                validator.throwErrorForField("project_id", messages.get("validation.do_not_exist", request.getProjectId()));
-            }
-            entity.setProjectId(request.getProjectIdAsUUID());
+        if (result.get("tags_ids") != null) {
+            //TODO delete all tags of task
+            entity.setTags(result.get("tags_ids").value());
         }
 
         tasksRepository.save(entity);
 
+    }
+
+    private Map<String, SanitizedField> sanitizeRequest(TasksDto.Create request, UUID userId) {
+        return sanitizer.sanitize(
+
+                sanitizer.field("title").withOptionalValue(request.getTitle()).sanitize(value -> {
+                    rules.isNotEmpty(value);
+                    return value;
+                }),
+
+                sanitizer.field("description").withOptionalValue(request.getDescription()).sanitize(value -> {
+                    rules.isNotEmpty(value);
+                    return value;
+                }),
+
+                sanitizer.field("due_date").withOptionalValue(request.getDueDate()).sanitize(value -> {
+                    var parsed = parser.toOffsetDateTime(value);
+                    rules.isPresentOrFuture(parsed);
+                    return parsed;
+                }),
+
+                sanitizer.field("priority").withOptionalValue(request.getPriority()).sanitize(parser::toPriority),
+
+                sanitizer.field("tags_ids").withOptionalValue(request.getTagsIds()).sanitize(value -> {
+                    var parsed = parser.toUUIDList(value);
+                    var found = tagsRepository.findAllByUserIdAndId(userId, parsed);
+                    rules.hasUnknownTag(parsed, found);
+                    return found;
+                }),
+
+                sanitizer.field("parent_id").withOptionalValue(request.getParentId()).sanitize(value -> {
+                    var parsed = parser.toUUID(value);
+                    rules.taskBelongsToUser(parsed, userId);
+                    return parsed;
+                }),
+
+                sanitizer.field("project_id").withOptionalValue(request.getProjectId()).sanitize(value -> {
+                    var parsed = parser.toUUID(value);
+                    rules.projectBelongsToUser(parsed, userId);
+                    return parsed;
+                }),
+
+                sanitizer.field("complete").withOptionalValue(request.getComplete()).sanitize(parser::toBoolean)
+
+        );
     }
 
 }

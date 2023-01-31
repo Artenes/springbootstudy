@@ -2,6 +2,7 @@ package degallant.github.io.todoapp.tags;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.data.domain.Example;
 
 import java.util.UUID;
 
@@ -22,5 +23,9 @@ public class TagEntity {
 
     @Column(name = "user_id")
     private UUID userId;
+
+    public static Example<TagEntity> belongsTo(UUID id, UUID userId) {
+        return Example.of(TagEntity.builder().id(id).userId(userId).build());
+    }
 
 }
