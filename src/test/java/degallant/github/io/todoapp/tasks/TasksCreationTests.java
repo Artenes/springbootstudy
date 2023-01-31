@@ -2,12 +2,54 @@ package degallant.github.io.todoapp.tasks;
 
 import degallant.github.io.todoapp.IntegrationTest;
 import org.junit.jupiter.api.Test;
+import org.springframework.test.web.reactive.server.JsonPathAssertions;
 
+import java.net.URI;
 import java.util.UUID;
 
 import static org.hamcrest.Matchers.containsString;
 
 public class TasksCreationTests extends IntegrationTest {
+
+    @Test
+    public void taskCreated_withAllFields() {
+
+        var title = "Take the dog for a walk";
+        var description = "This is very important, dog needs to walk or it will not behave";
+        var dueDate = "2030-01-01T12:50:29.790511-04:00";
+        var priority = "P3";
+        var complete = "true";
+        var parentId = makeTaskAsUser(DEFAULT_USER, "Parent task").uuid().toString();
+        var tags = makeTagsAsUser(DEFAULT_USER, "daily", "home", "pet");
+        var projectId = makeProjectAsUser(DEFAULT_USER, "daily tasks");
+
+        URI taskUri = request.asUser(DEFAULT_USER).to("tasks")
+                .withField("title", title)
+                .withField("description", description)
+                .withField("due_date", dueDate)
+                .withField("priority", priority)
+                .withField("complete", complete)
+                .withField("parent_id", parentId)
+                .withField("project_id", projectId)
+                .withField("tags_ids", tags)
+                .post().isCreated().getLocation();
+
+        request.asUser(DEFAULT_USER).to(taskUri)
+                .get().isOk()
+                .show()
+                .hasField("$.title", value -> value.isEqualTo(title))
+                .hasField("$.description", value -> value.isEqualTo(description))
+                .hasField("$.due_date", value -> value.isEqualTo(dueDate))
+                .hasField("$.priority", value -> value.isEqualTo(priority))
+                .hasField("$.complete", value -> value.isEqualTo(complete))
+                .hasField("$._embedded.parent.id", value -> value.isEqualTo(parentId))
+                .hasField("$._embedded.project.id", value -> value.isEqualTo(projectId))
+                .hasField("$._embedded.tags.length()", value -> value.isEqualTo(3))
+                .hasField("$._embedded.tags[?(@.name == 'daily')]", JsonPathAssertions::exists)
+                .hasField("$._embedded.tags[?(@.name == 'home')]", JsonPathAssertions::exists)
+                .hasField("$._embedded.tags[?(@.name == 'pet')]", JsonPathAssertions::exists);
+
+    }
 
     @Test
     public void taskNotCreated_invalidTitle_isEmpty() {
