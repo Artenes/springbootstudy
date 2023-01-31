@@ -57,9 +57,19 @@ public class AuthenticatedRequest {
         return this;
     }
 
+    public ExecutedRequest get() {
+        authenticate();
+        return new ExecutedRequest(resolveUri(client.get()).exchange());
+    }
+
     public ExecutedRequest post() {
         authenticate();
         return new ExecutedRequest(resolveUri(client.post()).bodyValue(body).exchange());
+    }
+
+    public ExecutedRequest patch() {
+        authenticate();
+        return new ExecutedRequest(resolveUri(client.patch()).bodyValue(body).exchange());
     }
 
     private void authenticate() {
@@ -69,6 +79,14 @@ public class AuthenticatedRequest {
     }
 
     private WebTestClient.RequestBodySpec resolveUri(WebTestClient.RequestBodyUriSpec spec) {
+        if (uri != null) {
+            return spec.uri(uri);
+        } else {
+            return spec.uri("/v1/" + path);
+        }
+    }
+
+    private WebTestClient.RequestHeadersSpec<?> resolveUri(WebTestClient.RequestHeadersUriSpec<?> spec) {
         if (uri != null) {
             return spec.uri(uri);
         } else {

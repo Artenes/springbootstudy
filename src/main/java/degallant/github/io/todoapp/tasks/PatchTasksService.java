@@ -37,11 +37,7 @@ public class PatchTasksService {
         entity.setComplete(result.get("complete").ifNull(entity.getComplete()));
         entity.setParentId(result.get("parent_id").ifNull(entity.getParentId()));
         entity.setProjectId(result.get("project_id").ifNull(entity.getProjectId()));
-
-        if (result.get("tags_ids") != null) {
-            //TODO delete all tags of task
-            entity.setTags(result.get("tags_ids").value());
-        }
+        entity.setTags(result.get("tags_ids").ifNull(entity.getTags()));
 
         tasksRepository.save(entity);
 

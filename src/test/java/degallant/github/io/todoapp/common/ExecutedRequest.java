@@ -1,5 +1,6 @@
 package degallant.github.io.todoapp.common;
 
+import org.springframework.test.web.reactive.server.EntityExchangeResult;
 import org.springframework.test.web.reactive.server.JsonPathAssertions;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
@@ -11,6 +12,7 @@ public class ExecutedRequest {
 
     private WebTestClient.ResponseSpec responseSpec;
     private WebTestClient.BodyContentSpec bodySpec;
+    private EntityExchangeResult<byte[]> response;
 
     public ExecutedRequest(WebTestClient.ResponseSpec responseSpec) {
         this.responseSpec = responseSpec;
@@ -26,6 +28,11 @@ public class ExecutedRequest {
         return this;
     }
 
+    public ExecutedRequest isOk() {
+        responseSpec = responseSpec.expectStatus().isOk();
+        return this;
+    }
+
     public URI getLocation() {
         return getBodySpec().returnResult().getResponseHeaders().getLocation();
     }
@@ -37,22 +44,28 @@ public class ExecutedRequest {
     }
 
     public ExecutedRequest hasField(String path, Consumer<JsonPathAssertions> consumer) {
-        consumer.accept(getBodySpec().jsonPath(path));
+        try {
+            consumer.accept(getBodySpec().jsonPath(path));
+        } catch (AssertionError error) {
+            show();
+            throw error;
+        }
         return this;
     }
 
     public ExecutedRequest show() {
-        if (bodySpec != null) {
-            bodySpec.consumeWith(System.out::println);
-            return this;
+        getBodySpec();
+        if (response != null) {
+            System.out.println(response);
         }
-        getBodySpec().consumeWith(System.out::println);
         return this;
     }
 
     private WebTestClient.BodyContentSpec getBodySpec() {
         if (bodySpec == null) {
-            bodySpec = responseSpec.expectBody();
+            bodySpec = responseSpec.expectBody().consumeWith(value -> {
+                response = value;
+            });
         }
         return bodySpec;
     }

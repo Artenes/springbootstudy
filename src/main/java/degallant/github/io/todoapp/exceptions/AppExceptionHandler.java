@@ -11,6 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.ErrorResponse;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
@@ -115,6 +116,21 @@ public class AppExceptionHandler {
                 .withDetail(messages.get("error.invalidrequesttype.detail"))
                 .withStatus(HttpStatus.BAD_REQUEST)
                 .withType(ErrorType.INVALID_REQUEST_TYPE)
+                .withDebug(debug)
+                .build();
+
+    }
+
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    public ErrorResponse handleHttpRequestMethodNotSupportedException(HttpRequestMethodNotSupportedException exception) {
+
+        printStack(exception);
+
+        return ErrorResponseBuilder.from(exception)
+                .withTitle(messages.get("error.notsupported.title"))
+                .withDetail(messages.get("error.notsupported.detail", exception.getMethod()))
+                .withStatus(HttpStatus.METHOD_NOT_ALLOWED)
+                .withType(ErrorType.METHOD_NOT_ALLOWED)
                 .withDebug(debug)
                 .build();
 

@@ -25,6 +25,7 @@ import java.net.URI;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
@@ -147,7 +148,7 @@ public abstract class IntegrationTest {
         return parts[parts.length - 1];
     }
 
-    protected String makeTaskAsUser(String email, String title) {
+    protected Identifier makeTaskAsUser(String email, String title) {
         URI uri = postAsUser(email, "tasks")
                 .bodyValue(Map.of("title", title))
                 .exchange()
@@ -155,9 +156,7 @@ public abstract class IntegrationTest {
                 .expectBody().returnResult()
                 .getResponseHeaders().getLocation();
 
-        String[] parts = uri.toString().split("/");
-
-        return parts[parts.length - 1];
+        return new Identifier(uri);
     }
 
     protected JsonNode parseResponse(WebTestClient.ResponseSpec statusAssertions) {
@@ -187,6 +186,16 @@ public abstract class IntegrationTest {
     protected WebTestClient.RequestBodySpec postAsUser(String email, String path) {
         authenticate(email);
         return client.post().uri("/v1/" + path);
+    }
+
+    public record Identifier(URI uri) {
+
+        public UUID uuid() {
+            var parts = uri.toString().split("/");
+            var id = parts[parts.length - 1];
+            return UUID.fromString(id);
+        }
+
     }
 
 }

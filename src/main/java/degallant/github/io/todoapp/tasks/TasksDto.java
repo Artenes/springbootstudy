@@ -43,7 +43,6 @@ public class TasksDto {
         @JsonProperty("due_date")
         private OffsetDateTime dueDate;
         private Priority priority;
-        private URI project;
         private boolean complete;
 
     }
