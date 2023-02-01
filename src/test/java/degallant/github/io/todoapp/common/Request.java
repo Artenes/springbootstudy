@@ -10,7 +10,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-/** @noinspection ClassCanBeRecord*/
+/**
+ * @noinspection ClassCanBeRecord
+ */
 public class Request {
 
     private final ClientProxy client;
@@ -75,6 +77,7 @@ public class Request {
         private final Authenticator authenticator;
         private final Map<String, Object> body = new HashMap<>();
         private final Map<String, Object> param = new HashMap<>();
+        private Object rawBody;
         private final URI uri;
         private String path;
 
@@ -85,6 +88,11 @@ public class Request {
             this.authenticator = authenticator;
             this.path = path;
             this.uri = uri;
+        }
+
+        public Destination withBody(Object object) {
+            this.rawBody = object;
+            return this;
         }
 
         public Destination withField(String key, Object value) {
@@ -118,7 +126,17 @@ public class Request {
 
         public ExecutedRequest post() {
             authenticate();
-            return new ExecutedRequest(mapper, resolveUri(client.post()).bodyValue(body).exchange());
+            var spec = resolveUri(client.post());
+
+            if (rawBody != null) {
+                return new ExecutedRequest(mapper, spec.bodyValue(rawBody).exchange());
+            }
+
+            if (!body.isEmpty()) {
+                return new ExecutedRequest(mapper, spec.bodyValue(body).exchange());
+            }
+
+            return new ExecutedRequest(mapper, spec.exchange());
         }
 
         public ExecutedRequest patch() {

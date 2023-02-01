@@ -27,4 +27,8 @@ public class ClientProxy {
         client = client.mutateWith(configure);
     }
 
+    public WebTestClient getClient() {
+        return client;
+    }
+
 }
