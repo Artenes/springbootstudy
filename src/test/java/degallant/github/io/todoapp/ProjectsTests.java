@@ -1,5 +1,6 @@
 package degallant.github.io.todoapp;
 
+import degallant.github.io.todoapp.common.IntegrationTest;
 import org.junit.jupiter.api.Test;
 
 import java.net.URI;

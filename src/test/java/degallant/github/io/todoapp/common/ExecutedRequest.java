@@ -1,20 +1,25 @@
 package degallant.github.io.todoapp.common;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.test.web.reactive.server.EntityExchangeResult;
 import org.springframework.test.web.reactive.server.JsonPathAssertions;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
+import java.io.IOException;
 import java.net.URI;
 import java.util.UUID;
 import java.util.function.Consumer;
 
 public class ExecutedRequest {
 
+    private final ObjectMapper mapper;
     private WebTestClient.ResponseSpec responseSpec;
     private WebTestClient.BodyContentSpec bodySpec;
     private EntityExchangeResult<byte[]> response;
 
-    public ExecutedRequest(WebTestClient.ResponseSpec responseSpec) {
+    public ExecutedRequest(ObjectMapper mapper, WebTestClient.ResponseSpec responseSpec) {
+        this.mapper = mapper;
         this.responseSpec = responseSpec;
     }
 
@@ -46,6 +51,14 @@ public class ExecutedRequest {
         var uri = getLocation();
         var parts = uri.toString().split("/");
         return UUID.fromString(parts[parts.length - 1]);
+    }
+
+    public JsonNode getBody() {
+        try {
+            return mapper.readValue(response.getResponseBodyContent(), JsonNode.class);
+        } catch (IOException exception) {
+            throw new RuntimeException(exception);
+        }
     }
 
     public ExecutedRequest hasField(String path, Consumer<JsonPathAssertions> consumer) {

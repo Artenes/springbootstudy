@@ -1,6 +1,6 @@
 package degallant.github.io.todoapp.tasks;
 
-import degallant.github.io.todoapp.IntegrationTest;
+import degallant.github.io.todoapp.common.IntegrationTest;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.web.reactive.server.JsonPathAssertions;
 

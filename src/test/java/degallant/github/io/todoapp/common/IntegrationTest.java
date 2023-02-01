@@ -1,11 +1,8 @@
-package degallant.github.io.todoapp;
+package degallant.github.io.todoapp.common;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import degallant.github.io.todoapp.common.Authenticator;
-import degallant.github.io.todoapp.common.ClientProxy;
-import degallant.github.io.todoapp.common.Request;
 import degallant.github.io.todoapp.openid.OpenIdTokenParser;
 import degallant.github.io.todoapp.openid.OpenIdUser;
 import org.flywaydb.core.Flyway;
@@ -25,7 +22,6 @@ import java.net.URI;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
@@ -54,15 +50,14 @@ public abstract class IntegrationTest {
 
     protected Request request;
 
-    private Authenticator authenticator;
-
-    private ClientProxy proxy;
+    protected EntityRequest entityRequest;
 
     @BeforeEach
     public void setUp() {
-        proxy = new ClientProxy(client);
-        authenticator = new Authenticator(proxy, openIdTokenParser, mapper);
+        ClientProxy proxy = new ClientProxy(client);
+        Authenticator authenticator = new Authenticator(proxy, openIdTokenParser, mapper);
         request = new Request(proxy, authenticator, mapper);
+        entityRequest = new EntityRequest(request);
         flyway.migrate();
     }
 
@@ -186,16 +181,6 @@ public abstract class IntegrationTest {
     protected WebTestClient.RequestBodySpec postAsUser(String email, String path) {
         authenticate(email);
         return client.post().uri("/v1/" + path);
-    }
-
-    public record Identifier(URI uri) {
-
-        public UUID uuid() {
-            var parts = uri.toString().split("/");
-            var id = parts[parts.length - 1];
-            return UUID.fromString(id);
-        }
-
     }
 
 }
