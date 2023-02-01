@@ -1,80 +1,80 @@
 package degallant.github.io.todoapp;
 
 import degallant.github.io.todoapp.common.IntegrationTest;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
-import org.springframework.test.web.reactive.server.EntityExchangeResult;
+import org.springframework.test.web.reactive.server.JsonPathAssertions;
 
-import java.io.IOException;
-import java.net.URI;
-import java.util.Map;
-
-/** @noinspection unchecked, ConstantConditions */
 public class AuthTests extends IntegrationTest {
 
     @Test
-    public void failsAuthenticationWithoutToken() {
-        show(client.post().uri("/v1/auth")
-                .bodyValue(Map.of()).exchange()
-                .expectStatus().isBadRequest());
+    public void authenticate_failsWhenTokenIsNotProvided() {
+
+        request.asGuest().to("auth")
+                .withField("something_else", "random")
+                .post().isBadRequest()
+                .hasField("$.errors[0].type", v -> v.value(Matchers.containsString("validation.is_required")));
+
     }
 
     @Test
-    public void registerNewUser() throws IOException {
+    public void authenticate_failsTokenIsEmpty() {
+
+        request.asGuest().to("auth")
+                .withField("open_id_token", "")
+                .post().isBadRequest()
+                .hasField("$.errors[0].type", v -> v.value(Matchers.containsString("validation.is_empty")));
+
+    }
+
+    @Test
+    public void authenticate_registerNewUser() {
 
         String email = "email@gmail.com";
         String name = "Jhon Doe";
         String profileUrl = "https://google.com/profile/903jfiwfiwoe";
 
-        String token = makeTokenFor(email, name, profileUrl);
+        String openIdToken = authenticator.makeTokenFor(email, name, profileUrl);
 
-        EntityExchangeResult<byte[]> result = client.post().uri("/v1/auth")
-                .bodyValue(Map.of("open_id_token", token))
-                .exchange()
-                .expectStatus().isCreated()
-                .expectBody()
-                .jsonPath("$.access_token").exists()
-                .jsonPath("$.refresh_token").exists()
-                .returnResult();
+        var response = request.asGuest().to("auth")
+                .withField("open_id_token", openIdToken)
+                .post().isCreated()
+                .hasField("$.access_token", JsonPathAssertions::exists)
+                .hasField("$.access_token", JsonPathAssertions::exists)
+                .getResponse();
 
-        URI userUri = result.getResponseHeaders().getLocation();
-        Map<String, String> response = mapper.readValue(result.getResponseBodyContent(), Map.class);
+        var userUri = response.headers().getLocation();
+        var token = response.body().get("access_token").asText();
 
-        authenticateWithToken(response.get("access_token"));
-
-        client.get()
-                .uri(userUri)
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody()
-                .jsonPath("$.email").isEqualTo(email)
-                .jsonPath("$.name").isEqualTo(name)
-                .jsonPath("$.picture_url").isEqualTo(profileUrl)
-                .jsonPath("$._links.self.href").exists()
-                .jsonPath("$._links.tasks.href").exists()
-                .jsonPath("$._links.projects.href").exists()
-                .jsonPath("$._links.tags.href").exists();
+        request.withToken(token).to(userUri)
+                .get().isOk()
+                .hasField("$.email", v -> v.isEqualTo(email))
+                .hasField("$.name", v -> v.isEqualTo(name))
+                .hasField("$.picture_url", v -> v.isEqualTo(profileUrl))
+                .hasField("$._links.self.href", JsonPathAssertions::exists)
+                .hasField("$._links.tasks.href", JsonPathAssertions::exists)
+                .hasField("$._links.projects.href", JsonPathAssertions::exists)
+                .hasField("$._links.tags.href", JsonPathAssertions::exists);
 
     }
 
     @Test
-    public void loginExistingUser() {
+    public void authenticate_loginExistingUser() {
 
         String email = "email@gmail.com";
         String name = "Jhon Doe";
         String profileUrl = "https://google.com/profile/903jfiwfiwoe";
 
-        String token = makeTokenFor(email, name, profileUrl);
+        String token = authenticator.makeTokenFor(email, name, profileUrl);
 
-        client.post().uri("/v1/auth")
-                .bodyValue(Map.of("open_id_token", token))
-                .exchange()
-                .expectStatus().isCreated();
+        request.asGuest().to("auth")
+                .withField("open_id_token", token)
+                .post().isCreated();
 
-        client.post().uri("/v1/auth")
-                .bodyValue(Map.of("open_id_token", token))
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody().jsonPath("$.access_token").exists();
+        request.asGuest().to("auth")
+                .withField("open_id_token", token)
+                .post().isOk()
+                .hasField("$.access_token", JsonPathAssertions::exists);
 
     }
 

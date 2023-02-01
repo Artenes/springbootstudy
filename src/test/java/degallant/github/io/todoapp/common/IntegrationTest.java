@@ -52,10 +52,12 @@ public abstract class IntegrationTest {
 
     protected EntityRequest entityRequest;
 
+    protected Authenticator authenticator;
+
     @BeforeEach
     public void setUp() {
         ClientProxy proxy = new ClientProxy(client);
-        Authenticator authenticator = new Authenticator(proxy, openIdTokenParser, mapper);
+        authenticator = new Authenticator(proxy, openIdTokenParser, mapper);
         request = new Request(proxy, authenticator, mapper);
         entityRequest = new EntityRequest(request);
         flyway.migrate();

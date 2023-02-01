@@ -27,7 +27,7 @@ public class Authenticator {
         this.mapper = mapper;
     }
 
-    protected void authenticate(String email) {
+    public void authenticate(String email) {
         String name = "Jhon Doe";
         String profileUrl = "https://google.com/profile/903jfiwfiwoe";
         String token = makeTokenFor(email, name, profileUrl);
@@ -43,7 +43,7 @@ public class Authenticator {
         }
     }
 
-    protected String makeTokenFor(String email, String name, String profileUrl) {
+    public String makeTokenFor(String email, String name, String profileUrl) {
         //a dummy token for test purposes
         String token = email + name + profileUrl;
         when(openIdTokenParser.extract(eq(token))).thenReturn(new OpenIdUser(email, name, profileUrl));

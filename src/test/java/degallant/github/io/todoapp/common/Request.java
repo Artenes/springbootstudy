@@ -26,27 +26,37 @@ public class Request {
     }
 
     public Authenticated asUser(String email) {
-        return new Authenticated(mapper, authenticator, email, client);
+        return new Authenticated(mapper, authenticator, new AuthInfo(email, null), client);
     }
 
     public Authenticated asGuest() {
-        return new Authenticated(mapper, authenticator, null, client);
+        return new Authenticated(mapper, authenticator, new AuthInfo(), client);
+    }
+
+    public Authenticated withToken(String token) {
+        return new Authenticated(mapper, authenticator, new AuthInfo(null, token), client);
+    }
+
+    public static record AuthInfo(String email, String token) {
+        public AuthInfo() {
+            this(null, null);
+        }
     }
 
     public static class Authenticated {
 
         private final ObjectMapper mapper;
         private final Authenticator authenticator;
-        private final String email;
+        private final AuthInfo authInfo;
         private final ClientProxy client;
 
         private String path;
         private URI uri;
 
-        public Authenticated(ObjectMapper mapper, Authenticator authenticator, String email, ClientProxy client) {
+        public Authenticated(ObjectMapper mapper, Authenticator authenticator, AuthInfo authInfo, ClientProxy client) {
             this.mapper = mapper;
             this.authenticator = authenticator;
-            this.email = email;
+            this.authInfo = authInfo;
             this.client = client;
         }
 
@@ -64,14 +74,14 @@ public class Request {
                 this.uri = (URI) url;
             }
 
-            return new Destination(email, client, mapper, authenticator, path, uri);
+            return new Destination(authInfo, client, mapper, authenticator, path, uri);
         }
 
     }
 
     public static class Destination {
 
-        private final String email;
+        private final AuthInfo authInfo;
         private final ClientProxy client;
         private final ObjectMapper mapper;
         private final Authenticator authenticator;
@@ -81,8 +91,8 @@ public class Request {
         private final URI uri;
         private String path;
 
-        public Destination(String email, ClientProxy client, ObjectMapper mapper, Authenticator authenticator, String path, URI uri) {
-            this.email = email;
+        public Destination(AuthInfo authInfo, ClientProxy client, ObjectMapper mapper, Authenticator authenticator, String path, URI uri) {
+            this.authInfo = authInfo;
             this.client = client;
             this.mapper = mapper;
             this.authenticator = authenticator;
@@ -145,8 +155,13 @@ public class Request {
         }
 
         private void authenticate() {
-            if (email != null) {
-                authenticator.authenticate(email);
+            if (authInfo.email() != null) {
+                authenticator.authenticate(authInfo.email());
+                return;
+            }
+
+            if (authInfo.token() != null) {
+                authenticator.authenticateWithToken(authInfo.token());
             }
         }
 

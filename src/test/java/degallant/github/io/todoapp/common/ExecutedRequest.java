@@ -2,6 +2,7 @@ package degallant.github.io.todoapp.common;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.http.HttpHeaders;
 import org.springframework.test.web.reactive.server.EntityExchangeResult;
 import org.springframework.test.web.reactive.server.JsonPathAssertions;
 import org.springframework.test.web.reactive.server.WebTestClient;
@@ -53,6 +54,10 @@ public class ExecutedRequest {
         return UUID.fromString(parts[parts.length - 1]);
     }
 
+    public Response getResponse() {
+        return new Response(getBody(), response.getResponseHeaders());
+    }
+
     public JsonNode getBody() {
         try {
             return mapper.readValue(response.getResponseBodyContent(), JsonNode.class);
@@ -86,6 +91,10 @@ public class ExecutedRequest {
             });
         }
         return bodySpec;
+    }
+
+    public record Response(JsonNode body, HttpHeaders headers) {
+
     }
 
 }
