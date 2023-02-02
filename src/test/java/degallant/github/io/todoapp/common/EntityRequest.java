@@ -2,6 +2,7 @@ package degallant.github.io.todoapp.common;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * @noinspection ClassCanBeRecord
@@ -55,6 +56,22 @@ public class EntityRequest {
             var authRequest = request.asUser(email).to("tasks");
             parseListAsFields(authRequest, body);
             var uri = authRequest.post().isCreated().getLocation();
+            return new Identifier(uri);
+        }
+
+        public List<Identifier> commentOnTask(UUID taskId, String... comments) {
+            var list = new ArrayList<Identifier>();
+            for (String comment : comments) {
+                list.add(commentOnTask(taskId, comment));
+            }
+            return list;
+        }
+
+        public Identifier commentOnTask(UUID taskId, String comment) {
+            var list = new ArrayList<Identifier>();
+            var uri = request.asUser(email).to("tasks/" + taskId + "/comments")
+                    .withField("text", comment)
+                    .post().isCreated().getLocation();
             return new Identifier(uri);
         }
 

@@ -2,6 +2,8 @@ package degallant.github.io.todoapp.validation;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import degallant.github.io.todoapp.comments.CommentEntity;
+import degallant.github.io.todoapp.comments.CommentsRepository;
 import degallant.github.io.todoapp.common.SortParsingException;
 import degallant.github.io.todoapp.common.SortingParser;
 import degallant.github.io.todoapp.tasks.Priority;
@@ -28,6 +30,7 @@ public class FieldParser {
 
     private final ObjectMapper mapper;
     private final TasksRepository tasksRepository;
+    private final CommentsRepository commentsRepository;
     private final SortingParser sortingParser;
 
     public Sort toSort(String value, String... validAttributes) throws InvalidValueException {
@@ -75,6 +78,14 @@ public class FieldParser {
         }
     }
 
+    public UUID toUuidOrThrow(String value) throws NoSuchElementException {
+        try {
+            return UUID.fromString(value);
+        } catch (IllegalArgumentException exception) {
+            throw new NoSuchElementException("Invalid UUID " + value);
+        }
+    }
+
     public LocalDate toLocalDate(String value) throws InvalidValueException {
         try {
             return LocalDate.parse(value);
@@ -101,22 +112,32 @@ public class FieldParser {
         return priority.get();
     }
 
-    public TaskEntity toTask(String id, UUID userId) throws NoSuchElementException {
-        try {
-            var taskId = UUID.fromString(id);
-            var example = TaskEntity.belongsTo(taskId, userId);
-            return tasksRepository.findOne(example).orElseThrow();
-        } catch (IllegalArgumentException exception) {
-            throw new NoSuchElementException(exception);
-        }
-    }
-
     public List<UUID> toUUIDList(String value) throws InvalidValueException {
         try {
             var array = mapper.readValue(value, UUID[].class);
             return Arrays.stream(array).toList();
         } catch (JsonProcessingException exception) {
             throw new InvalidValueException("validation.invalid_id_list", value);
+        }
+    }
+
+    public TaskEntity toTask(String id, UUID userId) throws NoSuchElementException {
+        try {
+            var taskId = UUID.fromString(id);
+            var example = TaskEntity.belongsTo(taskId, userId);
+            return tasksRepository.findOne(example).orElseThrow();
+        } catch (IllegalArgumentException | NoSuchElementException exception) {
+            throw new NoSuchElementException("No task found with id " + id, exception);
+        }
+    }
+
+    public CommentEntity toComment(String id, UUID taskId, UUID userId) throws NoSuchElementException {
+        try {
+            var commentId = UUID.fromString(id);
+            var example = CommentEntity.belongsTo(commentId, taskId, userId);
+            return commentsRepository.findOne(example).orElseThrow();
+        } catch (IllegalArgumentException | NoSuchElementException exception) {
+            throw new NoSuchElementException("No comment found with id " + id, exception);
         }
     }
 

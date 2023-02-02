@@ -1,25 +1,20 @@
 package degallant.github.io.todoapp.comments;
 
-import degallant.github.io.todoapp.tasks.TasksController;
 import degallant.github.io.todoapp.tasks.TasksRepository;
 import degallant.github.io.todoapp.users.UserEntity;
+import degallant.github.io.todoapp.validation.FieldParser;
 import degallant.github.io.todoapp.validation.FieldValidator;
 import degallant.github.io.todoapp.validation.Sanitizer;
 import lombok.RequiredArgsConstructor;
-import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
-import org.springframework.hateoas.RepresentationModel;
 import org.springframework.hateoas.mediatype.hal.HalModelBuilder;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Collections;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
-import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
-import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
+import static degallant.github.io.todoapp.common.LinkBuilder.makeLinkTo;
 
 /**
  * @noinspection ClassCanBeRecord
@@ -33,9 +28,13 @@ public class CommentsController {
     private final CommentsRepository commentsRepository;
     private final Sanitizer sanitizer;
     private final FieldValidator rules;
+    private final FieldParser parser;
 
     @PostMapping
-    public ResponseEntity<?> create(@PathVariable UUID id, @RequestBody CommentsDto.Create request, Authentication authentication) {
+    public ResponseEntity<?> create(@PathVariable String id, @RequestBody CommentsDto.Create request, Authentication authentication) {
+
+        var userId = ((UserEntity) authentication.getPrincipal()).getId();
+        var task = parser.toTask(id, userId);
 
         var result = sanitizer.sanitize(
                 sanitizer.field("text").withRequiredValue(request.getText()).sanitize(value -> {
@@ -44,63 +43,56 @@ public class CommentsController {
                 })
         );
 
-        var userId = ((UserEntity) authentication.getPrincipal()).getId();
-
-        //guard
-        tasksRepository.findByIdAndUserId(id, userId).orElseThrow();
-
         var entity = CommentEntity.builder()
                 .text(result.get("text").value())
                 .userId(userId)
-                .taskId(id)
+                .taskId(task.getId())
                 .build();
 
         entity = commentsRepository.save(entity);
 
-        var link = linkTo(methodOn(getClass(), id).details(id, entity.getId(), authentication)).withSelfRel();
+        var link = makeLinkTo("v1", "tasks", task.getId(), "comments", entity.getId()).withSelfRel();
 
         return ResponseEntity.created(link.toUri()).build();
     }
 
     @GetMapping("/{commentId}")
-    public ResponseEntity<?> details(@PathVariable UUID id, @PathVariable UUID commentId, Authentication authentication) {
-        var userId = ((UserEntity) authentication.getPrincipal()).getId();
-        var entity = commentsRepository.findByIdAndUserId(commentId, userId).orElseThrow();
+    public ResponseEntity<?> details(@PathVariable String id, @PathVariable String commentId, Authentication authentication) {
 
-        var response = toEntityModel(entity, authentication);
+        var userId = ((UserEntity) authentication.getPrincipal()).getId();
+        var task = parser.toTask(id, userId);
+        var comment = parser.toComment(commentId, task.getId(), userId);
+
+        var response = toEntityModel(comment);
 
         return ResponseEntity.ok(response);
     }
 
     @GetMapping
-    public RepresentationModel<?> list(@PathVariable UUID id, Authentication authentication) {
-        UUID userId = ((UserEntity) authentication.getPrincipal()).getId();
+    public ResponseEntity<?> list(@PathVariable String id, Authentication authentication) {
 
-        //guard
-        tasksRepository.findByIdAndUserId(id, userId).orElseThrow();
+        var userId = ((UserEntity) authentication.getPrincipal()).getId();
+        var task = tasksRepository.findByIdAndUserId(parser.toUuidOrThrow(id), userId).orElseThrow();
+        var entities = commentsRepository.findByTaskIdAndUserId(task.getId(), userId);
 
-        var entities = commentsRepository.findByTaskIdAndUserId(id, userId);
         var comments = entities.stream()
-                .map(entity -> toEntityModel(entity, authentication))
+                .map(this::toEntityModel)
                 .collect(Collectors.toList());
 
-        var linkSelf = linkTo(methodOn(getClass()).list(id, authentication)).withSelfRel();
+        var linkSelf = makeLinkTo("v1", "tasks", task.getId(), "comments").withSelfRel();
+        var response = HalModelBuilder.emptyHalModel()
+                .embed(comments, CommentsDto.Details.class)
+                .link(linkSelf)
+                .build();
 
-        if (comments.isEmpty()) {
-            return HalModelBuilder.emptyHalModel()
-                    .embed(Collections.emptyList(), CommentsDto.Details.class)
-                    .link(linkSelf)
-                    .build();
-        }
-
-        return CollectionModel.of(comments).add(linkSelf);
+        return ResponseEntity.ok(response);
     }
 
-    private EntityModel<CommentsDto.Details> toEntityModel(CommentEntity entity, Authentication authentication) {
+    private EntityModel<CommentsDto.Details> toEntityModel(CommentEntity entity) {
         var comment = CommentsDto.Details.builder().id(entity.getId()).text(entity.getText()).build();
-        var linkSelf = linkTo(methodOn(getClass()).details(entity.getTaskId(), entity.getId(), authentication)).withSelfRel();
-        var linkAll = linkTo(methodOn(getClass()).list(entity.getTaskId(), authentication)).withRel("all");
-        var linkTask = linkTo(methodOn(TasksController.class).details(entity.getTaskId().toString(), authentication)).withRel("task");
+        var linkSelf = makeLinkTo("v1", "tasks", entity.getTaskId(), "comments", entity.getId()).withSelfRel();
+        var linkAll = makeLinkTo("v1", "tasks", entity.getTaskId(), "comments").withRel("all");
+        var linkTask = makeLinkTo("v1", "tasks", entity.getTaskId()).withRel("task");
         return EntityModel.of(comment).add(linkSelf, linkAll, linkTask);
     }
 
