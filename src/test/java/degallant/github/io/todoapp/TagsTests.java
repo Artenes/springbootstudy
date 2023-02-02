@@ -2,82 +2,93 @@ package degallant.github.io.todoapp;
 
 import degallant.github.io.todoapp.common.IntegrationTest;
 import org.junit.jupiter.api.Test;
+import org.springframework.test.web.reactive.server.JsonPathAssertions;
 
-import java.net.URI;
-import java.util.Map;
+import java.util.UUID;
 
-/** @noinspection ConstantConditions*/
+import static org.hamcrest.Matchers.containsString;
+
 public class TagsTests extends IntegrationTest {
 
     @Test
-    public void failsCreationWithEmptyBody() {
-        authenticate();
-        client.post().uri("/v1/tags")
-                .bodyValue(Map.of())
-                .exchange()
-                .expectStatus().isBadRequest();
-    }
+    public void create_failsWithEmptyText() {
 
-    @Test
-    public void createATag() {
-
-        authenticate();
-
-        var tag = "house";
-
-        URI uri = client.post().uri("/v1/tags")
-                .bodyValue(Map.of("name", tag))
-                .exchange()
-                .expectStatus().isCreated()
-                .expectBody().returnResult()
-                .getResponseHeaders().getLocation();
-
-        client.get().uri(uri)
-                .exchange()
-                .expectBody()
-                .jsonPath("$.name").isEqualTo(tag);
+        request.asUser(DEFAULT_USER).to("tags")
+                .withField("name", "")
+                .post().isBadRequest()
+                .hasField("$.errors[0].type", v -> v.value(containsString("validation.is_empty")));
 
     }
 
     @Test
-    public void aUserCanOnlyListItsOwnTags() {
+    public void create_aTag() {
 
-        authenticate("usera@gmail.com");
-        client.post().uri("/v1/tags")
-                .bodyValue(Map.of("name", "house"))
-                .exchange()
-                .expectStatus().isCreated();
+        var uri = request.asUser(DEFAULT_USER).to("tags")
+                .withField("name", "A Tag")
+                .post().isCreated()
+                .getLocation();
 
-        client.get().uri("/v1/tags").exchange()
-                .expectStatus().isOk()
-                .expectBody()
-                .jsonPath("$._embedded.tags[0].name").isEqualTo("house");
-
-        authenticate("userb@gmail.com");
-        client.get().uri("/v1/tags").exchange()
-                .expectStatus().isOk()
-                .expectBody()
-                .jsonPath("$._embedded.tags").isEmpty();
+        request.asUser(DEFAULT_USER).to(uri)
+                .get().isOk()
+                .hasField("$.name", v -> v.isEqualTo("A Tag"));
 
     }
 
     @Test
-    public void aUserCanOnlySeeTheDetailsOfItsOwnTags() {
+    public void details_failsWithInvalidId() {
 
-        authenticate("usera@gmail.com");
-        URI uri = client.post().uri("/v1/tags")
-                .bodyValue(Map.of("name", "house"))
-                .exchange()
-                .expectStatus().isCreated()
-                .expectBody().returnResult()
-                .getResponseHeaders().getLocation();
+        request.asUser(DEFAULT_USER).to("tags/invalid")
+                .get().isNotFound();
 
-        client.get().uri(uri).exchange()
-                .expectStatus().isOk();
+    }
 
-        authenticate("userb@gmail.com");
-        client.get().uri(uri).exchange()
-                .expectStatus().isNotFound();
+    @Test
+    public void details_failsWithUnknownId() {
+
+        var commentId = UUID.randomUUID();
+        request.asUser(DEFAULT_USER).to("tags/" + commentId)
+                .get().isNotFound();
+
+    }
+
+    @Test
+    public void details_showsTagInfo() {
+
+        var projectId = entityRequest.asUser(DEFAULT_USER).makeTag("A Tag").uuid();
+        request.asUser(DEFAULT_USER).to("tags/" + projectId)
+                .get().isOk()
+                .hasField("$.name", v -> v.isEqualTo("A Tag"));
+
+    }
+
+    @Test
+    public void user_canOnlySeeItsTags() {
+
+        var tagUri = entityRequest.asUser("another@gmail.com").makeTag("A Tag").uri();
+        request.asUser(DEFAULT_USER).to(tagUri).get().isNotFound();
+
+    }
+
+    @Test
+    public void list_noItems() {
+
+        request.asUser(DEFAULT_USER).to("tags")
+                .get()
+                .hasField("$._embedded.tags.length()", v -> v.isEqualTo(0));
+
+    }
+
+    @Test
+    public void list_allTags() {
+
+        entityRequest.asUser(DEFAULT_USER).makeTags("Tag A", "Tag B", "Tag C");
+
+        request.asUser(DEFAULT_USER).to("tags")
+                .get()
+                .hasField("$._embedded.tags.length()", v -> v.isEqualTo(3))
+                .hasField("$._embedded.tags[?(@.name == 'Tag A')]", JsonPathAssertions::exists)
+                .hasField("$._embedded.tags[?(@.name == 'Tag B')]", JsonPathAssertions::exists)
+                .hasField("$._embedded.tags[?(@.name == 'Tag C')]", JsonPathAssertions::exists);
 
     }
 

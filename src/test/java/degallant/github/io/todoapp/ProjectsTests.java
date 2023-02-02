@@ -2,99 +2,93 @@ package degallant.github.io.todoapp;
 
 import degallant.github.io.todoapp.common.IntegrationTest;
 import org.junit.jupiter.api.Test;
+import org.springframework.test.web.reactive.server.JsonPathAssertions;
 
-import java.net.URI;
-import java.util.Map;
+import java.util.UUID;
 
-/**
- * @noinspection ConstantConditions
- */
+import static org.hamcrest.Matchers.containsString;
+
 class ProjectsTests extends IntegrationTest {
 
     @Test
-    public void failsCreationWithEmptyBody() {
-        authenticate();
+    public void create_failsWithEmptyText() {
 
-        client.post().uri("/v1/projects")
-                .bodyValue(Map.of()).exchange()
-                .expectStatus().isBadRequest();
-    }
-
-    @Test
-    public void addATaskToAProject() {
-
-        authenticate();
-
-        //create project
-        URI projectURI = client.post().uri("/v1/projects")
-                .bodyValue(Map.of("title", "House summer cleanup"))
-                .exchange()
-                .expectStatus().isCreated()
-                .expectBody().returnResult().getResponseHeaders().getLocation();
-
-        String[] parts = projectURI.toString().split("/");
-        String projectId = parts[parts.length - 1];
-
-        //create task
-        URI taskUri = client.post().uri("/v1/tasks")
-                .bodyValue(Map.of("title", "Clean up attic"))
-                .exchange()
-                .expectStatus().isCreated()
-                .expectBody().returnResult().getResponseHeaders().getLocation();
-
-        //add task to project
-        client.patch().uri(taskUri)
-                .bodyValue(Map.of("project_id", projectId))
-                .exchange()
-                .expectStatus().isOk();
-
-        //check if task is in project
-        client.get().uri(taskUri)
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody()
-                .jsonPath("$._embedded.project._links.self.href").isEqualTo(projectURI.toString());
+        request.asUser(DEFAULT_USER).to("projects")
+                .withField("title", "")
+                .post().isBadRequest()
+                .hasField("$.errors[0].type", v -> v.value(containsString("validation.is_empty")));
 
     }
 
     @Test
-    public void aUserCanOnlySeeItsOwnProjects() {
+    public void create_aProject() {
 
-        authenticate("usera@gmail.com");
+        var uri = request.asUser(DEFAULT_USER).to("projects")
+                .withField("title", "A Project")
+                .post().isCreated()
+                .getLocation();
 
-        URI projectUri = client.post().uri("/v1/projects")
-                .bodyValue(Map.of("title", "Test project"))
-                .exchange()
-                .expectStatus().isCreated()
-                .expectBody().returnResult()
-                .getResponseHeaders().getLocation();
-
-        authenticate("userb@gmail.com");
-
-        client.get().uri(projectUri).exchange()
-                .expectStatus().isNotFound();
+        request.asUser(DEFAULT_USER).to(uri)
+                .get().isOk()
+                .hasField("$.title", v -> v.isEqualTo("A Project"));
 
     }
 
     @Test
-    public void aUserCanOnlyListItsOwnProjects() {
+    public void details_failsWithInvalidId() {
 
-        authenticate("usera@gmail.com");
-        client.post().uri("/v1/projects")
-                .bodyValue(Map.of("title", "house"))
-                .exchange()
-                .expectStatus().isCreated();
+        request.asUser(DEFAULT_USER).to("projects/invalid")
+                .get().isNotFound();
 
-        client.get().uri("/v1/projects").exchange()
-                .expectStatus().isOk()
-                .expectBody()
-                .jsonPath("$._embedded.projects[0].title").isEqualTo("house");
+    }
 
-        authenticate("userb@gmail.com");
-        client.get().uri("/v1/projects").exchange()
-                .expectStatus().isOk()
-                .expectBody()
-                .jsonPath("$._embedded.projects").isEmpty();
+    @Test
+    public void details_failsWithUnknownId() {
+
+        var commentId = UUID.randomUUID();
+        request.asUser(DEFAULT_USER).to("projects/" + commentId)
+                .get().isNotFound();
+
+    }
+
+    @Test
+    public void details_showsProjectInfo() {
+
+        var projectId = entityRequest.asUser(DEFAULT_USER).makeProject("A Project").uuid();
+        request.asUser(DEFAULT_USER).to("projects/" + projectId)
+                .get().isOk()
+                .hasField("$.title", v -> v.isEqualTo("A Project"));
+
+    }
+
+    @Test
+    public void user_canOnlySeeItsProjects() {
+
+        var projectUri = entityRequest.asUser("another@gmail.com").makeProject("A Project").uri();
+        request.asUser(DEFAULT_USER).to(projectUri).get().isNotFound();
+
+    }
+
+    @Test
+    public void list_noItems() {
+
+        request.asUser(DEFAULT_USER).to("projects")
+                .get()
+                .hasField("$._embedded.projects.length()", v -> v.isEqualTo(0));
+
+    }
+
+    @Test
+    public void list_allProjects() {
+
+        entityRequest.asUser(DEFAULT_USER).makeProjects("Project A", "Project B", "Project C");
+
+        request.asUser(DEFAULT_USER).to("projects")
+                .get()
+                .hasField("$._embedded.projects.length()", v -> v.isEqualTo(3))
+                .hasField("$._embedded.projects[?(@.title == 'Project A')]", JsonPathAssertions::exists)
+                .hasField("$._embedded.projects[?(@.title == 'Project B')]", JsonPathAssertions::exists)
+                .hasField("$._embedded.projects[?(@.title == 'Project C')]", JsonPathAssertions::exists);
 
     }
 

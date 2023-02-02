@@ -13,7 +13,7 @@ public class TasksPatchTests extends IntegrationTest {
 
     @Test
     public void user_cantPatchOtherUsersTasks() {
-        var uri = makeTaskAsUser("another@gmail.com", "Task A").uri();
+        var uri = entityRequest.asUser("another@gmail.com").makeTask("Task A").uri();
         request.asUser(DEFAULT_USER).to(uri).patch().isNotFound();
     }
 
@@ -31,13 +31,13 @@ public class TasksPatchTests extends IntegrationTest {
         var dueDate = "2030-01-01T12:50:29.790511-04:00";
         var priority = "P3";
         var complete = "true";
-        var parentId = makeTaskAsUser(DEFAULT_USER, "Parent task").uuid().toString();
-        var tags = makeTagsAsUser(DEFAULT_USER, "daily", "home", "pet");
-        var projectId = makeProjectAsUser(DEFAULT_USER, "daily tasks");
+        var parentId = entityRequest.asUser(DEFAULT_USER).makeTask("Parent task").uuid().toString();
+        var tags = entityRequest.asUser(DEFAULT_USER).makeTags("daily", "home", "pet").asString();
+        var projectId = entityRequest.asUser(DEFAULT_USER).makeProject("daily tasks").uuid().toString();
 
         URI taskUri = request.asUser(DEFAULT_USER).to("tasks")
                 .withField("title", "Title")
-                .withField("tags_ids", makeTagsAsUser(DEFAULT_USER, "Tag A"))
+                .withField("tags_ids", entityRequest.asUser(DEFAULT_USER).makeTags("Tag A").asString())
                 .post().isCreated().getLocation();
 
         request.asUser(DEFAULT_USER).to(taskUri)
@@ -76,9 +76,9 @@ public class TasksPatchTests extends IntegrationTest {
         var dueDate = "2030-01-01T12:50:29.790511-04:00";
         var priority = "P3";
         var complete = "true";
-        var parentId = makeTaskAsUser(DEFAULT_USER, "Parent task").uuid().toString();
-        var tags = makeTagsAsUser(DEFAULT_USER, "daily", "home", "pet");
-        var projectId = makeProjectAsUser(DEFAULT_USER, "daily tasks");
+        var parentId = entityRequest.asUser(DEFAULT_USER).makeTask("Parent task").uuid().toString();
+        var tags = entityRequest.asUser(DEFAULT_USER).makeTags("daily", "home", "pet").asString();
+        var projectId = entityRequest.asUser(DEFAULT_USER).makeProject("daily tasks").uuid().toString();
 
         URI taskUri = request.asUser(DEFAULT_USER).to("tasks")
                 .withField("title", title)
@@ -111,7 +111,7 @@ public class TasksPatchTests extends IntegrationTest {
 
     @Test
     public void taskNotPatched_invalidTitle_isEmpty() {
-        var uri = makeTaskAsUser(DEFAULT_USER, "Take dog for a walk").uri();
+        var uri = entityRequest.asUser(DEFAULT_USER).makeTask("Take dog for a walk").uri();
         request.asUser(DEFAULT_USER).to(uri)
                 .withField("title", "").patch()
                 .isBadRequest()
@@ -124,7 +124,7 @@ public class TasksPatchTests extends IntegrationTest {
     @Test
     public void taskNotPatched_invalidDescription_isEmpty() {
 
-        var uri = makeTaskAsUser(DEFAULT_USER, "Take dog for a walk").uri();
+        var uri = entityRequest.asUser(DEFAULT_USER).makeTask("Take dog for a walk").uri();
         request.asUser(DEFAULT_USER).to(uri)
                 .withField("title", "Go for a walk")
                 .withField("description", "").patch()
@@ -137,7 +137,7 @@ public class TasksPatchTests extends IntegrationTest {
     @Test
     public void taskNotPatched_invalidDueDate_isEmpty() {
 
-        var uri = makeTaskAsUser(DEFAULT_USER, "Take dog for a walk").uri();
+        var uri = entityRequest.asUser(DEFAULT_USER).makeTask("Take dog for a walk").uri();
         request.asUser(DEFAULT_USER).to(uri)
                 .withField("title", "Go for a walk")
                 .withField("due_date", "").patch()
@@ -150,7 +150,7 @@ public class TasksPatchTests extends IntegrationTest {
     @Test
     public void taskNotPatched_invalidDueDate_isInPast() {
 
-        var uri = makeTaskAsUser(DEFAULT_USER, "Take dog for a walk").uri();
+        var uri = entityRequest.asUser(DEFAULT_USER).makeTask("Take dog for a walk").uri();
         request.asUser(DEFAULT_USER).to(uri)
                 .withField("title", "Go for a walk")
                 .withField("due_date", "2001-01-01T12:50:29.790511-04:00").patch()
@@ -163,7 +163,7 @@ public class TasksPatchTests extends IntegrationTest {
     @Test
     public void taskNotPatched_invalidPriority() {
 
-        var uri = makeTaskAsUser(DEFAULT_USER, "Take dog for a walk").uri();
+        var uri = entityRequest.asUser(DEFAULT_USER).makeTask("Take dog for a walk").uri();
         request.asUser(DEFAULT_USER).to(uri)
                 .withField("title", "Go for a walk")
                 .withField("priority", "invalid").patch()
@@ -176,7 +176,7 @@ public class TasksPatchTests extends IntegrationTest {
     @Test
     public void taskNotPatched_invalidTagsIds() {
 
-        var uri = makeTaskAsUser(DEFAULT_USER, "Take dog for a walk").uri();
+        var uri = entityRequest.asUser(DEFAULT_USER).makeTask("Take dog for a walk").uri();
         request.asUser(DEFAULT_USER).to(uri)
                 .withField("title", "Go for a walk")
                 .withField("tags_ids", "invalid").patch()
@@ -189,7 +189,7 @@ public class TasksPatchTests extends IntegrationTest {
     @Test
     public void taskNotPatched_invalidTagsIds_isWithNonexistentIds() {
 
-        var uri = makeTaskAsUser(DEFAULT_USER, "Take dog for a walk").uri();
+        var uri = entityRequest.asUser(DEFAULT_USER).makeTask("Take dog for a walk").uri();
         request.asUser(DEFAULT_USER).to(uri)
                 .withField("title", "Go for a walk")
                 .withArray("tags_ids", UUID.randomUUID(), UUID.randomUUID()).patch()
@@ -207,7 +207,7 @@ public class TasksPatchTests extends IntegrationTest {
                 .isCreated()
                 .getLocationUUID();
 
-        var uri = makeTaskAsUser(DEFAULT_USER, "Take dog for a walk").uri();
+        var uri = entityRequest.asUser(DEFAULT_USER).makeTask("Take dog for a walk").uri();
         request.asUser(DEFAULT_USER).to(uri)
                 .withField("title", "Go for a walk")
                 .withArray("tags_ids", tagAId).patch()
@@ -220,7 +220,7 @@ public class TasksPatchTests extends IntegrationTest {
     @Test
     public void taskNotPatched_invalidParentIds() {
 
-        var uri = makeTaskAsUser(DEFAULT_USER, "Take dog for a walk").uri();
+        var uri = entityRequest.asUser(DEFAULT_USER).makeTask("Take dog for a walk").uri();
         request.asUser(DEFAULT_USER).to(uri)
                 .withField("title", "Go for a walk")
                 .withField("parent_id", "invalid").patch()
@@ -233,7 +233,7 @@ public class TasksPatchTests extends IntegrationTest {
     @Test
     public void taskNotPatched_invalidParentId_withNonexistentId() {
 
-        var uri = makeTaskAsUser(DEFAULT_USER, "Take dog for a walk").uri();
+        var uri = entityRequest.asUser(DEFAULT_USER).makeTask("Take dog for a walk").uri();
         request.asUser(DEFAULT_USER).to(uri)
                 .withField("title", "Go for a walk")
                 .withField("parent_id", UUID.randomUUID()).patch()
@@ -250,7 +250,7 @@ public class TasksPatchTests extends IntegrationTest {
                 .isCreated()
                 .getLocationUUID();
 
-        var uri = makeTaskAsUser(DEFAULT_USER, "Take dog for a walk").uri();
+        var uri = entityRequest.asUser(DEFAULT_USER).makeTask("Take dog for a walk").uri();
         request.asUser(DEFAULT_USER).to(uri)
                 .withField("title", "Go for a walk")
                 .withField("parent_id", taskId).patch()
@@ -262,7 +262,7 @@ public class TasksPatchTests extends IntegrationTest {
 
     @Test
     public void taskNotPatched_invalidProjectId() {
-        var uri = makeTaskAsUser(DEFAULT_USER, "Take dog for a walk").uri();
+        var uri = entityRequest.asUser(DEFAULT_USER).makeTask("Take dog for a walk").uri();
         request.asUser(DEFAULT_USER).to(uri)
                 .withField("title", "Go for a walk")
                 .withField("project_id", "invalid").patch()
@@ -274,7 +274,7 @@ public class TasksPatchTests extends IntegrationTest {
 
     @Test
     public void taskNotPatched_invalidProjectId_withNonexistentId() {
-        var uri = makeTaskAsUser(DEFAULT_USER, "Take dog for a walk").uri();
+        var uri = entityRequest.asUser(DEFAULT_USER).makeTask("Take dog for a walk").uri();
         request.asUser(DEFAULT_USER).to(uri)
                 .withField("title", "Go for a walk")
                 .withField("project_id", UUID.randomUUID()).patch()
@@ -291,7 +291,7 @@ public class TasksPatchTests extends IntegrationTest {
                 .isCreated()
                 .getLocationUUID();
 
-        var uri = makeTaskAsUser(DEFAULT_USER, "Take dog for a walk").uri();
+        var uri = entityRequest.asUser(DEFAULT_USER).makeTask("Take dog for a walk").uri();
         request.asUser(DEFAULT_USER).to(uri)
                 .withField("title", "Go for a walk")
                 .withField("project_id", projectId).patch()

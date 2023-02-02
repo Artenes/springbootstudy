@@ -1,23 +1,20 @@
 package degallant.github.io.todoapp.tags;
 
 import degallant.github.io.todoapp.users.UserEntity;
+import degallant.github.io.todoapp.validation.FieldParser;
 import degallant.github.io.todoapp.validation.FieldValidator;
 import degallant.github.io.todoapp.validation.Sanitizer;
 import lombok.RequiredArgsConstructor;
-import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
-import org.springframework.hateoas.RepresentationModel;
 import org.springframework.hateoas.mediatype.hal.HalModelBuilder;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Collections;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
-import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
+import static degallant.github.io.todoapp.common.LinkBuilder.makeLinkTo;
 
 /**
  * @noinspection ClassCanBeRecord
@@ -30,6 +27,7 @@ public class TagsController {
     private final TagsRepository repository;
     private final Sanitizer sanitizer;
     private final FieldValidator rules;
+    private final FieldParser parser;
 
     @PostMapping
     public ResponseEntity<?> create(@RequestBody TagsDto.Create request, Authentication authentication) {
@@ -50,42 +48,40 @@ public class TagsController {
 
         entity = repository.save(entity);
 
-        var linkCreated = linkTo(methodOn(getClass()).details(entity.getId(), authentication)).withSelfRel();
+        var linkCreated = makeLinkTo("v1", "tags", entity.getId()).withSelfRel();
 
         return ResponseEntity.created(linkCreated.toUri()).build();
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> details(@PathVariable UUID id, Authentication authentication) {
+    public ResponseEntity<?> details(@PathVariable String id, Authentication authentication) {
         var userId = ((UserEntity) authentication.getPrincipal()).getId();
-        var entity = repository.findByIdAndUserId(id, userId).orElseThrow();
-        var response = toEntityModel(entity, authentication);
+        var entity = repository.findByIdAndUserId(parser.toUuidOrThrow(id), userId).orElseThrow();
+        var response = toEntityModel(entity);
         return ResponseEntity.ok(response);
     }
 
     @GetMapping
-    public RepresentationModel<?> list(Authentication authentication) {
+    public ResponseEntity<?> list(Authentication authentication) {
         UUID userId = ((UserEntity) authentication.getPrincipal()).getId();
 
         var tags = repository.findByUserId(userId)
                 .stream()
-                .map(entity -> toEntityModel(entity, authentication))
+                .map(this::toEntityModel)
                 .collect(Collectors.toList());
 
-        var selfRef = linkTo(methodOn(getClass()).list(authentication)).withSelfRel();
+        var selfRef = makeLinkTo("v1", "tags").withSelfRel();
 
-        if (tags.isEmpty()) {
-            return HalModelBuilder.emptyHalModel()
-                    .embed(Collections.emptyList(), TagsDto.Details.class)
-                    .link(selfRef).build();
-        }
+        var response = HalModelBuilder.emptyHalModel()
+                .embed(tags, TagsDto.Details.class)
+                .link(selfRef).build();
 
-        return CollectionModel.of(tags).add(selfRef);
+        return ResponseEntity.ok(response);
     }
 
-    private EntityModel<TagsDto.Details> toEntityModel(TagEntity entity, Authentication authentication) {
-        var linkSelf = linkTo(methodOn(getClass()).details(entity.getId(), authentication)).withSelfRel();
-        var linkAll = linkTo(methodOn(getClass()).list(authentication)).withRel("all");
+    private EntityModel<TagsDto.Details> toEntityModel(TagEntity entity) {
+        var linkSelf = makeLinkTo("v1", "tags", entity.getId()).withSelfRel();
+        var linkAll = makeLinkTo("v1", "tags").withRel("all");
 
         var tag = TagsDto.Details.builder()
                 .id(entity.getId())

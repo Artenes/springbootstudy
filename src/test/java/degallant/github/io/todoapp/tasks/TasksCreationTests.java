@@ -19,9 +19,9 @@ public class TasksCreationTests extends IntegrationTest {
         var dueDate = "2030-01-01T12:50:29.790511-04:00";
         var priority = "P3";
         var complete = "true";
-        var parentId = makeTaskAsUser(DEFAULT_USER, "Parent task").uuid().toString();
-        var tags = makeTagsAsUser(DEFAULT_USER, "daily", "home", "pet");
-        var projectId = makeProjectAsUser(DEFAULT_USER, "daily tasks");
+        var parentId = entityRequest.asUser(DEFAULT_USER).makeTask("Parent task").uuid().toString();
+        var tags = entityRequest.asUser(DEFAULT_USER).makeTags("daily", "home", "pet").asString();
+        var projectId = entityRequest.asUser(DEFAULT_USER).makeProject("daily tasks").uuid().toString();
 
         URI taskUri = request.asUser(DEFAULT_USER).to("tasks")
                 .withField("title", title)

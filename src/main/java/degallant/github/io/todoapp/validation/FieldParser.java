@@ -117,7 +117,7 @@ public class FieldParser {
             var array = mapper.readValue(value, UUID[].class);
             return Arrays.stream(array).toList();
         } catch (JsonProcessingException exception) {
-            throw new InvalidValueException("validation.invalid_id_list", value);
+            throw new InvalidValueException(exception, "validation.invalid_id_list", value);
         }
     }
 

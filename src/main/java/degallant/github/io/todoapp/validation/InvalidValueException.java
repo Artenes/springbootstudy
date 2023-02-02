@@ -12,4 +12,11 @@ public class InvalidValueException extends Exception {
         this.messageId = messageId;
         this.messageArgs = messageArgs;
     }
+
+    public InvalidValueException(Exception cause, String messageId, Object... messageArgs) {
+        super(cause);
+        this.messageId = messageId;
+        this.messageArgs = messageArgs;
+    }
+
 }

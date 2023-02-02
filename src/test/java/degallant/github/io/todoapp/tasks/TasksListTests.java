@@ -26,7 +26,7 @@ public class TasksListTests extends IntegrationTest {
     @Test
     public void list_containsTaskDetails() {
 
-        entityRequest.asUser(DEFAULT_USER).makeTask(
+        entityRequest.asUser(DEFAULT_USER).makeTaskWithDetails(
                 "title", "Task A",
                 "description", "task description",
                 "due_date", "2030-01-01T12:50:29.790511-04:00"
@@ -234,8 +234,8 @@ public class TasksListTests extends IntegrationTest {
     @Test
     public void sorting_sortByDueDateAsc() {
 
-        entityRequest.asUser(DEFAULT_USER).makeTask("title", "Task A", "due_date", "2030-01-01T12:50:29.790511-04:00");
-        entityRequest.asUser(DEFAULT_USER).makeTask("title", "Task B", "due_date", "2030-02-01T12:50:29.790511-04:00");
+        entityRequest.asUser(DEFAULT_USER).makeTaskWithDetails("title", "Task A", "due_date", "2030-01-01T12:50:29.790511-04:00");
+        entityRequest.asUser(DEFAULT_USER).makeTaskWithDetails("title", "Task B", "due_date", "2030-02-01T12:50:29.790511-04:00");
 
         request.asUser(DEFAULT_USER).to("tasks").withParam("s", "due_date:asc")
                 .get().isOk()
@@ -247,8 +247,8 @@ public class TasksListTests extends IntegrationTest {
     @Test
     public void sorting_sortByDueDateDesc() {
 
-        entityRequest.asUser(DEFAULT_USER).makeTask("title", "Task A", "due_date", "2030-01-01T12:50:29.790511-04:00");
-        entityRequest.asUser(DEFAULT_USER).makeTask("title", "Task B", "due_date", "2030-02-01T12:50:29.790511-04:00");
+        entityRequest.asUser(DEFAULT_USER).makeTaskWithDetails("title", "Task A", "due_date", "2030-01-01T12:50:29.790511-04:00");
+        entityRequest.asUser(DEFAULT_USER).makeTaskWithDetails("title", "Task B", "due_date", "2030-02-01T12:50:29.790511-04:00");
 
         request.asUser(DEFAULT_USER).to("tasks").withParam("s", "due_date:desc")
                 .get().isOk()
@@ -260,8 +260,8 @@ public class TasksListTests extends IntegrationTest {
     @Test
     public void sorting_sortByMoreThanOneField() {
 
-        entityRequest.asUser(DEFAULT_USER).makeTask("title", "Task A", "due_date", "2030-01-01T12:50:29.790511-04:00");
-        entityRequest.asUser(DEFAULT_USER).makeTask("title", "Task B", "due_date", "2030-02-01T12:50:29.790511-04:00");
+        entityRequest.asUser(DEFAULT_USER).makeTaskWithDetails("title", "Task A", "due_date", "2030-01-01T12:50:29.790511-04:00");
+        entityRequest.asUser(DEFAULT_USER).makeTaskWithDetails("title", "Task B", "due_date", "2030-02-01T12:50:29.790511-04:00");
 
         request.asUser(DEFAULT_USER).to("tasks").withParam("s", "due_date:asc,title:desc")
                 .get().isOk()
@@ -294,8 +294,8 @@ public class TasksListTests extends IntegrationTest {
     @Test
     public void filter_byCompleteTasks() {
 
-        entityRequest.asUser(DEFAULT_USER).makeTask("title", "Take dog for a walk", "complete", "true");
-        entityRequest.asUser(DEFAULT_USER).makeTask("title", "Take cat to vet", "complete", "false");
+        entityRequest.asUser(DEFAULT_USER).makeTaskWithDetails("title", "Take dog for a walk", "complete", "true");
+        entityRequest.asUser(DEFAULT_USER).makeTaskWithDetails("title", "Take cat to vet", "complete", "false");
 
         request.asUser(DEFAULT_USER).to("tasks").withParam("complete", "true")
                 .get().isOk()
@@ -307,8 +307,8 @@ public class TasksListTests extends IntegrationTest {
     @Test
     public void filter_byNotCompletedTasks() {
 
-        entityRequest.asUser(DEFAULT_USER).makeTask("title", "Take dog for a walk", "complete", "true");
-        entityRequest.asUser(DEFAULT_USER).makeTask("title", "Take cat to vet", "complete", "false");
+        entityRequest.asUser(DEFAULT_USER).makeTaskWithDetails("title", "Take dog for a walk", "complete", "true");
+        entityRequest.asUser(DEFAULT_USER).makeTaskWithDetails("title", "Take cat to vet", "complete", "false");
 
         request.asUser(DEFAULT_USER).to("tasks").withParam("complete", "false")
                 .get().isOk()
@@ -338,8 +338,8 @@ public class TasksListTests extends IntegrationTest {
     @Test
     public void filter_byDate() {
 
-        entityRequest.asUser(DEFAULT_USER).makeTask("title", "Take dog for a walk", "due_date", "2030-01-01T12:50:29.790511-04:00");
-        entityRequest.asUser(DEFAULT_USER).makeTask("title", "Take cat to vet", "due_date", "2030-01-03T12:50:29.790511-04:00");
+        entityRequest.asUser(DEFAULT_USER).makeTaskWithDetails("title", "Take dog for a walk", "due_date", "2030-01-01T12:50:29.790511-04:00");
+        entityRequest.asUser(DEFAULT_USER).makeTaskWithDetails("title", "Take cat to vet", "due_date", "2030-01-03T12:50:29.790511-04:00");
 
         request.asUser(DEFAULT_USER).to("tasks").withParam("due_date", "2030-01-03")
                 .get().isOk()
@@ -369,9 +369,9 @@ public class TasksListTests extends IntegrationTest {
     @Test
     public void filter_withMoreThanOneFilter() {
 
-        entityRequest.asUser(DEFAULT_USER).makeTask("title", "Take dog for a walk", "complete", "true");
-        entityRequest.asUser(DEFAULT_USER).makeTask("title", "Take dog to vet", "complete", "false");
-        entityRequest.asUser(DEFAULT_USER).makeTask("title", "Feed dog", "complete", "true");
+        entityRequest.asUser(DEFAULT_USER).makeTaskWithDetails("title", "Take dog for a walk", "complete", "true");
+        entityRequest.asUser(DEFAULT_USER).makeTaskWithDetails("title", "Take dog to vet", "complete", "false");
+        entityRequest.asUser(DEFAULT_USER).makeTaskWithDetails("title", "Feed dog", "complete", "true");
 
         request.asUser(DEFAULT_USER).to("tasks")
                 .withParam("title", "dog")
