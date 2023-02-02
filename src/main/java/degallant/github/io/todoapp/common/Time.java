@@ -8,6 +8,7 @@ import java.time.OffsetDateTime;
  * @noinspection ClassCanBeRecord
  */
 @RequiredArgsConstructor
+//TODO remove this implementation
 public class Time {
 
     private final OffsetDateTime now;

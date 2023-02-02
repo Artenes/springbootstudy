@@ -15,6 +15,8 @@ public class LinkBuilder {
     private final List<Object> paths = new ArrayList<>();
     private final Map<String, String> params = new HashMap<>();
 
+    //TODO remove static methods
+    //TODO hide versioning behind builder
     public static LinkBuilder makeLink(Object... paths) {
         try {
             var builder = new LinkBuilder(makeBaseUrl());

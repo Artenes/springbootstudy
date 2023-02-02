@@ -1,9 +1,5 @@
 # TO DO
 
-- add pagination to some endpoints
-
-- add sorting, filtering, search and embeds in some endpoints
-
 - make refresh token works
 
 - add test for invalid tokens

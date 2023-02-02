@@ -15,6 +15,7 @@ import java.util.Map;
  */
 public class Request {
 
+    //TODO add option to change version
     private final ClientProxy client;
     private final ObjectMapper mapper;
     private final Authenticator authenticator;
