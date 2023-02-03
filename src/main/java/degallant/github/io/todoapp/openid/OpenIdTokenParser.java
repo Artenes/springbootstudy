@@ -21,16 +21,16 @@ public class OpenIdTokenParser {
                 .build();
     }
 
-    public OpenIdUser extract(String token) {
+    public OpenIdUser extract(String token) throws OpenIdExtractionException {
         GoogleIdToken idToken;
         try {
             idToken = verifier.verify(token);
         } catch (GeneralSecurityException | IOException | IllegalArgumentException e) {
-            throw new OpenIdExtractionException("JWT Extraction failed", e);
+            throw new OpenIdExtractionException.FailedParsing(token, e);
         }
 
         if (idToken == null) {
-            throw new OpenIdExtractionException("Extracted JWT token is null");
+            throw new OpenIdExtractionException.InvalidToken(token);
         }
 
         GoogleIdToken.Payload payload = idToken.getPayload();

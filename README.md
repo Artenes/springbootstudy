@@ -1,9 +1,5 @@
 # TO DO
 
-- make refresh token works
-
-- add test for invalid tokens
-
 - extract authenticate user for easier access
 
 - deal with users roles

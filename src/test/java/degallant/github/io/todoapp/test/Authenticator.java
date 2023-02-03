@@ -1,6 +1,7 @@
 package degallant.github.io.todoapp.test;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import degallant.github.io.todoapp.openid.OpenIdExtractionException;
 import degallant.github.io.todoapp.openid.OpenIdTokenParser;
 import degallant.github.io.todoapp.openid.OpenIdUser;
 import org.springframework.http.HttpHeaders;
@@ -48,6 +49,14 @@ public class Authenticator {
         String token = email + name + profileUrl;
         when(openIdTokenParser.extract(eq(token))).thenReturn(new OpenIdUser(email, name, profileUrl));
         return token;
+    }
+
+    public void makeParsingFailsTo(String token) {
+        when(openIdTokenParser.extract(eq(token))).thenThrow(new OpenIdExtractionException.FailedParsing(token));
+    }
+
+    public void makeTokenInvalid(String token) {
+        when(openIdTokenParser.extract(eq(token))).thenThrow(new OpenIdExtractionException.InvalidToken(token));
     }
 
     protected void authenticateWithToken(String accessToken) {

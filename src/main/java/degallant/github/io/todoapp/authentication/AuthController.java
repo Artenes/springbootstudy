@@ -33,11 +33,11 @@ public class AuthController {
         var result = sanitizer.sanitize(
                 sanitizer.field("open_id_token").withRequiredValue(request.getOpenIdToken()).sanitize(value -> {
                     rules.isNotEmpty(value);
-                    return value;
+                    return service.parseOrThrow(value);
                 })
         );
 
-        var authenticatedUser = service.authenticateWithOpenId(result.get("open_id_token").value());
+        var authenticatedUser = service.authenticateWith(result.get("open_id_token").value());
         var credentials = (AuthenticationService.TokenPair) authenticatedUser.getCredentials();
         var isNew = (Boolean) authenticatedUser.getDetails();
 

@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test;
 public class AuthTests extends IntegrationTest {
 
     @Test
-    public void authenticate_failsWhenTokenIsNotProvided() {
+    public void authenticate_fails_whenOpenIdTokenIsNotProvided() {
 
         request.asGuest().to("auth")
                 .withField("something_else", "random")
@@ -16,12 +16,36 @@ public class AuthTests extends IntegrationTest {
     }
 
     @Test
-    public void authenticate_failsTokenIsEmpty() {
+    public void authenticate_fails_whenOpenIdTokenIsEmpty() {
 
         request.asGuest().to("auth")
                 .withField("open_id_token", "")
                 .post().isBadRequest()
                 .hasField("$.errors[0].type", contains("validation.is_empty"));
+
+    }
+
+    @Test
+    public void authenticate_failsWhenOpenIdTokenIsInvalid() {
+
+        authenticator.makeTokenInvalid("invalid");
+
+        request.asGuest().to("auth")
+                .withField("open_id_token", "invalid")
+                .post().isBadRequest()
+                .hasField("$.errors[0].type", contains("validation.openid_invalid_token"));
+
+    }
+
+    @Test
+    public void authenticate_failsWhenOpenIdTokenParsingFails() {
+
+        authenticator.makeParsingFailsTo("invalid");
+
+        request.asGuest().to("auth")
+                .withField("open_id_token", "invalid")
+                .post().isBadRequest()
+                .hasField("$.errors[0].type", contains("validation.openid_extraction_failed"));
 
     }
 

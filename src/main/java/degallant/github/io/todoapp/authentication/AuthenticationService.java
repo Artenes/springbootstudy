@@ -4,10 +4,12 @@ import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.interfaces.DecodedJWT;
+import degallant.github.io.todoapp.openid.OpenIdExtractionException;
 import degallant.github.io.todoapp.openid.OpenIdTokenParser;
 import degallant.github.io.todoapp.openid.OpenIdUser;
 import degallant.github.io.todoapp.users.UserEntity;
 import degallant.github.io.todoapp.users.UsersRepository;
+import degallant.github.io.todoapp.validation.InvalidValueException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
@@ -36,9 +38,16 @@ public class AuthenticationService {
         signature = Algorithm.HMAC256(config.signKey());
     }
 
-    public Authentication authenticateWithOpenId(String openIdToken) {
-        OpenIdUser openIdUser = openIdTokenParser.extract(openIdToken);
+    public OpenIdUser parseOrThrow(String openIdToken) throws InvalidValueException {
+        try {
+            return openIdTokenParser.extract(openIdToken);
+        } catch (OpenIdExtractionException exception) {
+            var message = exception instanceof OpenIdExtractionException.FailedParsing ? "validation.openid_extraction_failed" : "validation.openid_invalid_token";
+            throw new InvalidValueException(exception, message, exception.getToken());
+        }
+    }
 
+    public Authentication authenticateWith(OpenIdUser openIdUser) {
         Optional<UserEntity> user = repository.findByEmail(openIdUser.email());
 
         UserEntity userEntity;
