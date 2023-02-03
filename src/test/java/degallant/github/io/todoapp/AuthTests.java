@@ -1,9 +1,7 @@
 package degallant.github.io.todoapp;
 
 import degallant.github.io.todoapp.common.IntegrationTest;
-import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
-import org.springframework.test.web.reactive.server.JsonPathAssertions;
 
 public class AuthTests extends IntegrationTest {
 
@@ -13,7 +11,7 @@ public class AuthTests extends IntegrationTest {
         request.asGuest().to("auth")
                 .withField("something_else", "random")
                 .post().isBadRequest()
-                .hasField("$.errors[0].type", v -> v.value(Matchers.containsString("validation.is_required")));
+                .hasField("$.errors[0].type", contains("validation.is_required"));
 
     }
 
@@ -23,7 +21,7 @@ public class AuthTests extends IntegrationTest {
         request.asGuest().to("auth")
                 .withField("open_id_token", "")
                 .post().isBadRequest()
-                .hasField("$.errors[0].type", v -> v.value(Matchers.containsString("validation.is_empty")));
+                .hasField("$.errors[0].type", contains("validation.is_empty"));
 
     }
 
@@ -39,8 +37,8 @@ public class AuthTests extends IntegrationTest {
         var response = request.asGuest().to("auth")
                 .withField("open_id_token", openIdToken)
                 .post().isCreated()
-                .hasField("$.access_token", JsonPathAssertions::exists)
-                .hasField("$.access_token", JsonPathAssertions::exists)
+                .hasField("$.access_token", exists())
+                .hasField("$.access_token", exists())
                 .getResponse();
 
         var userUri = response.headers().getLocation();
@@ -48,13 +46,13 @@ public class AuthTests extends IntegrationTest {
 
         request.withToken(token).to(userUri)
                 .get().isOk()
-                .hasField("$.email", v -> v.isEqualTo(email))
-                .hasField("$.name", v -> v.isEqualTo(name))
-                .hasField("$.picture_url", v -> v.isEqualTo(profileUrl))
-                .hasField("$._links.self.href", JsonPathAssertions::exists)
-                .hasField("$._links.tasks.href", JsonPathAssertions::exists)
-                .hasField("$._links.projects.href", JsonPathAssertions::exists)
-                .hasField("$._links.tags.href", JsonPathAssertions::exists);
+                .hasField("$.email", isEqualTo(email))
+                .hasField("$.name", isEqualTo(name))
+                .hasField("$.picture_url", isEqualTo(profileUrl))
+                .hasField("$._links.self.href", exists())
+                .hasField("$._links.tasks.href", exists())
+                .hasField("$._links.projects.href", exists())
+                .hasField("$._links.tags.href", exists());
 
     }
 
@@ -74,7 +72,7 @@ public class AuthTests extends IntegrationTest {
         request.asGuest().to("auth")
                 .withField("open_id_token", token)
                 .post().isOk()
-                .hasField("$.access_token", JsonPathAssertions::exists);
+                .hasField("$.access_token", exists());
 
     }
 

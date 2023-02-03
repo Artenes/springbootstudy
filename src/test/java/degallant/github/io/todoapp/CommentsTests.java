@@ -36,7 +36,7 @@ public class CommentsTests extends IntegrationTest {
         request.asUser(DEFAULT_USER).to("tasks/" + id + "/comments")
                 .withField("text", "")
                 .post().isBadRequest()
-                .hasField("$.errors[0].type", v -> v.value(containsString("validation.is_empty")));
+                .hasField("$.errors[0].type", contains("validation.is_empty"));
 
     }
 
@@ -51,7 +51,7 @@ public class CommentsTests extends IntegrationTest {
 
         request.asUser(DEFAULT_USER).to(uri)
                 .get().isOk()
-                .hasField("$.text", v -> v.isEqualTo("a comment"));
+                .hasField("$.text", isEqualTo("a comment"));
 
     }
 
@@ -108,7 +108,7 @@ public class CommentsTests extends IntegrationTest {
         var commentId = entityRequest.asUser(DEFAULT_USER).commentOnTask(id, "gotta rush").uuid();
         request.asUser(DEFAULT_USER).to("tasks/" + id + "/comments/" + commentId)
                 .get().isOk()
-                .hasField("$.text", v -> v.isEqualTo("gotta rush"));
+                .hasField("$.text", isEqualTo("gotta rush"));
 
     }
 
@@ -146,7 +146,7 @@ public class CommentsTests extends IntegrationTest {
         var id = entityRequest.asUser(DEFAULT_USER).makeTaskWithDetails("title", "Task A").uuid();
         request.asUser(DEFAULT_USER).to("tasks/" + id + "/comments")
                 .get()
-                .hasField("$._embedded.comments.length()", v -> v.isEqualTo(0));
+                .hasField("$._embedded.comments.length()", isEqualTo(0));
 
     }
 
@@ -158,9 +158,9 @@ public class CommentsTests extends IntegrationTest {
 
         request.asUser(DEFAULT_USER).to("tasks/" + id + "/comments")
                 .get()
-                .hasField("$._embedded.comments.length()", v -> v.isEqualTo(2))
-                .hasField("$._embedded.comments[?(@.text == 'Comment A')]", JsonPathAssertions::exists)
-                .hasField("$._embedded.comments[?(@.text == 'Comment B')]", JsonPathAssertions::exists);
+                .hasField("$._embedded.comments.length()", isEqualTo(2))
+                .hasField("$._embedded.comments[?(@.text == 'Comment A')]", exists())
+                .hasField("$._embedded.comments[?(@.text == 'Comment B')]", exists());
 
     }
 

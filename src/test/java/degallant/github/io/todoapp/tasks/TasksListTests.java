@@ -4,8 +4,6 @@ import degallant.github.io.todoapp.common.IntegrationTest;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.web.reactive.server.JsonPathAssertions;
 
-import static org.hamcrest.Matchers.containsString;
-
 public class TasksListTests extends IntegrationTest {
 
     @Test
@@ -16,10 +14,10 @@ public class TasksListTests extends IntegrationTest {
 
         request.asUser(DEFAULT_USER).to("tasks")
                 .get().isOk()
-                .hasField("$._embedded.tasks.length()", v -> v.isEqualTo(3))
-                .hasField("$._embedded.tasks.[?(@.title == 'Task A')]", JsonPathAssertions::exists)
-                .hasField("$._embedded.tasks.[?(@.title == 'Task B')]", JsonPathAssertions::exists)
-                .hasField("$._embedded.tasks.[?(@.title == 'Task C')]", JsonPathAssertions::exists);
+                .hasField("$._embedded.tasks.length()", isEqualTo(3))
+                .hasField("$._embedded.tasks.[?(@.title == 'Task A')]", exists())
+                .hasField("$._embedded.tasks.[?(@.title == 'Task B')]", exists())
+                .hasField("$._embedded.tasks.[?(@.title == 'Task C')]", exists());
 
     }
 
@@ -33,11 +31,11 @@ public class TasksListTests extends IntegrationTest {
         );
 
         request.asUser(DEFAULT_USER).to("tasks").get().isOk()
-                .hasField("$._embedded.tasks.length()", JsonPathAssertions::exists)
-                .hasField("$._embedded.tasks[0].title", v -> v.isEqualTo("Task A"))
-                .hasField("$._embedded.tasks[0].description", v -> v.isEqualTo("task description"))
-                .hasField("$._embedded.tasks[0].due_date", v -> v.isEqualTo("2030-01-01T12:50:29.790511-04:00"))
-                .hasField("$._embedded.tasks[0].complete", v -> v.isEqualTo(false));
+                .hasField("$._embedded.tasks.length()", exists())
+                .hasField("$._embedded.tasks[0].title", isEqualTo("Task A"))
+                .hasField("$._embedded.tasks[0].description", isEqualTo("task description"))
+                .hasField("$._embedded.tasks[0].due_date", isEqualTo("2030-01-01T12:50:29.790511-04:00"))
+                .hasField("$._embedded.tasks[0].complete", isEqualTo(false));
 
     }
 
@@ -47,9 +45,9 @@ public class TasksListTests extends IntegrationTest {
         entityRequest.asUser(DEFAULT_USER).makeTasks("Task A", "Task B");
 
         request.asUser(DEFAULT_USER).to("tasks").get().isOk()
-                .hasField("$.count", v -> v.isEqualTo(2))
-                .hasField("$.pages", v -> v.isEqualTo(1))
-                .hasField("$.total", v -> v.isEqualTo(2))
+                .hasField("$.count", isEqualTo(2))
+                .hasField("$.pages", isEqualTo(1))
+                .hasField("$.total", isEqualTo(2))
                 .show();
 
     }
@@ -58,10 +56,10 @@ public class TasksListTests extends IntegrationTest {
     public void pagination_hasPageInformationWithoutTasks() {
 
         request.asUser(DEFAULT_USER).to("tasks").get().isOk()
-                .hasField("$._embedded.tasks.length()", v -> v.isEqualTo(0))
-                .hasField("$.count", v -> v.isEqualTo(0))
-                .hasField("$.pages", v -> v.isEqualTo(0))
-                .hasField("$.total", v -> v.isEqualTo(0))
+                .hasField("$._embedded.tasks.length()", isEqualTo(0))
+                .hasField("$.count", isEqualTo(0))
+                .hasField("$.pages", isEqualTo(0))
+                .hasField("$.total", isEqualTo(0))
                 .hasField("$._links.next", JsonPathAssertions::doesNotExist)
                 .hasField("$._links.previous", JsonPathAssertions::doesNotExist)
                 .hasField("$._links.first", JsonPathAssertions::doesNotExist)
@@ -75,11 +73,11 @@ public class TasksListTests extends IntegrationTest {
         entityRequest.asUser(DEFAULT_USER).makeNTasks(15);
 
         var next = request.asUser(DEFAULT_USER).to("tasks").get().isOk()
-                .hasField("$.count", v -> v.isEqualTo(10))
+                .hasField("$.count", isEqualTo(10))
                 .getBody().get("_links").get("next").get("href").asText();
 
         request.asUser(DEFAULT_USER).to(next).get().isOk()
-                .hasField("$.count", v -> v.isEqualTo(5));
+                .hasField("$.count", isEqualTo(5));
 
     }
 
@@ -90,11 +88,11 @@ public class TasksListTests extends IntegrationTest {
 
         var previous = request.asUser(DEFAULT_USER).to("tasks")
                 .withParam("p", 2).get().isOk()
-                .hasField("$.count", v -> v.isEqualTo(5))
+                .hasField("$.count", isEqualTo(5))
                 .getBody().get("_links").get("previous").get("href").asText();
 
         request.asUser(DEFAULT_USER).to(previous).get().isOk()
-                .hasField("$.count", v -> v.isEqualTo(10))
+                .hasField("$.count", isEqualTo(10))
                 .getBody().get("_links").get("last").get("href").asText();
 
     }
@@ -105,11 +103,11 @@ public class TasksListTests extends IntegrationTest {
         entityRequest.asUser(DEFAULT_USER).makeNTasks(15);
 
         var last = request.asUser(DEFAULT_USER).to("tasks").get().isOk()
-                .hasField("$.count", v -> v.isEqualTo(10))
+                .hasField("$.count", isEqualTo(10))
                 .getBody().get("_links").get("last").get("href").asText();
 
         request.asUser(DEFAULT_USER).to(last).get().isOk()
-                .hasField("$.count", v -> v.isEqualTo(5));
+                .hasField("$.count", isEqualTo(5));
 
     }
 
@@ -120,11 +118,11 @@ public class TasksListTests extends IntegrationTest {
 
         var first = request.asUser(DEFAULT_USER).to("tasks")
                 .withParam("p", 2).get().isOk()
-                .hasField("$.count", v -> v.isEqualTo(5))
+                .hasField("$.count", isEqualTo(5))
                 .getBody().get("_links").get("first").get("href").asText();
 
         request.asUser(DEFAULT_USER).to(first).get().isOk()
-                .hasField("$.count", v -> v.isEqualTo(10));
+                .hasField("$.count", isEqualTo(10));
 
     }
 
@@ -133,8 +131,8 @@ public class TasksListTests extends IntegrationTest {
 
         request.asUser(DEFAULT_USER).to("tasks")
                 .withParam("p", "invalid").get().isBadRequest()
-                .hasField("$.errors[0].field", v -> v.isEqualTo("p"))
-                .hasField("$.errors[0].type", v -> v.value(containsString("validation.is_not_a_number")));
+                .hasField("$.errors[0].field", isEqualTo("p"))
+                .hasField("$.errors[0].type", contains("validation.is_not_a_number"));
 
     }
 
@@ -150,8 +148,8 @@ public class TasksListTests extends IntegrationTest {
 
         request.asUser(DEFAULT_USER).to("tasks")
                 .withParam("p", "-3").get().isBadRequest()
-                .hasField("$.errors[0].field", v -> v.isEqualTo("p"))
-                .hasField("$.errors[0].type", v -> v.value(containsString("validation.is_positive")));
+                .hasField("$.errors[0].field", isEqualTo("p"))
+                .hasField("$.errors[0].type", contains("validation.is_positive"));
 
     }
 
@@ -162,7 +160,7 @@ public class TasksListTests extends IntegrationTest {
 
         request.asUser(DEFAULT_USER).to("tasks")
                 .withParam("p", 39).get().isOk()
-                .hasField("$.count", v -> v.isEqualTo(0))
+                .hasField("$.count", isEqualTo(0))
                 .show();
 
     }
@@ -172,7 +170,7 @@ public class TasksListTests extends IntegrationTest {
 
         request.asUser(DEFAULT_USER).to("tasks").withParam("s", "title:invalid")
                 .get().isBadRequest()
-                .hasField("$.errors[0].type", v -> v.value(containsString("error.invalid_sort_direction.detail")));
+                .hasField("$.errors[0].type", contains("error.invalid_sort_direction.detail"));
 
     }
 
@@ -181,7 +179,7 @@ public class TasksListTests extends IntegrationTest {
 
         request.asUser(DEFAULT_USER).to("tasks").withParam("s", "invalid:asc")
                 .get().isBadRequest()
-                .hasField("$.errors[0].type", v -> v.value(containsString("error.invalid_sort_attribute.detail")));
+                .hasField("$.errors[0].type", contains("error.invalid_sort_attribute.detail"));
 
     }
 
@@ -190,7 +188,7 @@ public class TasksListTests extends IntegrationTest {
 
         request.asUser(DEFAULT_USER).to("tasks").withParam("s", "title:asc,due_date")
                 .get().isBadRequest()
-                .hasField("$.errors[0].type", v -> v.value(containsString("error.invalid_sort_query.detail")));
+                .hasField("$.errors[0].type", contains("error.invalid_sort_query.detail"));
 
     }
 
@@ -199,7 +197,7 @@ public class TasksListTests extends IntegrationTest {
 
         request.asUser(DEFAULT_USER).to("tasks").withParam("s", "")
                 .get().isBadRequest()
-                .hasField("$.errors[0].type", v -> v.value(containsString("error.invalid_sort_query.detail")));
+                .hasField("$.errors[0].type", contains("error.invalid_sort_query.detail"));
 
     }
 
@@ -210,10 +208,10 @@ public class TasksListTests extends IntegrationTest {
 
         request.asUser(DEFAULT_USER).to("tasks").withParam("s", "title:asc")
                 .get().isOk()
-                .hasField("$._embedded.tasks[0].title", v -> v.isEqualTo("Task A"))
-                .hasField("$._embedded.tasks[1].title", v -> v.isEqualTo("Task B"))
-                .hasField("$._embedded.tasks[2].title", v -> v.isEqualTo("Task C"))
-                .hasField("$._embedded.tasks[3].title", v -> v.isEqualTo("Task D"));
+                .hasField("$._embedded.tasks[0].title", isEqualTo("Task A"))
+                .hasField("$._embedded.tasks[1].title", isEqualTo("Task B"))
+                .hasField("$._embedded.tasks[2].title", isEqualTo("Task C"))
+                .hasField("$._embedded.tasks[3].title", isEqualTo("Task D"));
 
     }
 
@@ -224,10 +222,10 @@ public class TasksListTests extends IntegrationTest {
 
         request.asUser(DEFAULT_USER).to("tasks").withParam("s", "title:desc")
                 .get().isOk()
-                .hasField("$._embedded.tasks[0].title", v -> v.isEqualTo("Task D"))
-                .hasField("$._embedded.tasks[1].title", v -> v.isEqualTo("Task C"))
-                .hasField("$._embedded.tasks[2].title", v -> v.isEqualTo("Task B"))
-                .hasField("$._embedded.tasks[3].title", v -> v.isEqualTo("Task A"));
+                .hasField("$._embedded.tasks[0].title", isEqualTo("Task D"))
+                .hasField("$._embedded.tasks[1].title", isEqualTo("Task C"))
+                .hasField("$._embedded.tasks[2].title", isEqualTo("Task B"))
+                .hasField("$._embedded.tasks[3].title", isEqualTo("Task A"));
 
     }
 
@@ -239,8 +237,8 @@ public class TasksListTests extends IntegrationTest {
 
         request.asUser(DEFAULT_USER).to("tasks").withParam("s", "due_date:asc")
                 .get().isOk()
-                .hasField("$._embedded.tasks[0].title", v -> v.isEqualTo("Task A"))
-                .hasField("$._embedded.tasks[1].title", v -> v.isEqualTo("Task B"));
+                .hasField("$._embedded.tasks[0].title", isEqualTo("Task A"))
+                .hasField("$._embedded.tasks[1].title", isEqualTo("Task B"));
 
     }
 
@@ -252,8 +250,8 @@ public class TasksListTests extends IntegrationTest {
 
         request.asUser(DEFAULT_USER).to("tasks").withParam("s", "due_date:desc")
                 .get().isOk()
-                .hasField("$._embedded.tasks[0].title", v -> v.isEqualTo("Task B"))
-                .hasField("$._embedded.tasks[1].title", v -> v.isEqualTo("Task A"));
+                .hasField("$._embedded.tasks[0].title", isEqualTo("Task B"))
+                .hasField("$._embedded.tasks[1].title", isEqualTo("Task A"));
 
     }
 
@@ -265,8 +263,8 @@ public class TasksListTests extends IntegrationTest {
 
         request.asUser(DEFAULT_USER).to("tasks").withParam("s", "due_date:asc,title:desc")
                 .get().isOk()
-                .hasField("$._embedded.tasks[0].title", v -> v.isEqualTo("Task A"))
-                .hasField("$._embedded.tasks[1].title", v -> v.isEqualTo("Task B"));
+                .hasField("$._embedded.tasks[0].title", isEqualTo("Task A"))
+                .hasField("$._embedded.tasks[1].title", isEqualTo("Task B"));
 
     }
 
@@ -277,8 +275,8 @@ public class TasksListTests extends IntegrationTest {
 
         request.asUser(DEFAULT_USER).to("tasks").withParam("title", "dog")
                 .get().isOk()
-                .hasField("$._embedded.tasks.length()", v -> v.isEqualTo(1))
-                .hasField("$._embedded.tasks[0].title", v -> v.isEqualTo("Take dog for walk"));
+                .hasField("$._embedded.tasks.length()", isEqualTo(1))
+                .hasField("$._embedded.tasks[0].title", isEqualTo("Take dog for walk"));
 
     }
 
@@ -287,7 +285,7 @@ public class TasksListTests extends IntegrationTest {
 
         request.asUser(DEFAULT_USER).to("tasks").withParam("title", "")
                 .get().isBadRequest()
-                .hasField("$.errors[0].type", v -> v.value(containsString("validation.is_empty")));
+                .hasField("$.errors[0].type", contains("validation.is_empty"));
 
     }
 
@@ -299,8 +297,8 @@ public class TasksListTests extends IntegrationTest {
 
         request.asUser(DEFAULT_USER).to("tasks").withParam("complete", "true")
                 .get().isOk()
-                .hasField("$._embedded.tasks.length()", v -> v.isEqualTo(1))
-                .hasField("$._embedded.tasks[0].title", v -> v.isEqualTo("Take dog for a walk"));
+                .hasField("$._embedded.tasks.length()", isEqualTo(1))
+                .hasField("$._embedded.tasks[0].title", isEqualTo("Take dog for a walk"));
 
     }
 
@@ -312,8 +310,8 @@ public class TasksListTests extends IntegrationTest {
 
         request.asUser(DEFAULT_USER).to("tasks").withParam("complete", "false")
                 .get().isOk()
-                .hasField("$._embedded.tasks.length()", v -> v.isEqualTo(1))
-                .hasField("$._embedded.tasks[0].title", v -> v.isEqualTo("Take cat to vet"));
+                .hasField("$._embedded.tasks.length()", isEqualTo(1))
+                .hasField("$._embedded.tasks[0].title", isEqualTo("Take cat to vet"));
 
     }
 
@@ -322,7 +320,7 @@ public class TasksListTests extends IntegrationTest {
 
         request.asUser(DEFAULT_USER).to("tasks").withParam("complete", "invalid")
                 .get().isBadRequest()
-                .hasField("$.errors[0].type", v -> v.value(containsString("validation.is_boolean")));
+                .hasField("$.errors[0].type", contains("validation.is_boolean"));
 
     }
 
@@ -331,7 +329,7 @@ public class TasksListTests extends IntegrationTest {
 
         request.asUser(DEFAULT_USER).to("tasks").withParam("complete", "")
                 .get().isBadRequest()
-                .hasField("$.errors[0].type", v -> v.value(containsString("validation.is_boolean")));
+                .hasField("$.errors[0].type", contains("validation.is_boolean"));
 
     }
 
@@ -343,8 +341,8 @@ public class TasksListTests extends IntegrationTest {
 
         request.asUser(DEFAULT_USER).to("tasks").withParam("due_date", "2030-01-03")
                 .get().isOk()
-                .hasField("$._embedded.tasks.length()", v -> v.isEqualTo(1))
-                .hasField("$._embedded.tasks[0].title", v -> v.isEqualTo("Take cat to vet"));
+                .hasField("$._embedded.tasks.length()", isEqualTo(1))
+                .hasField("$._embedded.tasks[0].title", isEqualTo("Take cat to vet"));
 
     }
 
@@ -353,7 +351,7 @@ public class TasksListTests extends IntegrationTest {
 
         request.asUser(DEFAULT_USER).to("tasks").withParam("due_date", "invalid")
                 .get().isBadRequest()
-                .hasField("$.errors[0].type", v -> v.value(containsString("validation.is_date")));
+                .hasField("$.errors[0].type", contains("validation.is_date"));
 
     }
 
@@ -362,7 +360,7 @@ public class TasksListTests extends IntegrationTest {
 
         request.asUser(DEFAULT_USER).to("tasks").withParam("due_date", "")
                 .get().isBadRequest()
-                .hasField("$.errors[0].type", v -> v.value(containsString("validation.is_date")));
+                .hasField("$.errors[0].type", contains("validation.is_date"));
 
     }
 
@@ -377,9 +375,9 @@ public class TasksListTests extends IntegrationTest {
                 .withParam("title", "dog")
                 .withParam("complete", "true")
                 .get().isOk()
-                .hasField("$._embedded.tasks.length()", v -> v.isEqualTo(2))
-                .hasField("$._embedded.tasks[?(@.title == 'Take dog for a walk')]", JsonPathAssertions::exists)
-                .hasField("$._embedded.tasks[?(@.title == 'Feed dog')]", JsonPathAssertions::exists);
+                .hasField("$._embedded.tasks.length()", isEqualTo(2))
+                .hasField("$._embedded.tasks[?(@.title == 'Take dog for a walk')]", exists())
+                .hasField("$._embedded.tasks[?(@.title == 'Feed dog')]", exists());
 
     }
 

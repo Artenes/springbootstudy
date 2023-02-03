@@ -6,8 +6,6 @@ import org.springframework.test.web.reactive.server.JsonPathAssertions;
 
 import java.util.UUID;
 
-import static org.hamcrest.Matchers.containsString;
-
 public class TagsTests extends IntegrationTest {
 
     @Test
@@ -16,7 +14,7 @@ public class TagsTests extends IntegrationTest {
         request.asUser(DEFAULT_USER).to("tags")
                 .withField("name", "")
                 .post().isBadRequest()
-                .hasField("$.errors[0].type", v -> v.value(containsString("validation.is_empty")));
+                .hasField("$.errors[0].type", contains("validation.is_empty"));
 
     }
 
@@ -30,7 +28,7 @@ public class TagsTests extends IntegrationTest {
 
         request.asUser(DEFAULT_USER).to(uri)
                 .get().isOk()
-                .hasField("$.name", v -> v.isEqualTo("A Tag"));
+                .hasField("$.name", isEqualTo("A Tag"));
 
     }
 
@@ -57,7 +55,7 @@ public class TagsTests extends IntegrationTest {
         var projectId = entityRequest.asUser(DEFAULT_USER).makeTag("A Tag").uuid();
         request.asUser(DEFAULT_USER).to("tags/" + projectId)
                 .get().isOk()
-                .hasField("$.name", v -> v.isEqualTo("A Tag"));
+                .hasField("$.name", isEqualTo("A Tag"));
 
     }
 
@@ -74,7 +72,7 @@ public class TagsTests extends IntegrationTest {
 
         request.asUser(DEFAULT_USER).to("tags")
                 .get()
-                .hasField("$._embedded.tags.length()", v -> v.isEqualTo(0));
+                .hasField("$._embedded.tags.length()", isEqualTo(0));
 
     }
 
@@ -85,7 +83,7 @@ public class TagsTests extends IntegrationTest {
 
         request.asUser(DEFAULT_USER).to("tags")
                 .get()
-                .hasField("$._embedded.tags.length()", v -> v.isEqualTo(3))
+                .hasField("$._embedded.tags.length()", isEqualTo(3))
                 .hasField("$._embedded.tags[?(@.name == 'Tag A')]", JsonPathAssertions::exists)
                 .hasField("$._embedded.tags[?(@.name == 'Tag B')]", JsonPathAssertions::exists)
                 .hasField("$._embedded.tags[?(@.name == 'Tag C')]", JsonPathAssertions::exists);

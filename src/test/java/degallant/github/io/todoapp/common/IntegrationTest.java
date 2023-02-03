@@ -10,9 +10,16 @@ import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWeb
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.web.reactive.server.JsonPathAssertions;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
-/** @noinspection unused*/
+import java.util.function.Consumer;
+
+import static org.hamcrest.Matchers.containsString;
+
+/**
+ * @noinspection unused
+ */
 @ActiveProfiles("test")
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureWebTestClient(timeout = "36000")
@@ -50,6 +57,18 @@ public abstract class IntegrationTest {
     @AfterEach
     public void tearDown() {
         flyway.clean();
+    }
+
+    protected Consumer<JsonPathAssertions> isEqualTo(Object value) {
+        return v -> v.isEqualTo(value.toString());
+    }
+
+    protected Consumer<JsonPathAssertions> exists() {
+        return JsonPathAssertions::exists;
+    }
+
+    protected Consumer<JsonPathAssertions> contains(String value) {
+        return v -> v.value(containsString(value));
     }
 
 }

@@ -6,8 +6,6 @@ import org.springframework.test.web.reactive.server.JsonPathAssertions;
 
 import java.util.UUID;
 
-import static org.hamcrest.Matchers.containsString;
-
 class ProjectsTests extends IntegrationTest {
 
     @Test
@@ -16,7 +14,7 @@ class ProjectsTests extends IntegrationTest {
         request.asUser(DEFAULT_USER).to("projects")
                 .withField("title", "")
                 .post().isBadRequest()
-                .hasField("$.errors[0].type", v -> v.value(containsString("validation.is_empty")));
+                .hasField("$.errors[0].type", contains("validation.is_empty"));
 
     }
 
@@ -30,7 +28,7 @@ class ProjectsTests extends IntegrationTest {
 
         request.asUser(DEFAULT_USER).to(uri)
                 .get().isOk()
-                .hasField("$.title", v -> v.isEqualTo("A Project"));
+                .hasField("$.title", isEqualTo("A Project"));
 
     }
 
@@ -57,7 +55,7 @@ class ProjectsTests extends IntegrationTest {
         var projectId = entityRequest.asUser(DEFAULT_USER).makeProject("A Project").uuid();
         request.asUser(DEFAULT_USER).to("projects/" + projectId)
                 .get().isOk()
-                .hasField("$.title", v -> v.isEqualTo("A Project"));
+                .hasField("$.title", isEqualTo("A Project"));
 
     }
 
@@ -74,7 +72,7 @@ class ProjectsTests extends IntegrationTest {
 
         request.asUser(DEFAULT_USER).to("projects")
                 .get()
-                .hasField("$._embedded.projects.length()", v -> v.isEqualTo(0));
+                .hasField("$._embedded.projects.length()", isEqualTo(0));
 
     }
 
@@ -85,7 +83,7 @@ class ProjectsTests extends IntegrationTest {
 
         request.asUser(DEFAULT_USER).to("projects")
                 .get()
-                .hasField("$._embedded.projects.length()", v -> v.isEqualTo(3))
+                .hasField("$._embedded.projects.length()", isEqualTo(3))
                 .hasField("$._embedded.projects[?(@.title == 'Project A')]", JsonPathAssertions::exists)
                 .hasField("$._embedded.projects[?(@.title == 'Project B')]", JsonPathAssertions::exists)
                 .hasField("$._embedded.projects[?(@.title == 'Project C')]", JsonPathAssertions::exists);

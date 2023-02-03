@@ -2,12 +2,9 @@ package degallant.github.io.todoapp.tasks;
 
 import degallant.github.io.todoapp.common.IntegrationTest;
 import org.junit.jupiter.api.Test;
-import org.springframework.test.web.reactive.server.JsonPathAssertions;
 
 import java.net.URI;
 import java.util.UUID;
-
-import static org.hamcrest.Matchers.containsString;
 
 public class TasksPatchTests extends IntegrationTest {
 
@@ -54,17 +51,17 @@ public class TasksPatchTests extends IntegrationTest {
         request.asUser(DEFAULT_USER).to(taskUri)
                 .get().isOk()
                 .show()
-                .hasField("$.title", value -> value.isEqualTo(title))
-                .hasField("$.description", value -> value.isEqualTo(description))
-                .hasField("$.due_date", value -> value.isEqualTo(dueDate))
-                .hasField("$.priority", value -> value.isEqualTo(priority))
-                .hasField("$.complete", value -> value.isEqualTo(complete))
-                .hasField("$._embedded.parent.id", value -> value.isEqualTo(parentId))
-                .hasField("$._embedded.project.id", value -> value.isEqualTo(projectId))
-                .hasField("$._embedded.tags.length()", value -> value.isEqualTo(3))
-                .hasField("$._embedded.tags[?(@.name == 'daily')]", JsonPathAssertions::exists)
-                .hasField("$._embedded.tags[?(@.name == 'home')]", JsonPathAssertions::exists)
-                .hasField("$._embedded.tags[?(@.name == 'pet')]", JsonPathAssertions::exists);
+                .hasField("$.title", isEqualTo(title))
+                .hasField("$.description", isEqualTo(description))
+                .hasField("$.due_date", isEqualTo(dueDate))
+                .hasField("$.priority", isEqualTo(priority))
+                .hasField("$.complete", isEqualTo(complete))
+                .hasField("$._embedded.parent.id", isEqualTo(parentId))
+                .hasField("$._embedded.project.id", isEqualTo(projectId))
+                .hasField("$._embedded.tags.length()", isEqualTo(3))
+                .hasField("$._embedded.tags[?(@.name == 'daily')]", exists())
+                .hasField("$._embedded.tags[?(@.name == 'home')]", exists())
+                .hasField("$._embedded.tags[?(@.name == 'pet')]", exists());
 
     }
 
@@ -95,17 +92,17 @@ public class TasksPatchTests extends IntegrationTest {
 
         request.asUser(DEFAULT_USER).to(taskUri)
                 .get().isOk()
-                .hasField("$.title", value -> value.isEqualTo(title))
-                .hasField("$.description", value -> value.isEqualTo(description))
-                .hasField("$.due_date", value -> value.isEqualTo(dueDate))
-                .hasField("$.priority", value -> value.isEqualTo(priority))
-                .hasField("$.complete", value -> value.isEqualTo(complete))
-                .hasField("$._embedded.parent.id", value -> value.isEqualTo(parentId))
-                .hasField("$._embedded.project.id", value -> value.isEqualTo(projectId))
-                .hasField("$._embedded.tags.length()", value -> value.isEqualTo(3))
-                .hasField("$._embedded.tags[?(@.name == 'daily')]", JsonPathAssertions::exists)
-                .hasField("$._embedded.tags[?(@.name == 'home')]", JsonPathAssertions::exists)
-                .hasField("$._embedded.tags[?(@.name == 'pet')]", JsonPathAssertions::exists);
+                .hasField("$.title", isEqualTo(title))
+                .hasField("$.description", isEqualTo(description))
+                .hasField("$.due_date", isEqualTo(dueDate))
+                .hasField("$.priority", isEqualTo(priority))
+                .hasField("$.complete", isEqualTo(complete))
+                .hasField("$._embedded.parent.id", isEqualTo(parentId))
+                .hasField("$._embedded.project.id", isEqualTo(projectId))
+                .hasField("$._embedded.tags.length()", isEqualTo(3))
+                .hasField("$._embedded.tags[?(@.name == 'daily')]", exists())
+                .hasField("$._embedded.tags[?(@.name == 'home')]", exists())
+                .hasField("$._embedded.tags[?(@.name == 'pet')]", exists());
 
     }
 
@@ -115,9 +112,9 @@ public class TasksPatchTests extends IntegrationTest {
         request.asUser(DEFAULT_USER).to(uri)
                 .withField("title", "").patch()
                 .isBadRequest()
-                .hasField("$.errors.length()", v -> v.isEqualTo(1))
-                .hasField("$.errors[0].field", v -> v.isEqualTo("title"))
-                .hasField("$.errors[0].type", v -> v.value(containsString("validation.is_empty")));
+                .hasField("$.errors.length()", isEqualTo(1))
+                .hasField("$.errors[0].field", isEqualTo("title"))
+                .hasField("$.errors[0].type", contains("validation.is_empty"));
 
     }
 
@@ -129,9 +126,9 @@ public class TasksPatchTests extends IntegrationTest {
                 .withField("title", "Go for a walk")
                 .withField("description", "").patch()
                 .isBadRequest()
-                .hasField("$.errors.length()", v -> v.isEqualTo(1))
-                .hasField("$.errors[0].field", v -> v.isEqualTo("description"))
-                .hasField("$.errors[0].type", v -> v.value(containsString("validation.is_empty")));
+                .hasField("$.errors.length()", isEqualTo(1))
+                .hasField("$.errors[0].field", isEqualTo("description"))
+                .hasField("$.errors[0].type", contains("validation.is_empty"));
     }
 
     @Test
@@ -142,9 +139,9 @@ public class TasksPatchTests extends IntegrationTest {
                 .withField("title", "Go for a walk")
                 .withField("due_date", "").patch()
                 .isBadRequest()
-                .hasField("$.errors.length()", v -> v.isEqualTo(1))
-                .hasField("$.errors[0].field", v -> v.isEqualTo("due_date"))
-                .hasField("$.errors[0].type", v -> v.value(containsString("validation.not_a_valid_date")));
+                .hasField("$.errors.length()", isEqualTo(1))
+                .hasField("$.errors[0].field", isEqualTo("due_date"))
+                .hasField("$.errors[0].type", contains("validation.not_a_valid_date"));
     }
 
     @Test
@@ -155,9 +152,9 @@ public class TasksPatchTests extends IntegrationTest {
                 .withField("title", "Go for a walk")
                 .withField("due_date", "2001-01-01T12:50:29.790511-04:00").patch()
                 .isBadRequest()
-                .hasField("$.errors.length()", v -> v.isEqualTo(1))
-                .hasField("$.errors[0].field", v -> v.isEqualTo("due_date"))
-                .hasField("$.errors[0].type", v -> v.value(containsString("validation.is_present_or_future")));
+                .hasField("$.errors.length()", isEqualTo(1))
+                .hasField("$.errors[0].field", isEqualTo("due_date"))
+                .hasField("$.errors[0].type", contains("validation.is_present_or_future"));
     }
 
     @Test
@@ -168,9 +165,9 @@ public class TasksPatchTests extends IntegrationTest {
                 .withField("title", "Go for a walk")
                 .withField("priority", "invalid").patch()
                 .isBadRequest()
-                .hasField("$.errors.length()", v -> v.isEqualTo(1))
-                .hasField("$.errors[0].field", v -> v.isEqualTo("priority"))
-                .hasField("$.errors[0].type", v -> v.value(containsString("validation.is_priority")));
+                .hasField("$.errors.length()", isEqualTo(1))
+                .hasField("$.errors[0].field", isEqualTo("priority"))
+                .hasField("$.errors[0].type", contains("validation.is_priority"));
     }
 
     @Test
@@ -181,9 +178,9 @@ public class TasksPatchTests extends IntegrationTest {
                 .withField("title", "Go for a walk")
                 .withField("tags_ids", "invalid").patch()
                 .isBadRequest()
-                .hasField("$.errors.length()", v -> v.isEqualTo(1))
-                .hasField("$.errors[0].field", v -> v.isEqualTo("tags_ids"))
-                .hasField("$.errors[0].type", v -> v.value(containsString("validation.invalid_id_list")));
+                .hasField("$.errors.length()", isEqualTo(1))
+                .hasField("$.errors[0].field", isEqualTo("tags_ids"))
+                .hasField("$.errors[0].type", contains("validation.invalid_id_list"));
     }
 
     @Test
@@ -194,9 +191,9 @@ public class TasksPatchTests extends IntegrationTest {
                 .withField("title", "Go for a walk")
                 .withArray("tags_ids", UUID.randomUUID(), UUID.randomUUID()).patch()
                 .isBadRequest()
-                .hasField("$.errors.length()", v -> v.isEqualTo(1))
-                .hasField("$.errors[0].field", v -> v.isEqualTo("tags_ids"))
-                .hasField("$.errors[0].type", v -> v.value(containsString("validation.do_not_exist_list")));
+                .hasField("$.errors.length()", isEqualTo(1))
+                .hasField("$.errors[0].field", isEqualTo("tags_ids"))
+                .hasField("$.errors[0].type", contains("validation.do_not_exist_list"));
     }
 
     @Test
@@ -212,9 +209,9 @@ public class TasksPatchTests extends IntegrationTest {
                 .withField("title", "Go for a walk")
                 .withArray("tags_ids", tagAId).patch()
                 .isBadRequest()
-                .hasField("$.errors.length()", v -> v.isEqualTo(1))
-                .hasField("$.errors[0].field", v -> v.isEqualTo("tags_ids"))
-                .hasField("$.errors[0].type", v -> v.value(containsString("validation.do_not_exist_list")));
+                .hasField("$.errors.length()", isEqualTo(1))
+                .hasField("$.errors[0].field", isEqualTo("tags_ids"))
+                .hasField("$.errors[0].type", contains("validation.do_not_exist_list"));
     }
 
     @Test
@@ -225,9 +222,9 @@ public class TasksPatchTests extends IntegrationTest {
                 .withField("title", "Go for a walk")
                 .withField("parent_id", "invalid").patch()
                 .isBadRequest()
-                .hasField("$.errors.length()", v -> v.isEqualTo(1))
-                .hasField("$.errors[0].field", v -> v.isEqualTo("parent_id"))
-                .hasField("$.errors[0].type", v -> v.value(containsString("validation.is_uuid")));
+                .hasField("$.errors.length()", isEqualTo(1))
+                .hasField("$.errors[0].field", isEqualTo("parent_id"))
+                .hasField("$.errors[0].type", contains("validation.is_uuid"));
     }
 
     @Test
@@ -238,9 +235,9 @@ public class TasksPatchTests extends IntegrationTest {
                 .withField("title", "Go for a walk")
                 .withField("parent_id", UUID.randomUUID()).patch()
                 .isBadRequest()
-                .hasField("$.errors.length()", v -> v.isEqualTo(1))
-                .hasField("$.errors[0].field", v -> v.isEqualTo("parent_id"))
-                .hasField("$.errors[0].type", v -> v.value(containsString("validation.do_not_exist")));
+                .hasField("$.errors.length()", isEqualTo(1))
+                .hasField("$.errors[0].field", isEqualTo("parent_id"))
+                .hasField("$.errors[0].type", contains("validation.do_not_exist"));
     }
 
     @Test
@@ -255,9 +252,9 @@ public class TasksPatchTests extends IntegrationTest {
                 .withField("title", "Go for a walk")
                 .withField("parent_id", taskId).patch()
                 .isBadRequest()
-                .hasField("$.errors.length()", v -> v.isEqualTo(1))
-                .hasField("$.errors[0].field", v -> v.isEqualTo("parent_id"))
-                .hasField("$.errors[0].type", v -> v.value(containsString("validation.do_not_exist")));
+                .hasField("$.errors.length()", isEqualTo(1))
+                .hasField("$.errors[0].field", isEqualTo("parent_id"))
+                .hasField("$.errors[0].type", contains("validation.do_not_exist"));
     }
 
     @Test
@@ -267,9 +264,9 @@ public class TasksPatchTests extends IntegrationTest {
                 .withField("title", "Go for a walk")
                 .withField("project_id", "invalid").patch()
                 .isBadRequest()
-                .hasField("$.errors.length()", v -> v.isEqualTo(1))
-                .hasField("$.errors[0].field", v -> v.isEqualTo("project_id"))
-                .hasField("$.errors[0].type", v -> v.value(containsString("validation.is_uuid")));
+                .hasField("$.errors.length()", isEqualTo(1))
+                .hasField("$.errors[0].field", isEqualTo("project_id"))
+                .hasField("$.errors[0].type", contains("validation.is_uuid"));
     }
 
     @Test
@@ -279,9 +276,9 @@ public class TasksPatchTests extends IntegrationTest {
                 .withField("title", "Go for a walk")
                 .withField("project_id", UUID.randomUUID()).patch()
                 .isBadRequest()
-                .hasField("$.errors.length()", v -> v.isEqualTo(1))
-                .hasField("$.errors[0].field", v -> v.isEqualTo("project_id"))
-                .hasField("$.errors[0].type", v -> v.value(containsString("validation.do_not_exist")));
+                .hasField("$.errors.length()", isEqualTo(1))
+                .hasField("$.errors[0].field", isEqualTo("project_id"))
+                .hasField("$.errors[0].type", contains("validation.do_not_exist"));
     }
 
     @Test
@@ -296,9 +293,9 @@ public class TasksPatchTests extends IntegrationTest {
                 .withField("title", "Go for a walk")
                 .withField("project_id", projectId).patch()
                 .isBadRequest()
-                .hasField("$.errors.length()", v -> v.isEqualTo(1))
-                .hasField("$.errors[0].field", v -> v.isEqualTo("project_id"))
-                .hasField("$.errors[0].type", v -> v.value(containsString("validation.do_not_exist")));
+                .hasField("$.errors.length()", isEqualTo(1))
+                .hasField("$.errors[0].field", isEqualTo("project_id"))
+                .hasField("$.errors[0].type", contains("validation.do_not_exist"));
     }
 
 }
