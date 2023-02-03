@@ -1,4 +1,4 @@
-package degallant.github.io.todoapp.common;
+package degallant.github.io.todoapp.test;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import degallant.github.io.todoapp.openid.OpenIdTokenParser;

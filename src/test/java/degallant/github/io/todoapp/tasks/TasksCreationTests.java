@@ -1,13 +1,10 @@
 package degallant.github.io.todoapp.tasks;
 
-import degallant.github.io.todoapp.common.IntegrationTest;
+import degallant.github.io.todoapp.test.IntegrationTest;
 import org.junit.jupiter.api.Test;
-import org.springframework.test.web.reactive.server.JsonPathAssertions;
 
 import java.net.URI;
 import java.util.UUID;
-
-import static org.hamcrest.Matchers.containsString;
 
 public class TasksCreationTests extends IntegrationTest {
 

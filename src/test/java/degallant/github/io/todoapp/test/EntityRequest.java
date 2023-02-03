@@ -1,4 +1,4 @@
-package degallant.github.io.todoapp.common;
+package degallant.github.io.todoapp.test;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -79,8 +79,8 @@ public class EntityRequest {
             return new Identifier(uri);
         }
 
-        public IdentifierList makeTags(String... names) {
-            return new IdentifierList(Arrays.stream(names).map(this::makeTag).collect(Collectors.toList()));
+        public Identifier.Collection makeTags(String... names) {
+            return new Identifier.Collection(Arrays.stream(names).map(this::makeTag).collect(Collectors.toList()));
         }
 
         public List<Identifier> commentOnTask(UUID taskId, String... comments) {
@@ -92,7 +92,6 @@ public class EntityRequest {
         }
 
         public Identifier commentOnTask(UUID taskId, String comment) {
-            var list = new ArrayList<Identifier>();
             var uri = request.asUser(email).to("tasks/" + taskId + "/comments")
                     .withField("text", comment)
                     .post().isCreated().getLocation();

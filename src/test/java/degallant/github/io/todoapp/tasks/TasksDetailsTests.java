@@ -1,6 +1,6 @@
 package degallant.github.io.todoapp.tasks;
 
-import degallant.github.io.todoapp.common.IntegrationTest;
+import degallant.github.io.todoapp.test.IntegrationTest;
 import org.junit.jupiter.api.Test;
 
 import java.util.UUID;

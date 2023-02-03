@@ -1,4 +1,4 @@
-package degallant.github.io.todoapp.common;
+package degallant.github.io.todoapp.test;
 
 import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.test.web.reactive.server.WebTestClientConfigurer;
