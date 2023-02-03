@@ -51,11 +51,11 @@ public class CommentsController {
 
         entity = commentsRepository.save(entity);
 
-        var link = this.link.version(1).to("tasks")
+        var linkSelf = link.to("tasks")
                 .slash(task.getId()).slash("comments").slash(entity.getId())
                 .withSelfRel();
 
-        return ResponseEntity.created(link.toUri()).build();
+        return ResponseEntity.created(linkSelf.toUri()).build();
     }
 
     @GetMapping("/{commentId}")
@@ -81,7 +81,7 @@ public class CommentsController {
                 .map(this::toEntityModel)
                 .collect(Collectors.toList());
 
-        var linkSelf = this.link.version(1).to("tasks").slash(task.getId()).slash("comments").withSelfRel();
+        var linkSelf = link.to("tasks").slash(task.getId()).slash("comments").withSelfRel();
         var response = HalModelBuilder.emptyHalModel()
                 .embed(comments, CommentsDto.Details.class)
                 .link(linkSelf)
@@ -92,9 +92,9 @@ public class CommentsController {
 
     private EntityModel<CommentsDto.Details> toEntityModel(CommentEntity entity) {
         var comment = CommentsDto.Details.builder().id(entity.getId()).text(entity.getText()).build();
-        var linkSelf = this.link.version(1).to("tasks").slash(entity.getTaskId()).slash("comments").slash(entity.getId()).withSelfRel();
-        var linkAll = this.link.version(1).to("tasks").slash(entity.getTaskId()).slash("comments").withRel("all");
-        var linkTask = this.link.version(1).to("tasks").slash(entity.getTaskId()).withRel("task");
+        var linkSelf = link.to("tasks").slash(entity.getTaskId()).slash("comments").slash(entity.getId()).withSelfRel();
+        var linkAll = link.to("tasks").slash(entity.getTaskId()).slash("comments").withRel("all");
+        var linkTask = link.to("tasks").slash(entity.getTaskId()).withRel("task");
         return EntityModel.of(comment).add(linkSelf, linkAll, linkTask);
     }
 

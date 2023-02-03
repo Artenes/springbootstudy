@@ -48,7 +48,7 @@ public class ListTasksService {
 
         var result = sanitizeFields(page, sort, title, dueDate, complete);
 
-        var linkBuilder = link.version(1).to("tasks").withParams().addSort(sort);
+        var linkBuilder = link.to("tasks").withParams().addSort(sort);
         var pageRequest = PageRequest.of(result.get("p").asInt() - 1, 10, result.get("s").or(Sort.unsorted()));
         var specification = matchesAnyOf(user.getId(), title, result.get("complete").value(), dueDate);
         var tasksPage = tasksRepository.findAll(specification, pageRequest);
@@ -65,8 +65,8 @@ public class ListTasksService {
                             .dueDate(entity.getDueDate())
                             .complete(entity.getComplete())
                             .build();
-                    var linkSelf = link.version(1).to("tasks").slash(entity.getId()).withSelfRel();
-                    var linkComments = link.version(1).to("tasks").slash(entity.getId()).slash("comments").withRel("comments");
+                    var linkSelf = link.to("tasks").slash(entity.getId()).withSelfRel();
+                    var linkComments = link.to("tasks").slash(entity.getId()).slash("comments").withRel("comments");
                     return EntityModel.of(task).add(linkSelf, linkComments);
                 })
                 .collect(Collectors.toList());

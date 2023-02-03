@@ -66,7 +66,7 @@ public class DetailsTaskService {
                     .id(parentEntity.getId())
                     .title(parentEntity.getTitle())
                     .build();
-            var linkSelf = link.version(1).to("tasks").slash(parentEntity.getId()).withSelfRel();
+            var linkSelf = link.to("tasks").slash(parentEntity.getId()).withSelfRel();
             response.embed(EntityModel.of(parent).add(linkSelf));
         }
 
@@ -76,11 +76,11 @@ public class DetailsTaskService {
                     .id(projectEntity.getId())
                     .title(projectEntity.getTitle())
                     .build();
-            var linkSelf = link.version(1).to("projects").slash(projectEntity.getId()).withSelfRel();
+            var linkSelf = link.to("projects").slash(projectEntity.getId()).withSelfRel();
             response.embed(EntityModel.of(project).add(linkSelf));
         }
 
-        var linkSelf = link.version(1).to("tasks").slash(entity.getId()).withSelfRel();
+        var linkSelf = link.to("tasks").slash(entity.getId()).withSelfRel();
         response.link(linkSelf);
         response.entity(task.build());
 
@@ -95,7 +95,7 @@ public class DetailsTaskService {
                 .description(entity.getDescription())
                 .build();
 
-        var linkSelf = link.version(1).to("tasks").slash(entity.getId()).withSelfRel();
+        var linkSelf = link.to("tasks").slash(entity.getId()).withSelfRel();
 
         return EntityModel.of(task).add(linkSelf);
     }
@@ -106,7 +106,7 @@ public class DetailsTaskService {
                 .name(entity.getName())
                 .build();
 
-        var linkSelf = link.version(1).to("tags").slash(entity.getId()).withSelfRel();
+        var linkSelf = link.to("tags").slash(entity.getId()).withSelfRel();
 
         return EntityModel.of(tag).add(linkSelf);
     }

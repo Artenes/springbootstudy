@@ -15,11 +15,18 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/** @noinspection unused*/
 @Component
 public class LinkBuilder {
 
+    private static final int DEFAULT_VERSION = 1;
+
     public PathStep version(int version) {
         return new PathStep(new BuilderArgs(makeBaseUrl(), version));
+    }
+
+    public ChildPathStep to(String path) {
+        return new PathStep(new BuilderArgs(makeBaseUrl(), DEFAULT_VERSION)).to(path);
     }
 
     private String makeBaseUrl() {

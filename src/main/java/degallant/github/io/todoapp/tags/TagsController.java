@@ -48,7 +48,7 @@ public class TagsController {
 
         entity = repository.save(entity);
 
-        var linkCreated = link.version(1).to("tags").slash(entity.getId()).withSelfRel();
+        var linkCreated = link.to("tags").slash(entity.getId()).withSelfRel();
 
         return ResponseEntity.created(linkCreated.toUri()).build();
     }
@@ -70,7 +70,7 @@ public class TagsController {
                 .map(this::toEntityModel)
                 .collect(Collectors.toList());
 
-        var selfRef = link.version(1).to("tags").withSelfRel();
+        var selfRef = link.to("tags").withSelfRel();
 
         var response = HalModelBuilder.emptyHalModel()
                 .embed(tags, TagsDto.Details.class)
@@ -80,8 +80,8 @@ public class TagsController {
     }
 
     private EntityModel<TagsDto.Details> toEntityModel(TagEntity entity) {
-        var linkSelf = link.version(1).to("tags").slash(entity.getId()).withSelfRel();
-        var linkAll = link.version(1).to("tags").withRel("all");
+        var linkSelf = link.to("tags").slash(entity.getId()).withSelfRel();
+        var linkAll = link.to("tags").withRel("all");
 
         var tag = TagsDto.Details.builder()
                 .id(entity.getId())

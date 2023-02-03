@@ -46,7 +46,7 @@ public class CreateTasksService {
 
         entity = tasksRepository.save(entity);
 
-        return link.version(1).to("tasks").slash(entity.getId()).withSelfRel().toUri();
+        return link.to("tasks").slash(entity.getId()).withSelfRel().toUri();
     }
 
     private Map<String, SanitizedField> sanitizeRequest(TasksDto.Create request, UUID userId) {
