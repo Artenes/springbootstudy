@@ -2,7 +2,6 @@ package degallant.github.io.todoapp.tasks;
 
 import degallant.github.io.todoapp.common.LinkBuilder;
 import degallant.github.io.todoapp.common.PagedResponse;
-import degallant.github.io.todoapp.common.Time;
 import degallant.github.io.todoapp.users.UserEntity;
 import degallant.github.io.todoapp.validation.FieldParser;
 import degallant.github.io.todoapp.validation.FieldValidator;
@@ -17,6 +16,8 @@ import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.RepresentationModel;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -50,7 +51,7 @@ public class ListTasksService {
 
         var linkBuilder = link.to("tasks").withParams().addSort(sort);
         var pageRequest = PageRequest.of(result.get("p").asInt() - 1, 10, result.get("s").or(Sort.unsorted()));
-        var specification = matchesAnyOf(user.getId(), title, result.get("complete").value(), dueDate);
+        var specification = matchesAnyOf(user.getId(), title, result.get("complete").value(), result.get("due_date").value());
         var tasksPage = tasksRepository.findAll(specification, pageRequest);
 
         var response = pagedResponse.makePagedResponse(linkBuilder, tasksPage, result.get("p").value());
@@ -76,7 +77,7 @@ public class ListTasksService {
         return response.build();
     }
 
-    public Specification<TaskEntity> matchesAnyOf(UUID userId, String title, Boolean complete, String date) {
+    public Specification<TaskEntity> matchesAnyOf(UUID userId, String title, Boolean complete, LocalDate date) {
         return (root, query, builder) -> {
 
             List<Predicate> predicates = new ArrayList<>();
@@ -91,9 +92,11 @@ public class ListTasksService {
                 predicates.add(builder.equal(root.get("complete"), complete));
             }
 
-            if (date != null && !date.isEmpty()) {
-                var time = Time.from(date);
-                predicates.add(builder.between(root.get("dueDate"), time.startOfDay(), time.endOfDay()));
+            if (date != null) {
+                var now = OffsetDateTime.now();
+                var startOfDay = date.atTime(0, 0).atOffset(now.getOffset());
+                var endOfDay = date.atTime(23, 59).atOffset(now.getOffset());
+                predicates.add(builder.between(root.get("dueDate"), startOfDay, endOfDay));
             }
 
             return builder.and(predicates.toArray(new Predicate[]{}));
