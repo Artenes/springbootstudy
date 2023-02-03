@@ -26,6 +26,7 @@ public class CreateTasksService {
     private final Sanitizer sanitizer;
     private final FieldValidator rules;
     private final FieldParser parser;
+    private final LinkBuilder link;
 
     public URI create(TasksDto.Create request, UserEntity user) {
 
@@ -45,7 +46,7 @@ public class CreateTasksService {
 
         entity = tasksRepository.save(entity);
 
-        return LinkBuilder.makeLinkTo("v1", "tasks", entity.getId()).withSelfRel().toUri();
+        return link.version(1).to("tasks").slash(entity.getId()).withSelfRel().toUri();
     }
 
     private Map<String, SanitizedField> sanitizeRequest(TasksDto.Create request, UUID userId) {

@@ -1,5 +1,6 @@
 package degallant.github.io.todoapp.comments;
 
+import degallant.github.io.todoapp.common.LinkBuilder;
 import degallant.github.io.todoapp.tasks.TasksRepository;
 import degallant.github.io.todoapp.users.UserEntity;
 import degallant.github.io.todoapp.validation.FieldParser;
@@ -14,8 +15,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.stream.Collectors;
 
-import static degallant.github.io.todoapp.common.LinkBuilder.makeLinkTo;
-
 /**
  * @noinspection ClassCanBeRecord
  */
@@ -29,6 +28,7 @@ public class CommentsController {
     private final Sanitizer sanitizer;
     private final FieldValidator rules;
     private final FieldParser parser;
+    private final LinkBuilder link;
 
     @PostMapping
     public ResponseEntity<?> create(@PathVariable String id, @RequestBody CommentsDto.Create request, Authentication authentication) {
@@ -51,7 +51,9 @@ public class CommentsController {
 
         entity = commentsRepository.save(entity);
 
-        var link = makeLinkTo("v1", "tasks", task.getId(), "comments", entity.getId()).withSelfRel();
+        var link = this.link.version(1).to("tasks")
+                .slash(task.getId()).slash("comments").slash(entity.getId())
+                .withSelfRel();
 
         return ResponseEntity.created(link.toUri()).build();
     }
@@ -79,7 +81,7 @@ public class CommentsController {
                 .map(this::toEntityModel)
                 .collect(Collectors.toList());
 
-        var linkSelf = makeLinkTo("v1", "tasks", task.getId(), "comments").withSelfRel();
+        var linkSelf = this.link.version(1).to("tasks").slash(task.getId()).slash("comments").withSelfRel();
         var response = HalModelBuilder.emptyHalModel()
                 .embed(comments, CommentsDto.Details.class)
                 .link(linkSelf)
@@ -90,9 +92,9 @@ public class CommentsController {
 
     private EntityModel<CommentsDto.Details> toEntityModel(CommentEntity entity) {
         var comment = CommentsDto.Details.builder().id(entity.getId()).text(entity.getText()).build();
-        var linkSelf = makeLinkTo("v1", "tasks", entity.getTaskId(), "comments", entity.getId()).withSelfRel();
-        var linkAll = makeLinkTo("v1", "tasks", entity.getTaskId(), "comments").withRel("all");
-        var linkTask = makeLinkTo("v1", "tasks", entity.getTaskId()).withRel("task");
+        var linkSelf = this.link.version(1).to("tasks").slash(entity.getTaskId()).slash("comments").slash(entity.getId()).withSelfRel();
+        var linkAll = this.link.version(1).to("tasks").slash(entity.getTaskId()).slash("comments").withRel("all");
+        var linkTask = this.link.version(1).to("tasks").slash(entity.getTaskId()).withRel("task");
         return EntityModel.of(comment).add(linkSelf, linkAll, linkTask);
     }
 

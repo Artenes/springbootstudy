@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class PagedResponse {
 
-    public HalModelBuilder makePagedResponse(LinkBuilder linkBuilder, Page<?> entityPage, int page) {
+    public HalModelBuilder makePagedResponse(LinkBuilder.ParamsStep linkBuilder, Page<?> entityPage, int page) {
         var builder = HalModelBuilder.emptyHalModel();
 
         var body = new PageBody(

@@ -1,5 +1,6 @@
 package degallant.github.io.todoapp.projects;
 
+import degallant.github.io.todoapp.common.LinkBuilder;
 import degallant.github.io.todoapp.users.UserEntity;
 import degallant.github.io.todoapp.validation.FieldParser;
 import degallant.github.io.todoapp.validation.FieldValidator;
@@ -14,8 +15,6 @@ import org.springframework.web.bind.annotation.*;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import static degallant.github.io.todoapp.common.LinkBuilder.makeLinkTo;
-
 /**
  * @noinspection ClassCanBeRecord
  */
@@ -28,6 +27,7 @@ public class ProjectsController {
     private final Sanitizer sanitizer;
     private final FieldValidator rules;
     private final FieldParser parser;
+    private final LinkBuilder link;
 
     @PostMapping
     public ResponseEntity<?> create(@RequestBody ProjectsDto.Create request, Authentication authentication) {
@@ -48,7 +48,7 @@ public class ProjectsController {
 
         entity = repository.save(entity);
 
-        var link = makeLinkTo("v1", "projects", entity.getId()).withSelfRel();
+        var link = this.link.version(1).to("projects").slash(entity.getId()).withSelfRel();
 
         return ResponseEntity.created(link.toUri()).build();
     }
@@ -74,7 +74,7 @@ public class ProjectsController {
                 .map(this::toEntityModel)
                 .collect(Collectors.toList());
 
-        var linkSelf = makeLinkTo("v1", "projects").withSelfRel();
+        var linkSelf = this.link.version(1).to("projects").withSelfRel();
 
         var response = HalModelBuilder.emptyHalModel()
                 .embed(projects, ProjectsDto.Details.class)
@@ -88,8 +88,8 @@ public class ProjectsController {
                 .id(entity.getId())
                 .title(entity.getTitle())
                 .build();
-        var linkSelf = makeLinkTo("v1", "projects", entity.getId()).withSelfRel();
-        var linkAll = makeLinkTo("v1", "projects").withRel("all");
+        var linkSelf = this.link.version(1).to("projects").slash(entity.getId()).withSelfRel();
+        var linkAll = this.link.version(1).to("projects").withRel("all");
         return EntityModel.of(project).add(linkSelf, linkAll);
     }
 

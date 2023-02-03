@@ -1,5 +1,6 @@
 package degallant.github.io.todoapp.tasks;
 
+import degallant.github.io.todoapp.common.LinkBuilder;
 import degallant.github.io.todoapp.projects.ProjectsDto;
 import degallant.github.io.todoapp.projects.ProjectsRepository;
 import degallant.github.io.todoapp.tags.TagEntity;
@@ -14,7 +15,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.stream.Collectors;
 
-import static degallant.github.io.todoapp.common.LinkBuilder.makeLinkTo;
 import static degallant.github.io.todoapp.validation.PathValidator.parseUUIDOrFail;
 
 /**
@@ -26,6 +26,7 @@ public class DetailsTaskService {
 
     private final TasksRepository tasksRepository;
     private final ProjectsRepository projectsRepository;
+    private final LinkBuilder link;
 
     public RepresentationModel<?> details(String rawId, Authentication authentication) {
 
@@ -65,7 +66,7 @@ public class DetailsTaskService {
                     .id(parentEntity.getId())
                     .title(parentEntity.getTitle())
                     .build();
-            var linkSelf = makeLinkTo("v1", "tasks", parentEntity.getId()).withSelfRel();
+            var linkSelf = link.version(1).to("tasks").slash(parentEntity.getId()).withSelfRel();
             response.embed(EntityModel.of(parent).add(linkSelf));
         }
 
@@ -75,11 +76,11 @@ public class DetailsTaskService {
                     .id(projectEntity.getId())
                     .title(projectEntity.getTitle())
                     .build();
-            var linkSelf = makeLinkTo("v1", "projects", projectEntity.getId()).withSelfRel();
+            var linkSelf = link.version(1).to("projects").slash(projectEntity.getId()).withSelfRel();
             response.embed(EntityModel.of(project).add(linkSelf));
         }
 
-        var linkSelf = makeLinkTo("v1", "tasks", entity.getId()).withSelfRel();
+        var linkSelf = link.version(1).to("tasks").slash(entity.getId()).withSelfRel();
         response.link(linkSelf);
         response.entity(task.build());
 
@@ -94,7 +95,7 @@ public class DetailsTaskService {
                 .description(entity.getDescription())
                 .build();
 
-        var linkSelf = makeLinkTo("v1", "tasks", entity.getId()).withSelfRel();
+        var linkSelf = link.version(1).to("tasks").slash(entity.getId()).withSelfRel();
 
         return EntityModel.of(task).add(linkSelf);
     }
@@ -105,7 +106,7 @@ public class DetailsTaskService {
                 .name(entity.getName())
                 .build();
 
-        var linkSelf = makeLinkTo("v1", "tags", entity.getId()).withSelfRel();
+        var linkSelf = link.version(1).to("tags").slash(entity.getId()).withSelfRel();
 
         return EntityModel.of(tag).add(linkSelf);
     }

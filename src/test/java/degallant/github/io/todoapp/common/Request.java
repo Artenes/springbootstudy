@@ -44,6 +44,7 @@ public class Request {
         }
     }
 
+    /** @noinspection unused*/
     public static class Authenticated {
 
         private final ObjectMapper mapper;
@@ -53,12 +54,19 @@ public class Request {
 
         private String path;
         private URI uri;
+        private String version;
 
         public Authenticated(ObjectMapper mapper, Authenticator authenticator, AuthInfo authInfo, ClientProxy client) {
             this.mapper = mapper;
             this.authenticator = authenticator;
             this.authInfo = authInfo;
             this.client = client;
+            this.version = "v1";
+        }
+
+        public Authenticated usingVersion(int version) {
+            this.version = "v"+version;
+            return this;
         }
 
         public Destination to(Object url) {
@@ -75,13 +83,14 @@ public class Request {
                 this.uri = (URI) url;
             }
 
-            return new Destination(authInfo, client, mapper, authenticator, path, uri);
+            return new Destination(version, authInfo, client, mapper, authenticator, path, uri);
         }
 
     }
 
     public static class Destination {
 
+        private final String version;
         private final AuthInfo authInfo;
         private final ClientProxy client;
         private final ObjectMapper mapper;
@@ -92,7 +101,8 @@ public class Request {
         private final URI uri;
         private String path;
 
-        public Destination(AuthInfo authInfo, ClientProxy client, ObjectMapper mapper, Authenticator authenticator, String path, URI uri) {
+        public Destination(String version, AuthInfo authInfo, ClientProxy client, ObjectMapper mapper, Authenticator authenticator, String path, URI uri) {
+            this.version = version;
             this.authInfo = authInfo;
             this.client = client;
             this.mapper = mapper;
@@ -170,7 +180,7 @@ public class Request {
             if (uri != null) {
                 return spec.uri(uri);
             } else {
-                return spec.uri("/v1/" + path);
+                return spec.uri("/"+version+"/" + path);
             }
         }
 
@@ -178,7 +188,7 @@ public class Request {
             if (uri != null) {
                 return spec.uri(uri);
             } else {
-                return spec.uri("/v1/" + path);
+                return spec.uri("/"+version+"/" + path);
             }
         }
 

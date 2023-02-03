@@ -1,5 +1,6 @@
 package degallant.github.io.todoapp.tags;
 
+import degallant.github.io.todoapp.common.LinkBuilder;
 import degallant.github.io.todoapp.users.UserEntity;
 import degallant.github.io.todoapp.validation.FieldParser;
 import degallant.github.io.todoapp.validation.FieldValidator;
@@ -14,8 +15,6 @@ import org.springframework.web.bind.annotation.*;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import static degallant.github.io.todoapp.common.LinkBuilder.makeLinkTo;
-
 /**
  * @noinspection ClassCanBeRecord
  */
@@ -28,6 +27,7 @@ public class TagsController {
     private final Sanitizer sanitizer;
     private final FieldValidator rules;
     private final FieldParser parser;
+    private final LinkBuilder link;
 
     @PostMapping
     public ResponseEntity<?> create(@RequestBody TagsDto.Create request, Authentication authentication) {
@@ -48,7 +48,7 @@ public class TagsController {
 
         entity = repository.save(entity);
 
-        var linkCreated = makeLinkTo("v1", "tags", entity.getId()).withSelfRel();
+        var linkCreated = link.version(1).to("tags").slash(entity.getId()).withSelfRel();
 
         return ResponseEntity.created(linkCreated.toUri()).build();
     }
@@ -70,7 +70,7 @@ public class TagsController {
                 .map(this::toEntityModel)
                 .collect(Collectors.toList());
 
-        var selfRef = makeLinkTo("v1", "tags").withSelfRel();
+        var selfRef = link.version(1).to("tags").withSelfRel();
 
         var response = HalModelBuilder.emptyHalModel()
                 .embed(tags, TagsDto.Details.class)
@@ -80,8 +80,8 @@ public class TagsController {
     }
 
     private EntityModel<TagsDto.Details> toEntityModel(TagEntity entity) {
-        var linkSelf = makeLinkTo("v1", "tags", entity.getId()).withSelfRel();
-        var linkAll = makeLinkTo("v1", "tags").withRel("all");
+        var linkSelf = link.version(1).to("tags").slash(entity.getId()).withSelfRel();
+        var linkAll = link.version(1).to("tags").withRel("all");
 
         var tag = TagsDto.Details.builder()
                 .id(entity.getId())
