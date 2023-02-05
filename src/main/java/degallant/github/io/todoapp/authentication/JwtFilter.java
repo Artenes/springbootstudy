@@ -30,9 +30,9 @@ public class JwtFilter extends GenericFilter {
         var response = (HttpServletResponse) rawResponse;
         String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
 
-        if (authHeader != null && !authHeader.isBlank() && authHeader.startsWith("Bearer ")) {
+        if (authHeader != null && !authHeader.isBlank() && authHeader.startsWith("Bearer")) {
             try {
-                String token = authHeader.split(" ")[1];
+                String token = getTokenFromHeader(authHeader);
                 Authentication authentication = service.authenticateWithJwtToken(token);
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             } catch (JwtTokenException exception) {
@@ -44,6 +44,14 @@ public class JwtFilter extends GenericFilter {
             }
         }
         chain.doFilter(rawRequest, rawResponse);
+    }
+
+    private String getTokenFromHeader(String header) {
+        String[] parts = header.split(" ");
+        if (parts.length != 2) {
+            throw new JwtTokenException.Empty();
+        }
+        return parts[1];
     }
 
 }

@@ -219,8 +219,8 @@ public class Request {
             return this;
         }
 
-        public ExecutedRequest isUnauthorized() {
-            arguments.setResponseSpec(arguments.getResponseSpec().expectStatus().isUnauthorized());
+        public ExecutedRequest isForbidden() {
+            arguments.setResponseSpec(arguments.getResponseSpec().expectStatus().isForbidden());
             return this;
         }
 

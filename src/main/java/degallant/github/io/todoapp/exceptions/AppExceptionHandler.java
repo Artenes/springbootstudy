@@ -159,19 +159,24 @@ public class AppExceptionHandler {
 
         printStack(exception);
 
-        String detail = messages.get("error.invalid_token");
-        URI type = makeType("error.invalid_token");
+        var errorId = "error.invalid_token";
 
         if (exception instanceof JwtTokenException.Expired) {
-            detail = messages.get("error.token_expired");
-            type = makeType("error.token_expired");
+            errorId = "error.token_expired";
         }
+
+        if (exception instanceof JwtTokenException.InvalidClaim) {
+            errorId = "error.token_tempered";
+        }
+
+        String detail = messages.get(errorId);
+        URI type = makeType(errorId);
 
         var exceptionDetail = debug ? new ExceptionDetails(exception) : null;
         return new Error(
                 type,
                 messages.get("error.invalid_access_token.title"),
-                HttpStatus.UNAUTHORIZED.value(),
+                HttpStatus.FORBIDDEN.value(),
                 detail,
                 request.getServletPath(),
                 exceptionDetail

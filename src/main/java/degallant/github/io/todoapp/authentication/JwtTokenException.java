@@ -1,14 +1,14 @@
 package degallant.github.io.todoapp.authentication;
 
-import lombok.Getter;
-
 public class JwtTokenException extends RuntimeException {
+
+    public JwtTokenException() {
+    }
 
     public JwtTokenException(Throwable cause) {
         super(cause);
     }
 
-    @Getter
     public static class Expired extends JwtTokenException {
 
         public Expired(Throwable cause) {
@@ -17,4 +17,25 @@ public class JwtTokenException extends RuntimeException {
 
     }
 
+    public static class Empty extends JwtTokenException {
+
+    }
+
+    public static class Invalid extends JwtTokenException {
+        public Invalid(Throwable cause) {
+            super(cause);
+        }
+    }
+
+    public static class InvalidSubject extends JwtTokenException {
+        public InvalidSubject(Throwable cause) {
+            super(cause);
+        }
+    }
+
+    public static class InvalidClaim extends JwtTokenException {
+        public InvalidClaim(Throwable exception) {
+            super(exception);
+        }
+    }
 }

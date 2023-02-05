@@ -3,6 +3,8 @@ package degallant.github.io.todoapp.authentication;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
+import com.auth0.jwt.exceptions.IncorrectClaimException;
+import com.auth0.jwt.exceptions.JWTDecodeException;
 import com.auth0.jwt.exceptions.TokenExpiredException;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import degallant.github.io.todoapp.users.UserEntity;
@@ -44,6 +46,14 @@ public class JwtToken {
                 .sign(signature);
     }
 
+    public String makeAccessTokenWithIssuer(UUID userId, String issuer) {
+        return JWT.create()
+                .withIssuer(issuer)
+                .withSubject(userId.toString())
+                .withExpiresAt(Instant.now().plus(config.accessExpiryMinutes(), ChronoUnit.MINUTES))
+                .sign(signature);
+    }
+
     public String makeRefreshToken(Instant expiresAt) {
         return JWT.create()
                 .withIssuer(config.issuer())
@@ -51,7 +61,7 @@ public class JwtToken {
                 .sign(signature);
     }
 
-    public UUID parseToUserId(String token) {
+    public UUID parseToUserId(String token) throws JwtTokenException {
         try {
             JWTVerifier verifier = JWT.require(signature)
                     .withIssuer(config.issuer())
@@ -62,6 +72,12 @@ public class JwtToken {
             return UUID.fromString(decodedJWT.getSubject());
         } catch (TokenExpiredException exception) {
             throw new JwtTokenException.Expired(exception);
+        } catch (JWTDecodeException exception) {
+            throw new JwtTokenException.Invalid(exception);
+        } catch (IllegalArgumentException exception) {
+            throw new JwtTokenException.InvalidSubject(exception);
+        } catch (IncorrectClaimException exception) {
+            throw new JwtTokenException.InvalidClaim(exception);
         }
     }
 

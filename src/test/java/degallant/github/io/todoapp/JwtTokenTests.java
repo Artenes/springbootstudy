@@ -14,24 +14,38 @@ public class JwtTokenTests extends IntegrationTest {
         var userId = authenticator.makeUser(DEFAULT_USER);
         var jwtToken = token.makeAccessTokenFor(userId, Instant.now().minus(1, ChronoUnit.MINUTES));
         request.withToken(jwtToken).to("tasks")
-                .get().isUnauthorized()
-                .hasField("$.type", contains("error.token_expired")).show();
+                .get().isForbidden()
+                .hasField("$.type", contains("error.token_expired"));
 
     }
 
     @Test
     public void authentication_fails_whenJwtTokenIsEmpty() {
-        //TODO
+
+        request.withToken("").to("tasks")
+                .get().isForbidden()
+                .hasField("$.type", contains("error.invalid_token"));
+
     }
 
     @Test
     public void authentication_fails_whenJwtTokenIsInvalid() {
-        //TODO
+
+        request.withToken("invalid").to("tasks")
+                .get().isForbidden()
+                .hasField("$.type", contains("error.invalid_token"));
+
     }
 
     @Test
     public void authentication_fails_whenJwtTokenIsTemperedWith() {
-        //TODO
+
+        var userId = authenticator.makeUser(DEFAULT_USER);
+        var jwtToken = token.makeAccessTokenWithIssuer(userId, "invalid-issuer");
+        request.withToken(jwtToken).to("tasks")
+                .get().isForbidden()
+                .hasField("$.type", contains("error.token_tempered"));
+
     }
 
     @Test
