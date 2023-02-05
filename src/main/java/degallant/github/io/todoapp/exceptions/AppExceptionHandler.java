@@ -1,11 +1,14 @@
 package degallant.github.io.todoapp.exceptions;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import degallant.github.io.todoapp.authentication.JwtTokenException;
 import degallant.github.io.todoapp.common.SortParsingException;
 import degallant.github.io.todoapp.internationalization.Messages;
 import degallant.github.io.todoapp.openid.OpenIdExtractionException;
 import degallant.github.io.todoapp.validation.FieldAndErrorMessage;
 import degallant.github.io.todoapp.validation.FieldAndErrorType;
 import degallant.github.io.todoapp.validation.InvalidRequestException;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -15,6 +18,7 @@ import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
+import java.net.URI;
 import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
 
@@ -151,6 +155,30 @@ public class AppExceptionHandler {
 
     }
 
+    public Error handleJwtTokenException(HttpServletRequest request, JwtTokenException exception) {
+
+        printStack(exception);
+
+        String detail = messages.get("error.invalid_token");
+        URI type = makeType("error.invalid_token");
+
+        if (exception instanceof JwtTokenException.Expired) {
+            detail = messages.get("error.token_expired");
+            type = makeType("error.token_expired");
+        }
+
+        var exceptionDetail = debug ? new ExceptionDetails(exception) : null;
+        return new Error(
+                type,
+                messages.get("error.invalid_access_token.title"),
+                HttpStatus.UNAUTHORIZED.value(),
+                detail,
+                request.getServletPath(),
+                exceptionDetail
+        );
+
+    }
+
     private void printStack(Exception exception) {
         if (debug) {
             exception.printStackTrace();
@@ -163,6 +191,20 @@ public class AppExceptionHandler {
                 "https://todoapp.com/" + error.errorId(),
                 messages.get(error.errorId(), error.errorArgs())
         );
+    }
+
+    private URI makeType(String type) {
+        return URI.create("https://todoapp.com/" + type);
+    }
+
+    public record Error(
+            URI type,
+            String title,
+            int status,
+            String detail,
+            String instance,
+            @JsonInclude(JsonInclude.Include.NON_NULL)
+            ExceptionDetails exception) {
     }
 
 }

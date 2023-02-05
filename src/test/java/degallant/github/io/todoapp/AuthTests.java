@@ -56,7 +56,7 @@ public class AuthTests extends IntegrationTest {
         String name = "Jhon Doe";
         String profileUrl = "https://google.com/profile/903jfiwfiwoe";
 
-        String openIdToken = authenticator.makeTokenFor(email, name, profileUrl);
+        String openIdToken = authenticator.makeOpenIdTokenFor(email, name, profileUrl);
 
         var response = request.asGuest().to("auth")
                 .withField("open_id_token", openIdToken)
@@ -87,7 +87,7 @@ public class AuthTests extends IntegrationTest {
         String name = "Jhon Doe";
         String profileUrl = "https://google.com/profile/903jfiwfiwoe";
 
-        String token = authenticator.makeTokenFor(email, name, profileUrl);
+        String token = authenticator.makeOpenIdTokenFor(email, name, profileUrl);
 
         request.asGuest().to("auth")
                 .withField("open_id_token", token)

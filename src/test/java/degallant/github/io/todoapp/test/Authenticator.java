@@ -1,5 +1,6 @@
 package degallant.github.io.todoapp.test;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import degallant.github.io.todoapp.openid.OpenIdExtractionException;
 import degallant.github.io.todoapp.openid.OpenIdTokenParser;
@@ -9,6 +10,7 @@ import org.springframework.test.web.reactive.server.EntityExchangeResult;
 
 import java.io.IOException;
 import java.util.Map;
+import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
@@ -28,10 +30,21 @@ public class Authenticator {
         this.mapper = mapper;
     }
 
+    public UUID makeUser(String email) {
+        authenticate(email);
+        EntityExchangeResult<byte[]> result = client.get().uri("/v1/auth/profile").exchange().expectBody().returnResult();
+        try {
+            var response = mapper.readValue(result.getResponseBodyContent(), JsonNode.class);
+            return UUID.fromString(response.get("id").asText());
+        } catch (IOException exception) {
+            throw new RuntimeException(exception);
+        }
+    }
+
     public void authenticate(String email) {
         String name = "Jhon Doe";
         String profileUrl = "https://google.com/profile/903jfiwfiwoe";
-        String token = makeTokenFor(email, name, profileUrl);
+        String token = makeOpenIdTokenFor(email, name, profileUrl);
         EntityExchangeResult<byte[]> result = client.post().uri("/v1/auth")
                 .bodyValue(Map.of("open_id_token", token))
                 .exchange()
@@ -44,7 +57,7 @@ public class Authenticator {
         }
     }
 
-    public String makeTokenFor(String email, String name, String profileUrl) {
+    public String makeOpenIdTokenFor(String email, String name, String profileUrl) {
         //a dummy token for test purposes
         String token = email + name + profileUrl;
         when(openIdTokenParser.extract(eq(token))).thenReturn(new OpenIdUser(email, name, profileUrl));

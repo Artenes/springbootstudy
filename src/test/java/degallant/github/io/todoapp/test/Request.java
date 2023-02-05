@@ -125,6 +125,7 @@ public class Request {
 
         public ExecutedRequest get() {
             authenticate();
+            setAcceptType();
             if (!arguments.getParams().isEmpty()) {
                 var params = parseParams();
                 arguments.setPath(arguments.getPath() + "?" + params);
@@ -135,6 +136,7 @@ public class Request {
 
         public ExecutedRequest post() {
             authenticate();
+            setAcceptType();
             var spec = resolveUri(arguments.getClient().post());
 
             if (arguments.getRawBody() != null) {
@@ -153,6 +155,7 @@ public class Request {
 
         public ExecutedRequest patch() {
             authenticate();
+            setAcceptType();
             arguments.setResponseSpec(resolveUri(arguments.getClient().patch()).bodyValue(arguments.getBody()).exchange());
             return new ExecutedRequest(arguments);
         }
@@ -184,6 +187,12 @@ public class Request {
             }
         }
 
+        private void setAcceptType() {
+            arguments.getClient().mutateWith((builder, httpHandlerBuilder, connector) -> {
+                builder.defaultHeader(HttpHeaders.ACCEPT, "application/json");
+            });
+        }
+
         private String parseParams() {
             var list = new ArrayList<String>();
             for (String key : arguments.getParams().keySet()) {
@@ -207,6 +216,11 @@ public class Request {
 
         public ExecutedRequest isBadRequest() {
             arguments.setResponseSpec(arguments.getResponseSpec().expectStatus().isBadRequest());
+            return this;
+        }
+
+        public ExecutedRequest isUnauthorized() {
+            arguments.setResponseSpec(arguments.getResponseSpec().expectStatus().isUnauthorized());
             return this;
         }
 

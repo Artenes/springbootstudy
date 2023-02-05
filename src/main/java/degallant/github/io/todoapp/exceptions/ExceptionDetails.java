@@ -1,6 +1,6 @@
 package degallant.github.io.todoapp.exceptions;
 
-record ExceptionDetails(String type, String message, String typeCause, String messageCause,
+public record ExceptionDetails(String type, String message, String typeCause, String messageCause,
                         StackTraceElement[] stack) {
 
     ExceptionDetails(Exception exception) {

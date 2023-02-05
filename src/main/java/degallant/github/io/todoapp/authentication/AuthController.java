@@ -1,5 +1,6 @@
 package degallant.github.io.todoapp.authentication;
 
+import degallant.github.io.todoapp.common.LinkBuilder;
 import degallant.github.io.todoapp.projects.ProjectsController;
 import degallant.github.io.todoapp.tags.TagsController;
 import degallant.github.io.todoapp.tasks.TasksController;
@@ -26,6 +27,7 @@ public class AuthController {
     private final AuthenticationService service;
     private final Sanitizer sanitizer;
     private final FieldValidator rules;
+    private final LinkBuilder link;
 
     @PostMapping
     public ResponseEntity<?> authenticate(@RequestBody AuthDto.Authenticate request) {
@@ -45,7 +47,8 @@ public class AuthController {
                 .accessToken(credentials.accessToken())
                 .refreshToken(credentials.refreshToken())
                 .build();
-        var linkSelf = linkTo(methodOn(getClass()).profile(authenticatedUser)).withSelfRel();
+
+        var linkSelf = link.to("auth").slash("profile").withSelfRel();
         var response = EntityModel.of(tokenPair).add(linkSelf);
 
         if (isNew) {
@@ -59,6 +62,7 @@ public class AuthController {
     public ResponseEntity<?> profile(Authentication authentication) {
         var entity = (UserEntity) authentication.getPrincipal();
         var user = UsersDto.Details.builder()
+                .id(entity.getId().toString())
                 .name(entity.getName())
                 .email(entity.getEmail())
                 .pictureUrl(entity.getPictureUrl())

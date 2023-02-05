@@ -9,7 +9,7 @@ public class RequestTests extends IntegrationTest {
     public void body_failsWhenInvalid() {
 
         request.asUser(DEFAULT_USER).to("tasks").withBody("").post().isBadRequest();
-        request.asUser(DEFAULT_USER).to("tasks").post().isBadRequest();
+        request.asUser(DEFAULT_USER).to("tasks").post().isBadRequest().show();
 
     }
 

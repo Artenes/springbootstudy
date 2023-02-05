@@ -1,6 +1,7 @@
 package degallant.github.io.todoapp.test;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import degallant.github.io.todoapp.authentication.JwtToken;
 import degallant.github.io.todoapp.openid.OpenIdTokenParser;
 import org.flywaydb.core.Flyway;
 import org.junit.jupiter.api.AfterEach;
@@ -38,6 +39,9 @@ public abstract class IntegrationTest {
 
     @Autowired
     private ObjectMapper mapper;
+
+    @Autowired
+    protected JwtToken token;
 
     protected Request request;
 

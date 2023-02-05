@@ -14,6 +14,7 @@ public class UsersDto {
     @Getter
     public static class Details {
 
+        private String id;
         private String name;
         private String email;
         @JsonProperty("picture_url")

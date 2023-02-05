@@ -13,6 +13,7 @@ public class ErrorResponseBuilder {
     private HttpStatus status = HttpStatus.UNPROCESSABLE_ENTITY;
     private String detail = "";
     private ErrorType type;
+    private URI uriType;
     private String title;
     private boolean debug;
     private final Map<String, Object> properties = new HashMap<>();
@@ -37,6 +38,11 @@ public class ErrorResponseBuilder {
 
     public ErrorResponseBuilder withType(ErrorType type) {
         this.type = type;
+        return this;
+    }
+
+    public ErrorResponseBuilder withType(URI type) {
+        this.uriType = type;
         return this;
     }
 
@@ -65,6 +71,10 @@ public class ErrorResponseBuilder {
 
         if (type != null) {
             builder.type(type.getUri());
+        }
+
+        if (uriType != null) {
+            builder.type(uriType);
         }
 
         if (title != null && !title.isBlank()) {
