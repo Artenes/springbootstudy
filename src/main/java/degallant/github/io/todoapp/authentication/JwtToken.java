@@ -30,8 +30,8 @@ public class JwtToken {
         return makeAccessTokenFor(entity, Instant.now().plus(config.accessExpiryMinutes(), ChronoUnit.MINUTES));
     }
 
-    public String makeRefreshToken() {
-        return makeRefreshToken(Instant.now().plus(config.refreshExpiryMinutes(), ChronoUnit.MINUTES));
+    public String makeRefreshToken(UserEntity entity) {
+        return makeRefreshToken(entity.getId(), Instant.now().plus(config.refreshExpiryMinutes(), ChronoUnit.MINUTES));
     }
 
     public String makeAccessTokenFor(UserEntity entity, Instant expiresAt) {
@@ -54,9 +54,10 @@ public class JwtToken {
                 .sign(signature);
     }
 
-    public String makeRefreshToken(Instant expiresAt) {
+    public String makeRefreshToken(UUID userId, Instant expiresAt) {
         return JWT.create()
                 .withIssuer(config.issuer())
+                .withSubject(userId.toString())
                 .withExpiresAt(expiresAt)
                 .sign(signature);
     }

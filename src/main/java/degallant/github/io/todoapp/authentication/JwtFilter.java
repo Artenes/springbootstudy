@@ -7,7 +7,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.apache.http.entity.ContentType;
-import org.springframework.http.HttpHeaders;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
@@ -19,24 +18,20 @@ import java.io.IOException;
 public class JwtFilter extends GenericFilter {
 
     private final AuthenticationService service;
-
     private final AppExceptionHandler handler;
-
     private final ObjectMapper mapper;
 
     @Override
     public void doFilter(ServletRequest rawRequest, ServletResponse rawResponse, FilterChain chain) throws IOException, ServletException {
-        var request = (HttpServletRequest) rawRequest;
+        var request = new AuthorizedRequest((HttpServletRequest) rawRequest);
         var response = (HttpServletResponse) rawResponse;
-        String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
-
-        if (authHeader != null && !authHeader.isBlank() && authHeader.startsWith("Bearer")) {
+        var token = request.getToken();
+        if (token != null) {
             try {
-                String token = getTokenFromHeader(authHeader);
-                Authentication authentication = service.authenticateWithJwtToken(token);
+                Authentication authentication = service.authenticateWithJwtToken(request.getToken());
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             } catch (JwtTokenException exception) {
-                var error = handler.handleJwtTokenException(request, exception);
+                var error = handler.handleJwtTokenException(request.raw(), exception);
                 response.setStatus(error.status());
                 rawResponse.setContentType(ContentType.APPLICATION_JSON.getMimeType());
                 rawResponse.getWriter().write(mapper.writeValueAsString(error));
@@ -44,14 +39,6 @@ public class JwtFilter extends GenericFilter {
             }
         }
         chain.doFilter(rawRequest, rawResponse);
-    }
-
-    private String getTokenFromHeader(String header) {
-        String[] parts = header.split(" ");
-        if (parts.length != 2) {
-            throw new JwtTokenException.Empty();
-        }
-        return parts[1];
     }
 
 }

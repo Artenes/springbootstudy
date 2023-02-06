@@ -22,7 +22,7 @@ public class RoutesConfiguration {
         http
                 .csrf().disable()
                 .authorizeHttpRequests()
-                .requestMatchers("/v1/auth/**").permitAll()
+                .requestMatchers("/v1/auth", "/v1/auth/refresh").permitAll()
                 .anyRequest().authenticated()
                 .and().addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 

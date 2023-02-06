@@ -12,6 +12,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 
 /**
@@ -27,13 +28,25 @@ public class AuthenticationService {
 
     private final JwtToken token;
 
-    public OpenIdUser parseOrThrow(String openIdToken) throws InvalidValueException {
+    public OpenIdUser parseOpenIdOrThrow(String openIdToken) throws InvalidValueException {
         try {
             return openIdTokenParser.extract(openIdToken);
         } catch (OpenIdExtractionException exception) {
             var message = exception instanceof OpenIdExtractionException.FailedParsing ? "validation.openid_extraction_failed" : "validation.openid_invalid_token";
             throw new InvalidValueException(exception, message, exception.getToken());
         }
+    }
+
+    public Authentication refresh(String jwtToken) throws JwtTokenException, NoSuchElementException {
+        var id = token.parseToUserId(jwtToken);
+        var user = repository.findById(id).orElseThrow();
+        String accessToken = token.makeAccessTokenFor(user);
+        String refreshToken = token.makeRefreshToken(user);
+        return new UsernamePasswordAuthenticationToken(
+                user,
+                new TokenPair(accessToken, refreshToken),
+                Collections.emptyList()
+        );
     }
 
     public Authentication authenticateWith(OpenIdUser openIdUser) {
@@ -56,7 +69,7 @@ public class AuthenticationService {
         }
 
         String accessToken = token.makeAccessTokenFor(userEntity);
-        String refreshToken = token.makeRefreshToken();
+        String refreshToken = token.makeRefreshToken(userEntity);
 
         UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
                 userEntity,

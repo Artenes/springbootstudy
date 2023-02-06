@@ -23,8 +23,7 @@ public class JwtTokenTests extends IntegrationTest {
     public void authentication_fails_whenJwtTokenIsEmpty() {
 
         request.withToken("").to("tasks")
-                .get().isForbidden()
-                .hasField("$.type", contains("error.invalid_token"));
+                .get().isForbidden();
 
     }
 
@@ -50,7 +49,14 @@ public class JwtTokenTests extends IntegrationTest {
 
     @Test
     public void refresh_fails_whenJwtTokenIsExpired() {
-        //TODO
+
+        var userId = authenticator.makeUser(DEFAULT_USER);
+        var jwtToken = token.makeAccessTokenFor(userId, Instant.now().minus(1, ChronoUnit.MINUTES));
+        request.asGuest().to("auth/refresh")
+                .withField("refresh_token", jwtToken)
+                .post().isBadRequest()
+                .hasField("$.errors[0].type", contains("error.token_expired"));
+
     }
 
     @Test

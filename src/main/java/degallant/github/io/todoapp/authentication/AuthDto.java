@@ -33,4 +33,15 @@ public class AuthDto {
 
     }
 
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class RefreshToken {
+
+        @JsonProperty("refresh_token")
+        private String refreshToken;
+
+    }
+
 }

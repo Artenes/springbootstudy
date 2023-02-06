@@ -155,7 +155,8 @@ public class AppExceptionHandler {
 
     }
 
-    public Error handleJwtTokenException(HttpServletRequest request, JwtTokenException exception) {
+    @ExceptionHandler(JwtTokenException.class)
+    public ErrorResponse handleJwtTokenException(JwtTokenException exception) {
 
         printStack(exception);
 
@@ -172,12 +173,26 @@ public class AppExceptionHandler {
         String detail = messages.get(errorId);
         URI type = makeType(errorId);
 
+        return ErrorResponseBuilder.from(exception)
+                .withTitle(messages.get("error.invalid_token.title"))
+                .withDetail(detail)
+                .withStatus(HttpStatus.FORBIDDEN)
+                .withType(type)
+                .withDebug(debug)
+                .build();
+
+    }
+
+    public Error handleJwtTokenException(HttpServletRequest request, JwtTokenException exception) {
+
+        var problemDetail = handleJwtTokenException(exception).getBody();
+
         var exceptionDetail = debug ? new ExceptionDetails(exception) : null;
         return new Error(
-                type,
-                messages.get("error.invalid_access_token.title"),
-                HttpStatus.FORBIDDEN.value(),
-                detail,
+                problemDetail.getType(),
+                problemDetail.getTitle(),
+                problemDetail.getStatus(),
+                problemDetail.getDetail(),
                 request.getServletPath(),
                 exceptionDetail
         );
