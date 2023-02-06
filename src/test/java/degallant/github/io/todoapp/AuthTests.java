@@ -100,4 +100,14 @@ public class AuthTests extends IntegrationTest {
 
     }
 
+    @Test
+    public void access_restrictedToNotAuthEndpoints() {
+
+        request.asGuest().to("tasks").get().isForbidden();
+        request.asGuest().to("tags").get().isForbidden();
+        request.asGuest().to("comments").get().isForbidden();
+        request.asGuest().to("projects").get().isForbidden();
+
+    }
+
 }

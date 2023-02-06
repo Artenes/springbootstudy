@@ -12,7 +12,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
-import java.util.NoSuchElementException;
 import java.util.Optional;
 
 /**
@@ -37,16 +36,10 @@ public class AuthenticationService {
         }
     }
 
-    public Authentication refresh(String jwtToken) throws JwtTokenException, NoSuchElementException {
-        var id = token.parseToUserId(jwtToken);
-        var user = repository.findById(id).orElseThrow();
+    public TokenPair refresh(UserEntity user) {
         String accessToken = token.makeAccessTokenFor(user);
         String refreshToken = token.makeRefreshToken(user);
-        return new UsernamePasswordAuthenticationToken(
-                user,
-                new TokenPair(accessToken, refreshToken),
-                Collections.emptyList()
-        );
+        return new TokenPair(accessToken, refreshToken);
     }
 
     public Authentication authenticateWith(OpenIdUser openIdUser) {
@@ -68,24 +61,26 @@ public class AuthenticationService {
             isNewUser = true;
         }
 
-        String accessToken = token.makeAccessTokenFor(userEntity);
-        String refreshToken = token.makeRefreshToken(userEntity);
+        var tokens = refresh(userEntity);
 
         UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
                 userEntity,
-                new TokenPair(accessToken, refreshToken),
+                tokens,
                 Collections.emptyList()
         );
         authentication.setDetails(isNewUser);
         return authentication;
     }
 
-    public Authentication authenticateWithJwtToken(String jwtToken) {
+    public Authentication authenticateWithJwtToken(String jwtToken) throws JwtTokenException {
         var userId = token.parseToUserId(jwtToken);
+        var user = repository.findById(userId);
 
-        UserEntity user = repository.findById(userId).orElseThrow();
+        if (user.isEmpty()) {
+            throw new JwtTokenException.InvalidSubject();
+        }
 
-        return new UsernamePasswordAuthenticationToken(user, null, Collections.emptyList());
+        return new UsernamePasswordAuthenticationToken(user.get(), null, Collections.emptyList());
     }
 
     public record TokenPair(String accessToken, String refreshToken) {

@@ -17,10 +17,6 @@ public class JwtTokenException extends RuntimeException {
 
     }
 
-    public static class Empty extends JwtTokenException {
-
-    }
-
     public static class Invalid extends JwtTokenException {
         public Invalid(Throwable cause) {
             super(cause);
@@ -30,6 +26,9 @@ public class JwtTokenException extends RuntimeException {
     public static class InvalidSubject extends JwtTokenException {
         public InvalidSubject(Throwable cause) {
             super(cause);
+        }
+
+        public InvalidSubject() {
         }
     }
 

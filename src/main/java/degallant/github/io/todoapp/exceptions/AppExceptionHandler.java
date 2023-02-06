@@ -170,6 +170,10 @@ public class AppExceptionHandler {
             errorId = "error.token_tempered";
         }
 
+        if (exception instanceof JwtTokenException.InvalidSubject) {
+            errorId = "error.token_unknown_subject";
+        }
+
         String detail = messages.get(errorId);
         URI type = makeType(errorId);
 

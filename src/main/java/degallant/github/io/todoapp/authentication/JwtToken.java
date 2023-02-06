@@ -8,17 +8,16 @@ import com.auth0.jwt.exceptions.JWTDecodeException;
 import com.auth0.jwt.exceptions.TokenExpiredException;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import degallant.github.io.todoapp.users.UserEntity;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 
 @Component
 public class JwtToken {
 
     private final AuthenticationConfiguration config;
-
     private final Algorithm signature;
 
     public JwtToken(AuthenticationConfiguration config) {
@@ -26,40 +25,16 @@ public class JwtToken {
         this.signature = Algorithm.HMAC256(config.signKey());
     }
 
+    public Builder make() {
+        return new Builder(config, signature);
+    }
+
     public String makeAccessTokenFor(UserEntity entity) {
-        return makeAccessTokenFor(entity, Instant.now().plus(config.accessExpiryMinutes(), ChronoUnit.MINUTES));
+        return make().withSubject(entity).asAccess().build();
     }
 
     public String makeRefreshToken(UserEntity entity) {
-        return makeRefreshToken(entity.getId(), Instant.now().plus(config.refreshExpiryMinutes(), ChronoUnit.MINUTES));
-    }
-
-    public String makeAccessTokenFor(UserEntity entity, Instant expiresAt) {
-        return makeAccessTokenFor(entity.getId(), expiresAt);
-    }
-
-    public String makeAccessTokenFor(UUID userId, Instant expiresAt) {
-        return JWT.create()
-                .withIssuer(config.issuer())
-                .withSubject(userId.toString())
-                .withExpiresAt(expiresAt)
-                .sign(signature);
-    }
-
-    public String makeAccessTokenWithIssuer(UUID userId, String issuer) {
-        return JWT.create()
-                .withIssuer(issuer)
-                .withSubject(userId.toString())
-                .withExpiresAt(Instant.now().plus(config.accessExpiryMinutes(), ChronoUnit.MINUTES))
-                .sign(signature);
-    }
-
-    public String makeRefreshToken(UUID userId, Instant expiresAt) {
-        return JWT.create()
-                .withIssuer(config.issuer())
-                .withSubject(userId.toString())
-                .withExpiresAt(expiresAt)
-                .sign(signature);
+        return make().withSubject(entity).asRefresh().build();
     }
 
     public UUID parseToUserId(String token) throws JwtTokenException {
@@ -67,9 +42,7 @@ public class JwtToken {
             JWTVerifier verifier = JWT.require(signature)
                     .withIssuer(config.issuer())
                     .build();
-
             DecodedJWT decodedJWT = verifier.verify(token);
-
             return UUID.fromString(decodedJWT.getSubject());
         } catch (TokenExpiredException exception) {
             throw new JwtTokenException.Expired(exception);
@@ -80,6 +53,65 @@ public class JwtToken {
         } catch (IncorrectClaimException exception) {
             throw new JwtTokenException.InvalidClaim(exception);
         }
+    }
+
+    @RequiredArgsConstructor
+    public static class Builder {
+
+        private final AuthenticationConfiguration config;
+        private final Algorithm signature;
+        private String issuer;
+        private String subject;
+        private Instant expiresAt;
+
+        public Builder withIssuer(String issuer) {
+            this.issuer = issuer;
+            return this;
+        }
+
+        public Builder withSubject(UserEntity subject) {
+            return withSubject(subject.getId());
+        }
+
+        public Builder withSubject(UUID subject) {
+            this.subject = subject.toString();
+            return this;
+        }
+
+        public Builder withSubject(String subject) {
+            this.subject = subject;
+            return this;
+        }
+
+        public Builder asAccess() {
+            this.expiresAt = config.accessExpiration();
+            return this;
+        }
+
+        public Builder asRefresh() {
+            this.expiresAt = config.refreshExpiration();
+            return this;
+        }
+
+        public Builder withExpiresAt(Instant instant) {
+            this.expiresAt = instant;
+            return this;
+        }
+
+        public String build() {
+
+            if (subject == null || subject.isEmpty()) {
+                throw new IllegalArgumentException("subject is required to build token");
+            }
+
+            var jwt = JWT.create();
+            jwt.withIssuer(issuer == null || issuer.isEmpty() ? config.issuer() : issuer);
+            jwt.withSubject(subject);
+            jwt.withExpiresAt(expiresAt == null ? config.accessExpiration() : expiresAt);
+            return jwt.sign(signature);
+
+        }
+
     }
 
 }

@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.UUID;
 
 public class JwtTokenTests extends IntegrationTest {
 
@@ -12,7 +13,7 @@ public class JwtTokenTests extends IntegrationTest {
     public void authentication_fails_whenJwtTokenIsExpired() {
 
         var userId = authenticator.makeUser(DEFAULT_USER);
-        var jwtToken = token.makeAccessTokenFor(userId, Instant.now().minus(1, ChronoUnit.MINUTES));
+        var jwtToken = token.make().withSubject(userId).withExpiresAt(Instant.now().minus(1, ChronoUnit.MINUTES)).build();
         request.withToken(jwtToken).to("tasks")
                 .get().isForbidden()
                 .hasField("$.type", contains("error.token_expired"));
@@ -40,7 +41,7 @@ public class JwtTokenTests extends IntegrationTest {
     public void authentication_fails_whenJwtTokenIsTemperedWith() {
 
         var userId = authenticator.makeUser(DEFAULT_USER);
-        var jwtToken = token.makeAccessTokenWithIssuer(userId, "invalid-issuer");
+        var jwtToken = token.make().withSubject(userId).withIssuer("invalid-issuer").build();
         request.withToken(jwtToken).to("tasks")
                 .get().isForbidden()
                 .hasField("$.type", contains("error.token_tempered"));
@@ -48,35 +49,35 @@ public class JwtTokenTests extends IntegrationTest {
     }
 
     @Test
-    public void refresh_fails_whenJwtTokenIsExpired() {
+    public void authentication_fails_whenUserIsInvalid() {
 
-        var userId = authenticator.makeUser(DEFAULT_USER);
-        var jwtToken = token.makeAccessTokenFor(userId, Instant.now().minus(1, ChronoUnit.MINUTES));
-        request.asGuest().to("auth/refresh")
-                .withField("refresh_token", jwtToken)
-                .post().isBadRequest()
-                .hasField("$.errors[0].type", contains("error.token_expired"));
+        var jwtToken = token.make().withSubject("invalid").build();
+        request.withToken(jwtToken).to("tasks")
+                .get().isForbidden()
+                .hasField("$.type", contains("error.token_unknown_subject"));
 
     }
 
     @Test
-    public void refresh_fails_whenJwtTokenIsEmpty() {
-        //TODO
-    }
+    public void authentication_fails_whenUserIsUnknown() {
 
-    @Test
-    public void refresh_fails_whenJwtTokenIsInvalid() {
-        //TODO
-    }
+        var jwtToken = token.make().withSubject(UUID.randomUUID()).build();
+        request.withToken(jwtToken).to("tasks")
+                .get().isForbidden()
+                .hasField("$.type", contains("error.token_unknown_subject"));
 
-    @Test
-    public void refresh_fails_whenJwtTokenIsTemperedWith() {
-        //TODO
     }
 
     @Test
     public void refresh_works_whenClientRequestNewSetOfTokens() {
-        //TODO
+
+        var userId = authenticator.makeUser(DEFAULT_USER);
+        var jwtToken = token.make().withSubject(userId).asRefresh().build();
+        request.withToken(jwtToken).to("auth/refresh")
+                .get().isOk()
+                .hasField("$.access_token", exists())
+                .hasField("$.refresh_token", exists());
+
     }
 
 }
