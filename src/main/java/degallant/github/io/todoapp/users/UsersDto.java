@@ -19,6 +19,7 @@ public class UsersDto {
         private String email;
         @JsonProperty("picture_url")
         private String pictureUrl;
+        private String role;
 
     }
 

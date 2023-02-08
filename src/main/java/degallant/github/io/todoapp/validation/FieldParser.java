@@ -9,6 +9,7 @@ import degallant.github.io.todoapp.common.SortingParser;
 import degallant.github.io.todoapp.tasks.Priority;
 import degallant.github.io.todoapp.tasks.TaskEntity;
 import degallant.github.io.todoapp.tasks.TasksRepository;
+import degallant.github.io.todoapp.users.Role;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
@@ -121,6 +122,14 @@ public class FieldParser {
         }
     }
 
+    public Role toRole(String value) throws InvalidValueException {
+        try {
+            return Arrays.stream(Role.values()).filter(role -> role.name().equalsIgnoreCase(value)).findFirst().orElseThrow();
+        } catch (NoSuchElementException exception) {
+            throw new InvalidValueException(exception, "validation.is_not_role", value);
+        }
+    }
+
     public TaskEntity toTask(String id, UUID userId) throws NoSuchElementException {
         try {
             var taskId = UUID.fromString(id);
@@ -140,5 +149,4 @@ public class FieldParser {
             throw new NoSuchElementException("No comment found with id " + id, exception);
         }
     }
-
 }

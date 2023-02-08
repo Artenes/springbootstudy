@@ -15,7 +15,7 @@ public class JwtTokenTests extends IntegrationTest {
         var userId = authenticator.makeUser(DEFAULT_USER);
         var jwtToken = token.make().withSubject(userId).withExpiresAt(Instant.now().minus(1, ChronoUnit.MINUTES)).build();
         request.withToken(jwtToken).to("tasks")
-                .get().isForbidden()
+                .get().isBadRequest()
                 .hasField("$.type", contains("error.token_expired"));
 
     }
@@ -32,7 +32,7 @@ public class JwtTokenTests extends IntegrationTest {
     public void authentication_fails_whenJwtTokenIsInvalid() {
 
         request.withToken("invalid").to("tasks")
-                .get().isForbidden()
+                .get().isBadRequest()
                 .hasField("$.type", contains("error.invalid_token"));
 
     }
@@ -43,7 +43,7 @@ public class JwtTokenTests extends IntegrationTest {
         var userId = authenticator.makeUser(DEFAULT_USER);
         var jwtToken = token.make().withSubject(userId).withIssuer("invalid-issuer").build();
         request.withToken(jwtToken).to("tasks")
-                .get().isForbidden()
+                .get().isBadRequest()
                 .hasField("$.type", contains("error.token_tempered"));
 
     }
@@ -53,7 +53,7 @@ public class JwtTokenTests extends IntegrationTest {
 
         var jwtToken = token.make().withSubject("invalid").build();
         request.withToken(jwtToken).to("tasks")
-                .get().isForbidden()
+                .get().isBadRequest()
                 .hasField("$.type", contains("error.token_unknown_subject"));
 
     }
@@ -63,7 +63,7 @@ public class JwtTokenTests extends IntegrationTest {
 
         var jwtToken = token.make().withSubject(UUID.randomUUID()).build();
         request.withToken(jwtToken).to("tasks")
-                .get().isForbidden()
+                .get().isBadRequest()
                 .hasField("$.type", contains("error.token_unknown_subject"));
 
     }

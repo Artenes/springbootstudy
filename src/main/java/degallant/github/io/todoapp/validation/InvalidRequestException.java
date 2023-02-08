@@ -11,7 +11,10 @@ public class InvalidRequestException extends RuntimeException {
     private final List<FieldAndErrorMessage> errors;
 
     public InvalidRequestException(List<FieldAndErrorMessage> errors) {
-        super(Arrays.toString(errors.toArray()));
+        super(Arrays.toString(errors.stream()
+                .map(item ->
+                        String.format("field=%s, error=%s, args=%s", item.field(), item.errorId(), Arrays.toString(item.errorArgs()))
+                ).toArray()));
         this.errors = errors;
     }
 }

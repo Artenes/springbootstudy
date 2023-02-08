@@ -15,12 +15,12 @@ public class AuthDto {
         @JsonProperty("open_id_token")
         private String openIdToken;
 
-    }
 
+    }
     @Getter
+    @Builder
     @NoArgsConstructor
     @AllArgsConstructor
-    @Builder
     public static class TokenPair {
 
         @JsonProperty("access_token")
@@ -28,6 +28,21 @@ public class AuthDto {
 
         @JsonProperty("refresh_token")
         private String refreshToken;
+
+    }
+
+    @Getter
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class Patch {
+
+        private String name;
+
+        @JsonProperty("picture_url")
+        private String pictureUrl;
+
+        private String role;
 
     }
 

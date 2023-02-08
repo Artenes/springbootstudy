@@ -1,5 +1,6 @@
 package degallant.github.io.todoapp.authentication;
 
+import degallant.github.io.todoapp.users.Role;
 import degallant.github.io.todoapp.common.LinkBuilder;
 import degallant.github.io.todoapp.exceptions.AppExceptionHandler;
 import degallant.github.io.todoapp.projects.ProjectsController;
@@ -7,7 +8,10 @@ import degallant.github.io.todoapp.tags.TagsController;
 import degallant.github.io.todoapp.tasks.TasksController;
 import degallant.github.io.todoapp.users.UserEntity;
 import degallant.github.io.todoapp.users.UsersDto;
+import degallant.github.io.todoapp.users.UsersRepository;
+import degallant.github.io.todoapp.validation.FieldParser;
 import degallant.github.io.todoapp.validation.FieldValidator;
+import degallant.github.io.todoapp.validation.InvalidValueException;
 import degallant.github.io.todoapp.validation.Sanitizer;
 import lombok.RequiredArgsConstructor;
 import org.springframework.hateoas.EntityModel;
@@ -30,8 +34,10 @@ public class AuthController {
     private final AuthenticationService service;
     private final Sanitizer sanitizer;
     private final FieldValidator rules;
+    private final FieldParser parser;
     private final LinkBuilder link;
     private final AppExceptionHandler handler;
+    private final UsersRepository usersRepository;
 
     @PostMapping
     public ResponseEntity<?> authenticate(@RequestBody AuthDto.Authenticate request) {
@@ -84,6 +90,7 @@ public class AuthController {
                 .name(entity.getName())
                 .email(entity.getEmail())
                 .pictureUrl(entity.getPictureUrl())
+                .role(entity.getRole().simpleName())
                 .build();
 
         Link selfLink = linkTo(methodOn(getClass()).profile(authentication)).withSelfRel();
@@ -94,6 +101,54 @@ public class AuthController {
         var response = EntityModel.of(user).add(selfLink, tasksLink, tagsLink, projectsLink);
 
         return ResponseEntity.ok(response);
+    }
+
+    @PatchMapping("/profile")
+    public ResponseEntity<?> patch(@RequestBody AuthDto.Patch request, Authentication authentication) {
+        var user = (UserEntity) authentication.getPrincipal();
+
+        var result = sanitizer.sanitize(
+                sanitizer.field("name").withOptionalValue(request.getName()).sanitize(value -> {
+                    rules.isNotEmpty(value);
+                    return value;
+                }),
+
+                sanitizer.field("picture_url").withOptionalValue(request.getPictureUrl()).sanitize(value -> {
+                    rules.isNotEmpty(value);
+                    rules.isURL(value);
+                    return value;
+                }),
+
+                sanitizer.field("role").withOptionalValue(request.getRole()).sanitize(value -> {
+                    var role = parser.toRole(value);
+                    isNotAnotherAdmin(role, user.getRole());
+                    return role;
+                })
+        );
+
+        user.setName(result.get("name").ifNull(user.getName()));
+        user.setPictureUrl(result.get("picture_url").ifNull(user.getPictureUrl()));
+        user.setRole(result.get("role").ifNull(user.getRole()));
+
+        usersRepository.save(user);
+
+        return ResponseEntity.ok().build();
+    }
+
+    public void isNotAnotherAdmin(Role value, Role original) throws InvalidValueException {
+        if (value == original) {
+            return;
+        }
+
+        if (value != Role.ROLE_ADMIN) {
+            return;
+        }
+
+        if (usersRepository.findByRole(Role.ROLE_ADMIN).isEmpty()) {
+            return;
+        }
+
+        throw new InvalidValueException("validation.cannot_assign", value);
     }
 
 }

@@ -174,13 +174,13 @@ public class AppExceptionHandler {
             errorId = "error.token_unknown_subject";
         }
 
-        String detail = messages.get(errorId);
+        String detail = messages.get(errorId, exception.getToken());
         URI type = makeType(errorId);
 
         return ErrorResponseBuilder.from(exception)
                 .withTitle(messages.get("error.invalid_token.title"))
                 .withDetail(detail)
-                .withStatus(HttpStatus.FORBIDDEN)
+                .withStatus(HttpStatus.BAD_REQUEST)
                 .withType(type)
                 .withDebug(debug)
                 .build();

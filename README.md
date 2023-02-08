@@ -1,14 +1,18 @@
 # TO DO
 
-- extract authenticate user for easier access
-
 - deal with users roles
+
+- check about relationships in hibernate for lazy loading relationships
+
+- fix timestamp handling, needs to save as +0 and retrieve in -4
+
+- check about created at, updated at columns (maybe add an enable option to users?)
+
+- deal with logging and monitoring
 
 - check about caching - Cache-Control header
 
 - deal with rate limit
-
-- deal with logging and monitoring
 
 - check about graphql
 
@@ -16,11 +20,7 @@
 
 - check about CORS
 
-- check about relationships in hibernate for lazy loading relationships
-
 - add support to check style
-
-- fix timestamp handling, needs to save as +0 and retrieve in -4
 
 - see how to do stress test on spring boot app
 

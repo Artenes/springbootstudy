@@ -45,13 +45,13 @@ public class JwtToken {
             DecodedJWT decodedJWT = verifier.verify(token);
             return UUID.fromString(decodedJWT.getSubject());
         } catch (TokenExpiredException exception) {
-            throw new JwtTokenException.Expired(exception);
+            throw new JwtTokenException.Expired(exception, token);
         } catch (JWTDecodeException exception) {
-            throw new JwtTokenException.Invalid(exception);
+            throw new JwtTokenException.Invalid(exception, token);
         } catch (IllegalArgumentException exception) {
-            throw new JwtTokenException.InvalidSubject(exception);
+            throw new JwtTokenException.InvalidSubject(exception, token);
         } catch (IncorrectClaimException exception) {
-            throw new JwtTokenException.InvalidClaim(exception);
+            throw new JwtTokenException.InvalidClaim(exception, token);
         }
     }
 

@@ -3,6 +3,7 @@ package degallant.github.io.todoapp.authentication;
 import degallant.github.io.todoapp.openid.OpenIdExtractionException;
 import degallant.github.io.todoapp.openid.OpenIdTokenParser;
 import degallant.github.io.todoapp.openid.OpenIdUser;
+import degallant.github.io.todoapp.users.Role;
 import degallant.github.io.todoapp.users.UserEntity;
 import degallant.github.io.todoapp.users.UsersRepository;
 import degallant.github.io.todoapp.validation.InvalidValueException;
@@ -56,6 +57,7 @@ public class AuthenticationService {
                     .email(openIdUser.email())
                     .name(openIdUser.name())
                     .pictureUrl(openIdUser.pictureUrl())
+                    .role(Role.ROLE_USER)
                     .build();
             userEntity = repository.save(newUser);
             isNewUser = true;
@@ -77,10 +79,10 @@ public class AuthenticationService {
         var user = repository.findById(userId);
 
         if (user.isEmpty()) {
-            throw new JwtTokenException.InvalidSubject();
+            throw new JwtTokenException.InvalidSubject(jwtToken);
         }
 
-        return new UsernamePasswordAuthenticationToken(user.get(), null, Collections.emptyList());
+        return new UsernamePasswordAuthenticationToken(user.get(), null, user.get().roles());
     }
 
     public record TokenPair(String accessToken, String refreshToken) {

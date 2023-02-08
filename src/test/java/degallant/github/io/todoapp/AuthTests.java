@@ -110,4 +110,97 @@ public class AuthTests extends IntegrationTest {
 
     }
 
+    @Test
+    public void patch_failsWhenNameIsEmpty() {
+
+        request.asUser(DEFAULT_USER).to("auth/profile")
+                .withField("name", "")
+                .patch().isBadRequest()
+                .hasField("$.errors[0].type", contains("validation.is_empty"));
+
+    }
+
+    @Test
+    public void patch_failsWithInvalidPictureUrl() {
+
+        request.asUser(DEFAULT_USER).to("auth/profile")
+                .withField("picture_url", "invalid")
+                .patch().isBadRequest()
+                .hasField("$.errors[0].type", contains("validation.is_not_url"));
+
+    }
+
+    @Test
+    public void patch_failsWhenRoleIsEmpty() {
+
+        request.asUser("another@gmail.com").to("auth/profile")
+                .withField("role", "")
+                .patch().isBadRequest()
+                .hasField("$.errors[0].type", contains("validation.is_not_role"));
+
+    }
+
+    @Test
+    public void patch_failsWhenRoleIsInvalid() {
+
+        request.asUser("another@gmail.com").to("auth/profile")
+                .withField("role", "invalid")
+                .patch().isBadRequest()
+                .hasField("$.errors[0].type", contains("validation.is_not_role"));
+
+    }
+
+    @Test
+    public void patch_failsWhenAdminAlreadyExists() {
+
+        request.asUser(DEFAULT_USER).to("auth/profile")
+                .withField("role", "ROLE_ADMIN")
+                .patch().isOk();
+
+        request.asUser("another@gmail.com").to("auth/profile")
+                .withField("role", "ROLE_ADMIN")
+                .patch().isBadRequest()
+                .hasField("$.errors[0].type", contains("validation.cannot_assign"));
+
+    }
+
+    @Test
+    public void patch_successChangesName() {
+
+        request.asUser(DEFAULT_USER).to("auth/profile")
+                .withField("name", "New name")
+                .patch().isOk();
+
+        request.asUser(DEFAULT_USER).to("auth/profile")
+                .get().isOk()
+                .hasField("$.name", isEqualTo("New name"));
+
+    }
+
+    @Test
+    public void patch_successChangesProfileUrl() {
+
+        request.asUser(DEFAULT_USER).to("auth/profile")
+                .withField("name", "http://newimage/image.jpg")
+                .patch().isOk();
+
+        request.asUser(DEFAULT_USER).to("auth/profile")
+                .get().isOk()
+                .hasField("$.name", isEqualTo("http://newimage/image.jpg"));
+
+    }
+
+    @Test
+    public void patch_successElevatesToAdmin() {
+
+        request.asUser(DEFAULT_USER).to("auth/profile")
+                .withField("role", "ROLE_ADMIN")
+                .patch().isOk();
+
+        request.asUser(DEFAULT_USER).to("auth/profile")
+                .get().isOk()
+                .hasField("$.role", isEqualTo("ADMIN"));
+
+    }
+
 }

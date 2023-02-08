@@ -3,6 +3,7 @@ CREATE TABLE users (
 	email varchar(255) UNIQUE NOT NULL,
 	name varchar(255) NOT NULL,
 	picture_url varchar(255),
+	role varchar(255) NOT NULL,
 	PRIMARY KEY (id)
 );
 

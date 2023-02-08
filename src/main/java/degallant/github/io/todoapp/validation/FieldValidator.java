@@ -11,6 +11,9 @@ import lombok.RequiredArgsConstructor;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.stereotype.Component;
 
+import java.net.MalformedURLException;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -18,7 +21,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
- * @noinspection ClassCanBeRecord
+ * @noinspection ClassCanBeRecord, ResultOfMethodCallIgnored
  */
 @Component
 @RequiredArgsConstructor
@@ -38,6 +41,15 @@ public class FieldValidator {
     public FieldValidator isNotEmpty(String value) throws InvalidValueException {
         if (value.isEmpty()) {
             throwError("validation.is_empty");
+        }
+        return this;
+    }
+
+    public FieldValidator isURL(String value) throws InvalidValueException {
+        try {
+            new URL(value).toURI();
+        } catch (MalformedURLException | URISyntaxException exception) {
+            throwError("validation.is_not_url", value);
         }
         return this;
     }
