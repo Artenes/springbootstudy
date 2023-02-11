@@ -1,7 +1,5 @@
 # TO DO
 
-- deal with users roles
-
 - check about relationships in hibernate for lazy loading relationships
 
 - fix timestamp handling, needs to save as +0 and retrieve in -4

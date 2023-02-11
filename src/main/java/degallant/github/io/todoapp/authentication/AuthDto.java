@@ -55,8 +55,6 @@ public class AuthDto {
         @JsonProperty("user_id")
         private String userId;
 
-        private String role;
-
     }
 
 }

@@ -40,6 +40,8 @@ public class Authenticator {
             return UUID.fromString(response.get("id").asText());
         } catch (IOException exception) {
             throw new RuntimeException(exception);
+        } finally {
+            clearAuthentication();
         }
     }
 
@@ -57,6 +59,11 @@ public class Authenticator {
         } catch (IOException exception) {
             throw new RuntimeException(exception);
         }
+    }
+
+    public void clearAuthentication() {
+        client.mutateWith((builder, httpHandlerBuilder, connector)
+                -> builder.defaultHeader(HttpHeaders.AUTHORIZATION));
     }
 
     public String makeOpenIdTokenFor(String email, String name, String profileUrl) {

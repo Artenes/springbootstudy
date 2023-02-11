@@ -31,8 +31,7 @@ public class RoutesConfiguration {
                 .csrf().disable()
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(HttpMethod.POST, "/v1/auth").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/v1/auth/refresh").authenticated()
-                        .requestMatchers(HttpMethod.PATCH, "/v1/auth/promote").access(withRole(Role.ROLE_ADMIN))
+                        .requestMatchers("/v1/admin/**").access(withRole(Role.ROLE_ADMIN))
                         .anyRequest().access(withRole(Role.ROLE_USER))
                         .and().addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
                 );

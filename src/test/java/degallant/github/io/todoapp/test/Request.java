@@ -168,7 +168,10 @@ public class Request {
 
             if (arguments.getAuthInfo().token() != null) {
                 arguments.getAuthenticator().authenticateWithToken(arguments.getAuthInfo().token());
+                return;
             }
+
+            arguments.getAuthenticator().clearAuthentication();
         }
 
         private WebTestClient.RequestBodySpec resolveUri(WebTestClient.RequestBodyUriSpec spec) {

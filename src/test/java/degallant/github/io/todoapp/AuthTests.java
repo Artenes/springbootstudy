@@ -133,40 +133,6 @@ public class AuthTests extends IntegrationTest {
     }
 
     @Test
-    public void patch_failsWhenRoleIsEmpty() {
-
-        request.asUser("another@gmail.com").to("auth/profile")
-                .withField("role", "")
-                .patch().isBadRequest()
-                .hasField("$.errors[0].type", contains("validation.is_not_role"));
-
-    }
-
-    @Test
-    public void patch_failsWhenRoleIsInvalid() {
-
-        request.asUser("another@gmail.com").to("auth/profile")
-                .withField("role", "invalid")
-                .patch().isBadRequest()
-                .hasField("$.errors[0].type", contains("validation.is_not_role"));
-
-    }
-
-    @Test
-    public void patch_failsWhenAdminAlreadyExists() {
-
-        request.asUser(DEFAULT_USER).to("auth/profile")
-                .withField("role", "ROLE_ADMIN")
-                .patch().isOk();
-
-        request.asUser("another@gmail.com").to("auth/profile")
-                .withField("role", "ROLE_ADMIN")
-                .patch().isBadRequest()
-                .hasField("$.errors[0].type", contains("validation.cannot_assign"));
-
-    }
-
-    @Test
     public void patch_successChangesName() {
 
         request.asUser(DEFAULT_USER).to("auth/profile")
@@ -193,22 +159,9 @@ public class AuthTests extends IntegrationTest {
     }
 
     @Test
-    public void patch_successElevatesToAdmin() {
-
-        request.asUser(DEFAULT_USER).to("auth/profile")
-                .withField("role", "ROLE_ADMIN")
-                .patch().isOk();
-
-        request.asUser(DEFAULT_USER).to("auth/profile")
-                .get().isOk()
-                .hasField("$.role", isEqualTo("ROLE_ADMIN"));
-
-    }
-
-    @Test
     public void promote_failsWhenUserTryToAccess() {
 
-        request.asUser(DEFAULT_USER).to("auth/promote")
+        request.asUser(DEFAULT_USER).to("admin/promote")
                 .patch().isForbidden();
 
     }
@@ -216,13 +169,9 @@ public class AuthTests extends IntegrationTest {
     @Test
     public void promote_failsWhenUserIdIsNotProvided() {
 
-        request.asUser(DEFAULT_USER).to("auth/profile")
-                .withField("role", "ROLE_ADMIN")
-                .patch().isOk();
-
-        request.asUser(DEFAULT_USER).to("auth/promote")
-                .patch()
-                .isBadRequest()
+        request.asUser(ADMIN_USER).to("admin/promote")
+                .withField("another", "something")
+                .post().isBadRequest()
                 .hasField("$.errors[?(@.field == 'user_id')].type", firstContains("validation.is_required"));
 
     }
@@ -230,13 +179,9 @@ public class AuthTests extends IntegrationTest {
     @Test
     public void promote_failsWhenUserIdIsEmpty() {
 
-        request.asUser(DEFAULT_USER).to("auth/profile")
-                .withField("role", "ROLE_ADMIN")
-                .patch().isOk();
-
-        request.asUser(DEFAULT_USER).to("auth/promote")
-                .withField("user_id", "").patch()
-                .isBadRequest()
+        request.asUser(ADMIN_USER).to("admin/promote")
+                .withField("user_id", "")
+                .post().isBadRequest()
                 .hasField("$.errors[?(@.field == 'user_id')].type", firstContains("validation.is_uuid"));
 
     }
@@ -244,12 +189,8 @@ public class AuthTests extends IntegrationTest {
     @Test
     public void promote_failsWhenUserIdIsInvalid() {
 
-        request.asUser(DEFAULT_USER).to("auth/profile")
-                .withField("role", "ROLE_ADMIN")
-                .patch().isOk();
-
-        request.asUser(DEFAULT_USER).to("auth/promote")
-                .withField("user_id", "invalid").patch()
+        request.asUser(ADMIN_USER).to("admin/promote")
+                .withField("user_id", "invalid").post()
                 .isBadRequest()
                 .hasField("$.errors[?(@.field == 'user_id')].type", firstContains("validation.is_uuid"));
 
@@ -258,71 +199,21 @@ public class AuthTests extends IntegrationTest {
     @Test
     public void promote_failsWhenUserIdDoesNotExists() {
 
-        request.asUser(DEFAULT_USER).to("auth/profile")
-                .withField("role", "ROLE_ADMIN")
-                .patch().isOk();
-
-        request.asUser(DEFAULT_USER).to("auth/promote")
-                .withField("user_id", UUID.randomUUID()).patch()
+        request.asUser(ADMIN_USER).to("admin/promote")
+                .withField("user_id", UUID.randomUUID()).post()
                 .isBadRequest()
                 .hasField("$.errors[?(@.field == 'user_id')].type", firstContains("validation.do_not_exist"));
 
     }
 
     @Test
-    public void promote_failsWhenRoleIsNotProvided() {
-
-        request.asUser(DEFAULT_USER).to("auth/profile")
-                .withField("role", "ROLE_ADMIN")
-                .patch().isOk();
-
-        request.asUser(DEFAULT_USER).to("auth/promote")
-                .patch()
-                .isBadRequest()
-                .hasField("$.errors[?(@.field == 'role')].type", firstContains("validation.is_required"));
-
-    }
-
-    @Test
-    public void promote_failsWhenRoleIsEmpty() {
-
-        request.asUser(DEFAULT_USER).to("auth/profile")
-                .withField("role", "ROLE_ADMIN")
-                .patch().isOk();
-
-        request.asUser(DEFAULT_USER).to("auth/promote")
-                .withField("role", "").patch()
-                .isBadRequest()
-                .hasField("$.errors[?(@.field == 'role')].type", firstContains("validation.is_not_role"));
-
-    }
-
-    @Test
-    public void promote_failsWhenRoleIsInvalid() {
-
-        request.asUser(DEFAULT_USER).to("auth/profile")
-                .withField("role", "ROLE_ADMIN")
-                .patch().isOk();
-
-        request.asUser(DEFAULT_USER).to("auth/promote")
-                .withField("role", "invalid").patch()
-                .isBadRequest()
-                .hasField("$.errors[?(@.field == 'role')].type", firstContains("validation.is_not_role"));
-
-    }
-
-    @Test
     public void promote_failsWhenUserTryToUpdateHimself() {
 
-        request.asUser(DEFAULT_USER).to("auth/profile")
-                .withField("role", "ROLE_ADMIN")
-                .patch().isOk();
-
-        var userId = request.asUser(DEFAULT_USER).to("auth/profile")
+        var userId = request.asUser(ADMIN_USER).to("auth/profile")
                 .get().isOk().getBody().get("id").asText();
 
-        request.asUser(DEFAULT_USER).to("auth/promote")
-                .withField("user_id", userId).patch()
+        request.asUser(ADMIN_USER).to("admin/promote")
+                .withField("user_id", userId).post()
                 .isBadRequest()
                 .hasField("$.errors[?(@.field == 'user_id')].type", firstContains("validation.cannot_change_role_current_user"));
 
@@ -331,23 +222,48 @@ public class AuthTests extends IntegrationTest {
     @Test
     public void promote_successUpdateOtherUserToAdmin() {
 
-        request.asUser(DEFAULT_USER).to("auth/profile")
-                .withField("role", "ROLE_ADMIN")
-                .patch().isOk();
-
         var otherId = request.asUser("another@gmail.com").to("auth/profile")
                 .get().isOk()
                 .hasField("$.role", contains("ROLE_USER"))
                 .getBody().get("id").asText();
 
-        request.asUser(DEFAULT_USER).to("auth/promote")
+        request.asUser(ADMIN_USER).to("admin/promote")
                 .withField("user_id", otherId)
-                .withField("role", "ROLE_ADMIN").patch()
-                .isOk();
+                .withField("role", "ROLE_ADMIN")
+                .post().isOk();
 
         request.asUser("another@gmail.com").to("auth/profile")
                 .get().isOk()
                 .hasField("$.role", contains("ROLE_ADMIN"));
+
+    }
+
+    @Test
+    public void statistics_failsWhenUserAccess() {
+
+        request.asUser(DEFAULT_USER).to("admin/statistics")
+                .get().isForbidden();
+
+    }
+
+    @Test
+    public void statistics_successShowTotals() {
+
+        var tasks = entityRequest.asUser(DEFAULT_USER).makeTasks("Task A", "Task B", "Task C");
+
+        entityRequest.asUser(DEFAULT_USER).commentOnTask(tasks.get(0).uuid(), "Comment A", "Comment B", "Comment C", "Comment D");
+
+        entityRequest.asUser(DEFAULT_USER).makeTags("Tag A", "Tag B");
+
+        entityRequest.asUser(DEFAULT_USER).makeProjects("Project A");
+
+        request.asUser(ADMIN_USER).to("admin/statistics")
+                .get().isOk()
+                .hasField("$.total_users", isEqualTo(2))
+                .hasField("$.total_tasks", isEqualTo(3))
+                .hasField("$.total_comments", isEqualTo(4))
+                .hasField("$.total_tags", isEqualTo(2))
+                .hasField("$.total_projects", isEqualTo(1));
 
     }
 

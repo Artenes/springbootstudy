@@ -3,6 +3,8 @@ package degallant.github.io.todoapp.test;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import degallant.github.io.todoapp.authentication.JwtToken;
 import degallant.github.io.todoapp.openid.OpenIdTokenParser;
+import degallant.github.io.todoapp.users.Role;
+import degallant.github.io.todoapp.users.UsersRepository;
 import net.minidev.json.JSONArray;
 import org.flywaydb.core.Flyway;
 import org.junit.jupiter.api.AfterEach;
@@ -30,6 +32,8 @@ public abstract class IntegrationTest {
 
     protected static final String DEFAULT_USER = "default@gmail.com";
 
+    protected static final String ADMIN_USER = "admin@gmail.com";
+
     @Autowired
     private WebTestClient client;
 
@@ -45,6 +49,9 @@ public abstract class IntegrationTest {
     @Autowired
     protected JwtToken token;
 
+    @Autowired
+    private UsersRepository usersRepository;
+
     protected Request request;
 
     protected EntityRequest entityRequest;
@@ -58,6 +65,14 @@ public abstract class IntegrationTest {
         request = new Request(proxy, authenticator, mapper);
         entityRequest = new EntityRequest(request);
         flyway.migrate();
+        makeAdmin();
+    }
+
+    private void makeAdmin() {
+        var id = authenticator.makeUser(ADMIN_USER);
+        var entity = usersRepository.findById(id).orElseThrow();
+        entity.setRole(Role.ROLE_ADMIN);
+        usersRepository.save(entity);
     }
 
     @AfterEach
@@ -79,13 +94,13 @@ public abstract class IntegrationTest {
 
     /**
      * Retardedly, but understandable, the JSON Path implementation we are using does not allow to do this:
-     *
+     * <p>
      * $.errors[?(@.field == 'user_id')].type.first()
-     *
+     * <p>
      * Where after applying a filter, we are able to get an element from the list of results.
-     *
+     * <p>
      * So to bypass this we just need to peek the result array and compare the value ourselves.
-     *
+     * <p>
      * This was never implemented (since 2016) because "is not supported on any of the implementations".
      * https://github.com/json-path/JsonPath/issues/272
      *

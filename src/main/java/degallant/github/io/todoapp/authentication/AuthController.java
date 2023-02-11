@@ -5,13 +5,11 @@ import degallant.github.io.todoapp.exceptions.AppExceptionHandler;
 import degallant.github.io.todoapp.projects.ProjectsController;
 import degallant.github.io.todoapp.tags.TagsController;
 import degallant.github.io.todoapp.tasks.TasksController;
-import degallant.github.io.todoapp.users.Role;
 import degallant.github.io.todoapp.users.UserEntity;
 import degallant.github.io.todoapp.users.UsersDto;
 import degallant.github.io.todoapp.users.UsersRepository;
 import degallant.github.io.todoapp.validation.FieldParser;
 import degallant.github.io.todoapp.validation.FieldValidator;
-import degallant.github.io.todoapp.validation.InvalidValueException;
 import degallant.github.io.todoapp.validation.Sanitizer;
 import lombok.RequiredArgsConstructor;
 import org.springframework.hateoas.EntityModel;
@@ -103,31 +101,6 @@ public class AuthController {
         return ResponseEntity.ok(response);
     }
 
-    @PatchMapping("/promote")
-    public ResponseEntity<?> promote(@RequestBody AuthDto.Promote request, Authentication authentication) {
-
-        var user = (UserEntity) authentication.getPrincipal();
-
-        var result = sanitizer.sanitize(
-
-                sanitizer.field("user_id").withRequiredValue(request.getUserId()).sanitize(value -> {
-                    var id = parser.toUUID(value);
-                    rules.check(usersRepository.existsById(id)).orThrow("validation.do_not_exist", id);
-                    rules.check(!user.getId().equals(id)).orThrow("validation.cannot_change_role_current_user", id);
-                    return id;
-                }),
-
-                sanitizer.field("role").withRequiredValue(request.getRole()).sanitize(parser::toRole)
-
-        );
-
-        var userToUpdate = usersRepository.findById(result.get("user_id").value()).orElseThrow();
-        userToUpdate.setRole(result.get("role").value());
-        usersRepository.save(userToUpdate);
-
-        return ResponseEntity.ok().build();
-    }
-
     @PatchMapping("/profile")
     public ResponseEntity<?> patch(@RequestBody AuthDto.Patch request, Authentication authentication) {
         var user = (UserEntity) authentication.getPrincipal();
@@ -142,38 +115,15 @@ public class AuthController {
                     rules.isNotEmpty(value);
                     rules.isURL(value);
                     return value;
-                }),
-
-                sanitizer.field("role").withOptionalValue(request.getRole()).sanitize(value -> {
-                    var role = parser.toRole(value);
-                    isNotAnotherAdmin(role, user.getRole());
-                    return role;
                 })
         );
 
         user.setName(result.get("name").ifNull(user.getName()));
         user.setPictureUrl(result.get("picture_url").ifNull(user.getPictureUrl()));
-        user.setRole(result.get("role").ifNull(user.getRole()));
 
         usersRepository.save(user);
 
         return ResponseEntity.ok().build();
-    }
-
-    public void isNotAnotherAdmin(Role value, Role original) throws InvalidValueException {
-        if (value == original) {
-            return;
-        }
-
-        if (value != Role.ROLE_ADMIN) {
-            return;
-        }
-
-        if (usersRepository.findByRole(Role.ROLE_ADMIN).isEmpty()) {
-            return;
-        }
-
-        throw new InvalidValueException("validation.cannot_assign", value);
     }
 
 }
