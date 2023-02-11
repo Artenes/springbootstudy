@@ -46,4 +46,17 @@ public class AuthDto {
 
     }
 
+    @Getter
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class Promote {
+
+        @JsonProperty("user_id")
+        private String userId;
+
+        private String role;
+
+    }
+
 }

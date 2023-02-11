@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.access.hierarchicalroles.RoleHierarchy;
 import org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl;
 import org.springframework.security.authorization.AuthorityAuthorizationManager;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -12,8 +13,6 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.intercept.RequestAuthorizationContext;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-
-import java.util.Arrays;
 
 /**
  * @noinspection ClassCanBeRecord, unused, SameParameterValue
@@ -33,6 +32,7 @@ public class RoutesConfiguration {
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(HttpMethod.POST, "/v1/auth").permitAll()
                         .requestMatchers(HttpMethod.GET, "/v1/auth/refresh").authenticated()
+                        .requestMatchers(HttpMethod.PATCH, "/v1/auth/promote").access(withRole(Role.ROLE_ADMIN))
                         .anyRequest().access(withRole(Role.ROLE_USER))
                         .and().addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
                 );
@@ -43,10 +43,14 @@ public class RoutesConfiguration {
 
     private AuthorityAuthorizationManager<RequestAuthorizationContext> withRole(Role role) {
         var access = AuthorityAuthorizationManager.<RequestAuthorizationContext>hasRole(role.simpleName());
+        access.setRoleHierarchy(makeRoleHierarchy());
+        return access;
+    }
+
+    private RoleHierarchy makeRoleHierarchy() {
         var hierarchy = new RoleHierarchyImpl();
         hierarchy.setHierarchy("ROLE_ADMIN > ROLE_USER");
-        access.setRoleHierarchy(hierarchy);
-        return access;
+        return hierarchy;
     }
 
 }

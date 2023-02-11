@@ -5,6 +5,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import degallant.github.io.todoapp.openid.OpenIdExtractionException;
 import degallant.github.io.todoapp.openid.OpenIdTokenParser;
 import degallant.github.io.todoapp.openid.OpenIdUser;
+import net.minidev.json.JSONArray;
+import org.junit.jupiter.api.Assertions;
 import org.springframework.http.HttpHeaders;
 import org.springframework.test.web.reactive.server.EntityExchangeResult;
 

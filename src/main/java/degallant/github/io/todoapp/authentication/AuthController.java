@@ -1,11 +1,11 @@
 package degallant.github.io.todoapp.authentication;
 
-import degallant.github.io.todoapp.users.Role;
 import degallant.github.io.todoapp.common.LinkBuilder;
 import degallant.github.io.todoapp.exceptions.AppExceptionHandler;
 import degallant.github.io.todoapp.projects.ProjectsController;
 import degallant.github.io.todoapp.tags.TagsController;
 import degallant.github.io.todoapp.tasks.TasksController;
+import degallant.github.io.todoapp.users.Role;
 import degallant.github.io.todoapp.users.UserEntity;
 import degallant.github.io.todoapp.users.UsersDto;
 import degallant.github.io.todoapp.users.UsersRepository;
@@ -17,7 +17,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.Link;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -91,7 +90,7 @@ public class AuthController {
                 .name(entity.getName())
                 .email(entity.getEmail())
                 .pictureUrl(entity.getPictureUrl())
-                .role(entity.getRole().simpleName())
+                .role(entity.getRole().name())
                 .build();
 
         Link selfLink = linkTo(methodOn(getClass()).profile(authentication)).withSelfRel();
@@ -102,6 +101,31 @@ public class AuthController {
         var response = EntityModel.of(user).add(selfLink, tasksLink, tagsLink, projectsLink);
 
         return ResponseEntity.ok(response);
+    }
+
+    @PatchMapping("/promote")
+    public ResponseEntity<?> promote(@RequestBody AuthDto.Promote request, Authentication authentication) {
+
+        var user = (UserEntity) authentication.getPrincipal();
+
+        var result = sanitizer.sanitize(
+
+                sanitizer.field("user_id").withRequiredValue(request.getUserId()).sanitize(value -> {
+                    var id = parser.toUUID(value);
+                    rules.check(usersRepository.existsById(id)).orThrow("validation.do_not_exist", id);
+                    rules.check(!user.getId().equals(id)).orThrow("validation.cannot_change_role_current_user", id);
+                    return id;
+                }),
+
+                sanitizer.field("role").withRequiredValue(request.getRole()).sanitize(parser::toRole)
+
+        );
+
+        var userToUpdate = usersRepository.findById(result.get("user_id").value()).orElseThrow();
+        userToUpdate.setRole(result.get("role").value());
+        usersRepository.save(userToUpdate);
+
+        return ResponseEntity.ok().build();
     }
 
     @PatchMapping("/profile")

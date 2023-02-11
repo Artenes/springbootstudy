@@ -3,6 +3,8 @@ package degallant.github.io.todoapp;
 import degallant.github.io.todoapp.test.IntegrationTest;
 import org.junit.jupiter.api.Test;
 
+import java.util.UUID;
+
 public class AuthTests extends IntegrationTest {
 
     @Test
@@ -199,7 +201,153 @@ public class AuthTests extends IntegrationTest {
 
         request.asUser(DEFAULT_USER).to("auth/profile")
                 .get().isOk()
-                .hasField("$.role", isEqualTo("ADMIN"));
+                .hasField("$.role", isEqualTo("ROLE_ADMIN"));
+
+    }
+
+    @Test
+    public void promote_failsWhenUserTryToAccess() {
+
+        request.asUser(DEFAULT_USER).to("auth/promote")
+                .patch().isForbidden();
+
+    }
+
+    @Test
+    public void promote_failsWhenUserIdIsNotProvided() {
+
+        request.asUser(DEFAULT_USER).to("auth/profile")
+                .withField("role", "ROLE_ADMIN")
+                .patch().isOk();
+
+        request.asUser(DEFAULT_USER).to("auth/promote")
+                .patch()
+                .isBadRequest()
+                .hasField("$.errors[?(@.field == 'user_id')].type", firstContains("validation.is_required"));
+
+    }
+
+    @Test
+    public void promote_failsWhenUserIdIsEmpty() {
+
+        request.asUser(DEFAULT_USER).to("auth/profile")
+                .withField("role", "ROLE_ADMIN")
+                .patch().isOk();
+
+        request.asUser(DEFAULT_USER).to("auth/promote")
+                .withField("user_id", "").patch()
+                .isBadRequest()
+                .hasField("$.errors[?(@.field == 'user_id')].type", firstContains("validation.is_uuid"));
+
+    }
+
+    @Test
+    public void promote_failsWhenUserIdIsInvalid() {
+
+        request.asUser(DEFAULT_USER).to("auth/profile")
+                .withField("role", "ROLE_ADMIN")
+                .patch().isOk();
+
+        request.asUser(DEFAULT_USER).to("auth/promote")
+                .withField("user_id", "invalid").patch()
+                .isBadRequest()
+                .hasField("$.errors[?(@.field == 'user_id')].type", firstContains("validation.is_uuid"));
+
+    }
+
+    @Test
+    public void promote_failsWhenUserIdDoesNotExists() {
+
+        request.asUser(DEFAULT_USER).to("auth/profile")
+                .withField("role", "ROLE_ADMIN")
+                .patch().isOk();
+
+        request.asUser(DEFAULT_USER).to("auth/promote")
+                .withField("user_id", UUID.randomUUID()).patch()
+                .isBadRequest()
+                .hasField("$.errors[?(@.field == 'user_id')].type", firstContains("validation.do_not_exist"));
+
+    }
+
+    @Test
+    public void promote_failsWhenRoleIsNotProvided() {
+
+        request.asUser(DEFAULT_USER).to("auth/profile")
+                .withField("role", "ROLE_ADMIN")
+                .patch().isOk();
+
+        request.asUser(DEFAULT_USER).to("auth/promote")
+                .patch()
+                .isBadRequest()
+                .hasField("$.errors[?(@.field == 'role')].type", firstContains("validation.is_required"));
+
+    }
+
+    @Test
+    public void promote_failsWhenRoleIsEmpty() {
+
+        request.asUser(DEFAULT_USER).to("auth/profile")
+                .withField("role", "ROLE_ADMIN")
+                .patch().isOk();
+
+        request.asUser(DEFAULT_USER).to("auth/promote")
+                .withField("role", "").patch()
+                .isBadRequest()
+                .hasField("$.errors[?(@.field == 'role')].type", firstContains("validation.is_not_role"));
+
+    }
+
+    @Test
+    public void promote_failsWhenRoleIsInvalid() {
+
+        request.asUser(DEFAULT_USER).to("auth/profile")
+                .withField("role", "ROLE_ADMIN")
+                .patch().isOk();
+
+        request.asUser(DEFAULT_USER).to("auth/promote")
+                .withField("role", "invalid").patch()
+                .isBadRequest()
+                .hasField("$.errors[?(@.field == 'role')].type", firstContains("validation.is_not_role"));
+
+    }
+
+    @Test
+    public void promote_failsWhenUserTryToUpdateHimself() {
+
+        request.asUser(DEFAULT_USER).to("auth/profile")
+                .withField("role", "ROLE_ADMIN")
+                .patch().isOk();
+
+        var userId = request.asUser(DEFAULT_USER).to("auth/profile")
+                .get().isOk().getBody().get("id").asText();
+
+        request.asUser(DEFAULT_USER).to("auth/promote")
+                .withField("user_id", userId).patch()
+                .isBadRequest()
+                .hasField("$.errors[?(@.field == 'user_id')].type", firstContains("validation.cannot_change_role_current_user"));
+
+    }
+
+    @Test
+    public void promote_successUpdateOtherUserToAdmin() {
+
+        request.asUser(DEFAULT_USER).to("auth/profile")
+                .withField("role", "ROLE_ADMIN")
+                .patch().isOk();
+
+        var otherId = request.asUser("another@gmail.com").to("auth/profile")
+                .get().isOk()
+                .hasField("$.role", contains("ROLE_USER"))
+                .getBody().get("id").asText();
+
+        request.asUser(DEFAULT_USER).to("auth/promote")
+                .withField("user_id", otherId)
+                .withField("role", "ROLE_ADMIN").patch()
+                .isOk();
+
+        request.asUser("another@gmail.com").to("auth/profile")
+                .get().isOk()
+                .hasField("$.role", contains("ROLE_ADMIN"));
 
     }
 

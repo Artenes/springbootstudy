@@ -143,8 +143,25 @@ public class FieldValidator {
         return this;
     }
 
-    private void throwError(String messageId, Object... args) throws InvalidValueException {
+    public InlineValidation check(boolean isValid) {
+        return new InlineValidation(isValid);
+    }
+
+    public void throwError(String messageId, Object... args) throws InvalidValueException {
         throw new InvalidValueException(messageId, args);
+    }
+
+    @RequiredArgsConstructor
+    public static class InlineValidation {
+
+        private final boolean isValid;
+
+        public void orThrow(String messageId, Object... args) throws InvalidValueException {
+            if (!isValid) {
+                throw new InvalidValueException(messageId, args);
+            }
+        }
+
     }
 
 }

@@ -3,6 +3,7 @@ package degallant.github.io.todoapp.test;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import degallant.github.io.todoapp.authentication.JwtToken;
 import degallant.github.io.todoapp.openid.OpenIdTokenParser;
+import net.minidev.json.JSONArray;
 import org.flywaydb.core.Flyway;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -17,9 +18,10 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 import java.util.function.Consumer;
 
 import static org.hamcrest.Matchers.containsString;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
- * @noinspection unused
+ * @noinspection unused, SameParameterValue
  */
 @ActiveProfiles("test")
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -73,6 +75,35 @@ public abstract class IntegrationTest {
 
     protected Consumer<JsonPathAssertions> contains(String value) {
         return v -> v.value(containsString(value));
+    }
+
+    /**
+     * Retardedly, but understandable, the JSON Path implementation we are using does not allow to do this:
+     *
+     * $.errors[?(@.field == 'user_id')].type.first()
+     *
+     * Where after applying a filter, we are able to get an element from the list of results.
+     *
+     * So to bypass this we just need to peek the result array and compare the value ourselves.
+     *
+     * This was never implemented (since 2016) because "is not supported on any of the implementations".
+     * https://github.com/json-path/JsonPath/issues/272
+     *
+     * @param value the value to verify against the first item found
+     * @return the consumer that will validate the result
+     */
+    protected Consumer<JsonPathAssertions> firstContains(String value) {
+        return v -> {
+            v.value(consumed -> {
+                var list = (JSONArray) consumed;
+                if (list.isEmpty()) {
+                    fail("No result found with provided jsonpath");
+                }
+                if (!list.get(0).toString().contains(value)) {
+                    fail("First item (" + list.get(0) + ") does not contains " + value);
+                }
+            });
+        };
     }
 
 }

@@ -254,6 +254,7 @@ public class Request {
         }
 
         public JsonNode getBody() {
+            getBodySpec();
             try {
                 return arguments.getMapper().readValue(arguments.getResponse().getResponseBodyContent(), JsonNode.class);
             } catch (IOException exception) {
