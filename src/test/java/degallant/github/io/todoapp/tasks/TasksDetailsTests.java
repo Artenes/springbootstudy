@@ -8,7 +8,7 @@ import java.util.UUID;
 public class TasksDetailsTests extends IntegrationTest {
 
     @Test
-    public void taskDetails_failsWhenIdIsInvalid() {
+    public void detail_failsWhenIdIsInvalid() {
 
         request.asUser(DEFAULT_USER).to("tasks/invalid")
                 .get().isNotFound();
@@ -16,10 +16,27 @@ public class TasksDetailsTests extends IntegrationTest {
     }
 
     @Test
-    public void taskDetails_failsWhenIdIsNotFound() {
+    public void details_failsWhenIdIsNotFound() {
 
         request.asUser(DEFAULT_USER).to("tasks/" + UUID.randomUUID())
                 .get().isNotFound();
+
+    }
+
+    @Test
+    public void details_showsSubtasks() {
+
+        var task = entityRequest.asUser(DEFAULT_USER).makeTask("Task A");
+
+        entityRequest.asUser(DEFAULT_USER).makeTaskWithDetails("title", "Subtask A", "parent_id", task.uuid().toString());
+        entityRequest.asUser(DEFAULT_USER).makeTaskWithDetails("title", "Subtask B", "parent_id", task.uuid().toString());
+        entityRequest.asUser(DEFAULT_USER).makeTaskWithDetails("title", "Subtask C", "parent_id", task.uuid().toString());
+
+        request.asUser(DEFAULT_USER).to(task.uri())
+                .get().isOk()
+                .hasField("$._embedded.subtasks[?(@.title == 'Subtask A')]", exists())
+                .hasField("$._embedded.subtasks[?(@.title == 'Subtask B')]", exists())
+                .hasField("$._embedded.subtasks[?(@.title == 'Subtask C')]", exists());
 
     }
 

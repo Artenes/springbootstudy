@@ -52,6 +52,10 @@ public class TaskEntity {
     )
     private List<TagEntity> tags;
 
+    @OneToMany(fetch = FetchType.LAZY)
+    @JoinColumn(name = "parent_id")
+    private List<TaskEntity> subTasks;
+
     public static Example<TaskEntity> belongsTo(UUID id, UserEntity user) {
         return Example.of(TaskEntity.builder().id(id).user(user).build());
     }

@@ -25,7 +25,6 @@ import static degallant.github.io.todoapp.validation.PathValidator.parseUUIDOrFa
 public class DetailsTaskService {
 
     private final TasksRepository tasksRepository;
-    private final ProjectsRepository projectsRepository;
     private final LinkBuilder link;
 
     public RepresentationModel<?> details(String rawId, Authentication authentication) {
@@ -51,7 +50,7 @@ public class DetailsTaskService {
             response.embed(tags);
         }
 
-        var children = tasksRepository.findByParentId(entity.getId());
+        var children = entity.getSubTasks();
         if (children != null && !children.isEmpty()) {
             var subTasks = children
                     .stream()
@@ -61,7 +60,7 @@ public class DetailsTaskService {
         }
 
         if (entity.getParent() != null) {
-            var parentEntity = tasksRepository.findByIdAndUserId(entity.getParent().getId(), userId).orElseThrow();
+            var parentEntity = entity.getParent();
             var parent = TasksDto.ParentTask.builder()
                     .id(parentEntity.getId())
                     .title(parentEntity.getTitle())
@@ -71,7 +70,7 @@ public class DetailsTaskService {
         }
 
         if (entity.getProject() != null) {
-            var projectEntity = projectsRepository.findByIdAndUserId(entity.getProject().getId(), userId).orElseThrow();
+            var projectEntity = entity.getProject();
             var project = ProjectsDto.Details.builder()
                     .id(projectEntity.getId())
                     .title(projectEntity.getTitle())
