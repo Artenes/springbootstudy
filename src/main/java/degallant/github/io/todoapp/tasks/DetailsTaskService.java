@@ -70,8 +70,8 @@ public class DetailsTaskService {
             response.embed(EntityModel.of(parent).add(linkSelf));
         }
 
-        if (entity.getProjectId() != null) {
-            var projectEntity = projectsRepository.findByIdAndUserId(entity.getProjectId(), userId).orElseThrow();
+        if (entity.getProject() != null) {
+            var projectEntity = projectsRepository.findByIdAndUserId(entity.getProject().getId(), userId).orElseThrow();
             var project = ProjectsDto.Details.builder()
                     .id(projectEntity.getId())
                     .title(projectEntity.getTitle())

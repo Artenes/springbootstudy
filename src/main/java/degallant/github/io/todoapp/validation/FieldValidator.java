@@ -136,14 +136,6 @@ public class FieldValidator {
         return this;
     }
 
-    public FieldValidator projectBelongsToUser(UUID projectId, UUID userId) throws InvalidValueException {
-        var example = ProjectEntity.belongsTo(projectId, userId);
-        if (!projectsRepository.exists(example)) {
-            throwError("validation.do_not_exist", projectId);
-        }
-        return this;
-    }
-
     public InlineValidation check(boolean isValid) {
         return new InlineValidation(isValid);
     }

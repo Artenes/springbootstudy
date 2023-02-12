@@ -23,6 +23,7 @@ public class CreateTasksService {
     private final FieldValidator rules;
     private final PrimitiveFieldParser primitiveParser;
     private final TasksFieldParser tasksParser;
+    private final ProjectsFieldParser projectsParser;
     private final LinkBuilder link;
 
     public URI create(TasksDto.Create request, UserEntity user) {
@@ -37,7 +38,7 @@ public class CreateTasksService {
                 .tags(result.get("tags_ids").value())
                 .parent(result.get("parent").value())
                 .user(user)
-                .projectId(result.get("project_id").value())
+                .project(result.get("project").value())
                 .complete(result.get("complete").asBool())
                 .build();
 
@@ -77,11 +78,8 @@ public class CreateTasksService {
                 sanitizer.field("parent_id").withOptionalValue(request.getParentId())
                         .sanitize(value -> tasksParser.toTask(value, user)).withName("parent"),
 
-                sanitizer.field("project_id").withOptionalValue(request.getProjectId()).sanitize(value -> {
-                    var parsed = primitiveParser.toUUID(value);
-                    rules.projectBelongsToUser(parsed, user.getId());
-                    return parsed;
-                }),
+                sanitizer.field("project_id").withOptionalValue(request.getProjectId())
+                        .sanitize(value -> projectsParser.toProject(value, user)).withName("project"),
 
                 sanitizer.field("complete").withOptionalValue(request.getComplete()).sanitize(primitiveParser::toBoolean)
 

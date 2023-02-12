@@ -21,6 +21,7 @@ public class PatchTasksService {
     private final FieldValidator rules;
     private final PrimitiveFieldParser parser;
     private final TasksFieldParser tasksParser;
+    private final ProjectsFieldParser projectParser;
 
     public void patch(String id, TasksDto.Create request, UserEntity user) {
 
@@ -33,7 +34,7 @@ public class PatchTasksService {
         entity.setPriority(result.get("priority").ifNull(entity.getPriority()));
         entity.setComplete(result.get("complete").ifNull(entity.getComplete()));
         entity.setParent(result.get("parent").ifNull(entity.getParent()));
-        entity.setProjectId(result.get("project_id").ifNull(entity.getProjectId()));
+        entity.setProject(result.get("project").ifNull(entity.getProject()));
         entity.setTags(result.get("tags_ids").ifNull(entity.getTags()));
 
         tasksRepository.save(entity);
@@ -71,11 +72,8 @@ public class PatchTasksService {
                 sanitizer.field("parent_id").withOptionalValue(request.getParentId())
                         .sanitize(value -> tasksParser.toTask(value, user)).withName("parent"),
 
-                sanitizer.field("project_id").withOptionalValue(request.getProjectId()).sanitize(value -> {
-                    var parsed = parser.toUUID(value);
-                    rules.projectBelongsToUser(parsed, user.getId());
-                    return parsed;
-                }),
+                sanitizer.field("project_id").withOptionalValue(request.getProjectId())
+                        .sanitize(value -> projectParser.toProject(value, user)).withName("project"),
 
                 sanitizer.field("complete").withOptionalValue(request.getComplete()).sanitize(parser::toBoolean)
 

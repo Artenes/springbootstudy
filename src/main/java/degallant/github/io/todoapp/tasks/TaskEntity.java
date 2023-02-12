@@ -1,5 +1,6 @@
 package degallant.github.io.todoapp.tasks;
 
+import degallant.github.io.todoapp.projects.ProjectEntity;
 import degallant.github.io.todoapp.tags.TagEntity;
 import degallant.github.io.todoapp.users.UserEntity;
 import jakarta.persistence.*;
@@ -37,8 +38,8 @@ public class TaskEntity {
     @OneToOne(fetch = FetchType.LAZY)
     private TaskEntity parent;
 
-    @Column(name = "project_id")
-    private UUID projectId;
+    @OneToOne(fetch = FetchType.LAZY)
+    private ProjectEntity project;
 
     @Column(name = "due_date")
     private OffsetDateTime dueDate;
