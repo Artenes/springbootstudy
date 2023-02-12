@@ -7,6 +7,7 @@ import degallant.github.io.todoapp.projects.ProjectsRepository;
 import degallant.github.io.todoapp.tags.TagEntity;
 import degallant.github.io.todoapp.tasks.TaskEntity;
 import degallant.github.io.todoapp.tasks.TasksRepository;
+import degallant.github.io.todoapp.users.UserEntity;
 import lombok.RequiredArgsConstructor;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.stereotype.Component;
@@ -127,8 +128,8 @@ public class FieldValidator {
         return this;
     }
 
-    public FieldValidator taskBelongsToUser(UUID taskId, UUID userId) throws InvalidValueException {
-        var example = TaskEntity.belongsTo(taskId, userId);
+    public FieldValidator taskBelongsToUser(UUID taskId, UserEntity user) throws InvalidValueException {
+        var example = TaskEntity.belongsTo(taskId, user);
         if (!tasksRepository.exists(example)) {
             throwError("validation.do_not_exist", taskId);
         }

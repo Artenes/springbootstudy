@@ -10,6 +10,7 @@ import degallant.github.io.todoapp.tasks.Priority;
 import degallant.github.io.todoapp.tasks.TaskEntity;
 import degallant.github.io.todoapp.tasks.TasksRepository;
 import degallant.github.io.todoapp.users.Role;
+import degallant.github.io.todoapp.users.UserEntity;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
@@ -130,10 +131,10 @@ public class FieldParser {
         }
     }
 
-    public TaskEntity toTask(String id, UUID userId) throws NoSuchElementException {
+    public TaskEntity toTask(String id, UserEntity user) throws NoSuchElementException {
         try {
             var taskId = UUID.fromString(id);
-            var example = TaskEntity.belongsTo(taskId, userId);
+            var example = TaskEntity.belongsTo(taskId, user);
             return tasksRepository.findOne(example).orElseThrow();
         } catch (IllegalArgumentException | NoSuchElementException exception) {
             throw new NoSuchElementException("No task found with id " + id, exception);

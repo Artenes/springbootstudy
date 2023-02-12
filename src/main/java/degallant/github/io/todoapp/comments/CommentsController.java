@@ -33,8 +33,8 @@ public class CommentsController {
     @PostMapping
     public ResponseEntity<?> create(@PathVariable String id, @RequestBody CommentsDto.Create request, Authentication authentication) {
 
-        var userId = ((UserEntity) authentication.getPrincipal()).getId();
-        var task = parser.toTask(id, userId);
+        var user = (UserEntity) authentication.getPrincipal();
+        var task = parser.toTask(id, user);
 
         var result = sanitizer.sanitize(
                 sanitizer.field("text").withRequiredValue(request.getText()).sanitize(value -> {
@@ -45,7 +45,7 @@ public class CommentsController {
 
         var entity = CommentEntity.builder()
                 .text(result.get("text").value())
-                .userId(userId)
+                .userId(user.getId())
                 .taskId(task.getId())
                 .build();
 
@@ -61,9 +61,9 @@ public class CommentsController {
     @GetMapping("/{commentId}")
     public ResponseEntity<?> details(@PathVariable String id, @PathVariable String commentId, Authentication authentication) {
 
-        var userId = ((UserEntity) authentication.getPrincipal()).getId();
-        var task = parser.toTask(id, userId);
-        var comment = parser.toComment(commentId, task.getId(), userId);
+        var user = (UserEntity) authentication.getPrincipal();
+        var task = parser.toTask(id, user);
+        var comment = parser.toComment(commentId, task.getId(), user.getId());
 
         var response = toEntityModel(comment);
 

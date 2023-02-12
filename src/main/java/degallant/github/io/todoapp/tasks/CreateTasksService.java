@@ -30,7 +30,7 @@ public class CreateTasksService {
 
     public URI create(TasksDto.Create request, UserEntity user) {
 
-        var result = sanitizeRequest(request, user.getId());
+        var result = sanitizeRequest(request, user);
 
         var entity = TaskEntity.builder()
                 .title(result.get("title").value())
@@ -39,7 +39,7 @@ public class CreateTasksService {
                 .priority(result.get("priority").value())
                 .tags(result.get("tags_ids").value())
                 .parentId(result.get("parent_id").value())
-                .userId(user.getId())
+                .user(user)
                 .projectId(result.get("project_id").value())
                 .complete(result.get("complete").asBool())
                 .build();
@@ -49,7 +49,7 @@ public class CreateTasksService {
         return link.to("tasks").slash(entity.getId()).withSelfRel().toUri();
     }
 
-    private Map<String, SanitizedField> sanitizeRequest(TasksDto.Create request, UUID userId) {
+    private Map<String, SanitizedField> sanitizeRequest(TasksDto.Create request, UserEntity user) {
         return sanitizer.sanitize(
 
                 sanitizer.field("title").withRequiredValue(request.getTitle()).sanitize(value -> {
@@ -72,20 +72,20 @@ public class CreateTasksService {
 
                 sanitizer.field("tags_ids").withOptionalValue(request.getTagsIds()).sanitize(value -> {
                     var parsed = parser.toUUIDList(value);
-                    var found = tagsRepository.findAllByUserIdAndId(userId, parsed);
+                    var found = tagsRepository.findAllByUserIdAndId(user.getId(), parsed);
                     rules.hasUnknownTag(parsed, found);
                     return found;
                 }),
 
                 sanitizer.field("parent_id").withOptionalValue(request.getParentId()).sanitize(value -> {
                     var parsed = parser.toUUID(value);
-                    rules.taskBelongsToUser(parsed, userId);
+                    rules.taskBelongsToUser(parsed, user);
                     return parsed;
                 }),
 
                 sanitizer.field("project_id").withOptionalValue(request.getProjectId()).sanitize(value -> {
                     var parsed = parser.toUUID(value);
-                    rules.projectBelongsToUser(parsed, userId);
+                    rules.projectBelongsToUser(parsed, user.getId());
                     return parsed;
                 }),
 

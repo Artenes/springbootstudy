@@ -10,7 +10,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.Map;
-import java.util.UUID;
 
 /**
  * @noinspection ClassCanBeRecord
@@ -27,8 +26,8 @@ public class PatchTasksService {
 
     public void patch(String id, TasksDto.Create request, UserEntity user) {
 
-        var entity = parser.toTask(id, user.getId());
-        var result = sanitizeRequest(request, user.getId());
+        var entity = parser.toTask(id, user);
+        var result = sanitizeRequest(request, user);
 
         entity.setTitle(result.get("title").ifNull(entity.getTitle()));
         entity.setDescription(result.get("description").ifNull(entity.getDescription()));
@@ -43,7 +42,7 @@ public class PatchTasksService {
 
     }
 
-    private Map<String, SanitizedField> sanitizeRequest(TasksDto.Create request, UUID userId) {
+    private Map<String, SanitizedField> sanitizeRequest(TasksDto.Create request, UserEntity user) {
         return sanitizer.sanitize(
 
                 sanitizer.field("title").withOptionalValue(request.getTitle()).sanitize(value -> {
@@ -66,20 +65,20 @@ public class PatchTasksService {
 
                 sanitizer.field("tags_ids").withOptionalValue(request.getTagsIds()).sanitize(value -> {
                     var parsed = parser.toUUIDList(value);
-                    var found = tagsRepository.findAllByUserIdAndId(userId, parsed);
+                    var found = tagsRepository.findAllByUserIdAndId(user.getId(), parsed);
                     rules.hasUnknownTag(parsed, found);
                     return found;
                 }),
 
                 sanitizer.field("parent_id").withOptionalValue(request.getParentId()).sanitize(value -> {
                     var parsed = parser.toUUID(value);
-                    rules.taskBelongsToUser(parsed, userId);
+                    rules.taskBelongsToUser(parsed, user);
                     return parsed;
                 }),
 
                 sanitizer.field("project_id").withOptionalValue(request.getProjectId()).sanitize(value -> {
                     var parsed = parser.toUUID(value);
-                    rules.projectBelongsToUser(parsed, userId);
+                    rules.projectBelongsToUser(parsed, user.getId());
                     return parsed;
                 }),
 

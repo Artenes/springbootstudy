@@ -1,6 +1,7 @@
 package degallant.github.io.todoapp.tasks;
 
 import degallant.github.io.todoapp.tags.TagEntity;
+import degallant.github.io.todoapp.users.UserEntity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.domain.Example;
@@ -30,8 +31,8 @@ public class TaskEntity {
 
     private Priority priority;
 
-    @Column(name = "user_id")
-    private UUID userId;
+    @OneToOne(fetch = FetchType.LAZY)
+    private UserEntity user;
 
     @Column(name = "parent_id")
     private UUID parentId;
@@ -42,7 +43,7 @@ public class TaskEntity {
     @Column(name = "due_date")
     private OffsetDateTime dueDate;
 
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "tasks_tags",
             joinColumns = @JoinColumn(name = "task_id"),
@@ -50,8 +51,8 @@ public class TaskEntity {
     )
     private List<TagEntity> tags;
 
-    public static Example<TaskEntity> belongsTo(UUID id, UUID userId) {
-        return Example.of(TaskEntity.builder().id(id).userId(userId).build());
+    public static Example<TaskEntity> belongsTo(UUID id, UserEntity user) {
+        return Example.of(TaskEntity.builder().id(id).user(user).build());
     }
 
 }

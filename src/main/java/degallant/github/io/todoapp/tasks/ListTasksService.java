@@ -21,7 +21,6 @@ import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
@@ -51,7 +50,7 @@ public class ListTasksService {
 
         var linkBuilder = link.to("tasks").withParams().addSort(sort);
         var pageRequest = PageRequest.of(result.get("p").asInt() - 1, 10, result.get("s").or(Sort.unsorted()));
-        var specification = matchesAnyOf(user.getId(), title, result.get("complete").value(), result.get("due_date").value());
+        var specification = matchesAnyOf(user, title, result.get("complete").value(), result.get("due_date").value());
         var tasksPage = tasksRepository.findAll(specification, pageRequest);
 
         var response = pagedResponse.makePagedResponse(linkBuilder, tasksPage, result.get("p").value());
@@ -77,12 +76,12 @@ public class ListTasksService {
         return response.build();
     }
 
-    public Specification<TaskEntity> matchesAnyOf(UUID userId, String title, Boolean complete, LocalDate date) {
+    public Specification<TaskEntity> matchesAnyOf(UserEntity user, String title, Boolean complete, LocalDate date) {
         return (root, query, builder) -> {
 
             List<Predicate> predicates = new ArrayList<>();
 
-            predicates.add(builder.equal(root.get("userId"), userId));
+            predicates.add(builder.equal(root.get("user"), user));
 
             if (title != null && !title.isEmpty()) {
                 predicates.add(builder.like(root.get("title"), "%" + title + "%"));
