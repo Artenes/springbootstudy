@@ -1,9 +1,9 @@
 package degallant.github.io.todoapp.sanitization.parsers;
 
 import degallant.github.io.todoapp.sanitization.InvalidValueException;
-import degallant.github.io.todoapp.tasks.TaskEntity;
-import degallant.github.io.todoapp.tasks.TasksRepository;
-import degallant.github.io.todoapp.users.UserEntity;
+import degallant.github.io.todoapp.domain.tasks.TaskEntity;
+import degallant.github.io.todoapp.domain.tasks.TasksRepository;
+import degallant.github.io.todoapp.domain.users.UserEntity;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 

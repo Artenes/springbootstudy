@@ -1,8 +1,8 @@
 package degallant.github.io.todoapp.sanitization.parsers;
 
-import degallant.github.io.todoapp.comments.CommentEntity;
-import degallant.github.io.todoapp.comments.CommentsRepository;
-import degallant.github.io.todoapp.users.UserEntity;
+import degallant.github.io.todoapp.domain.comments.CommentEntity;
+import degallant.github.io.todoapp.domain.comments.CommentsRepository;
+import degallant.github.io.todoapp.domain.users.UserEntity;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 

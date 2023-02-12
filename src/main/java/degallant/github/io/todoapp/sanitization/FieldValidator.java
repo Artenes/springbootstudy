@@ -1,6 +1,6 @@
 package degallant.github.io.todoapp.sanitization;
 
-import degallant.github.io.todoapp.tags.TagEntity;
+import degallant.github.io.todoapp.domain.tags.TagEntity;
 import lombok.RequiredArgsConstructor;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.stereotype.Component;

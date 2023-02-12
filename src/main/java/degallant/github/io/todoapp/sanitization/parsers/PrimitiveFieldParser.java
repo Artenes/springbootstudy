@@ -3,7 +3,7 @@ package degallant.github.io.todoapp.sanitization.parsers;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import degallant.github.io.todoapp.sanitization.InvalidValueException;
-import degallant.github.io.todoapp.tasks.Priority;
+import degallant.github.io.todoapp.domain.tasks.Priority;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 

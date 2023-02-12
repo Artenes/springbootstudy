@@ -2,12 +2,12 @@ package degallant.github.io.todoapp.authentication;
 
 import degallant.github.io.todoapp.common.LinkBuilder;
 import degallant.github.io.todoapp.exceptions.AppExceptionHandler;
-import degallant.github.io.todoapp.projects.ProjectsController;
-import degallant.github.io.todoapp.tags.TagsController;
-import degallant.github.io.todoapp.tasks.TasksController;
-import degallant.github.io.todoapp.users.UserEntity;
-import degallant.github.io.todoapp.users.UsersDto;
-import degallant.github.io.todoapp.users.UsersRepository;
+import degallant.github.io.todoapp.domain.projects.ProjectsController;
+import degallant.github.io.todoapp.domain.tags.TagsController;
+import degallant.github.io.todoapp.domain.tasks.TasksController;
+import degallant.github.io.todoapp.domain.users.UserEntity;
+import degallant.github.io.todoapp.domain.users.UsersDto;
+import degallant.github.io.todoapp.domain.users.UsersRepository;
 import degallant.github.io.todoapp.sanitization.parsers.PrimitiveFieldParser;
 import degallant.github.io.todoapp.sanitization.FieldValidator;
 import degallant.github.io.todoapp.sanitization.Sanitizer;
