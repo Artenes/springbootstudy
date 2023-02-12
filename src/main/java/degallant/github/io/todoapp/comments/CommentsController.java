@@ -48,8 +48,8 @@ public class CommentsController {
 
         var entity = CommentEntity.builder()
                 .text(result.get("text").value())
-                .userId(user.getId())
-                .taskId(task.getId())
+                .commenter(user)
+                .task(task)
                 .build();
 
         entity = commentsRepository.save(entity);
@@ -78,7 +78,7 @@ public class CommentsController {
 
         var userId = ((UserEntity) authentication.getPrincipal()).getId();
         var task = tasksRepository.findByIdAndUserId(parser.toUuidOrThrow(id), userId).orElseThrow();
-        var entities = commentsRepository.findByTaskIdAndUserId(task.getId(), userId);
+        var entities = commentsRepository.findByTaskIdAndCommenterId(task.getId(), userId);
 
         var comments = entities.stream()
                 .map(this::toEntityModel)
@@ -95,9 +95,9 @@ public class CommentsController {
 
     private EntityModel<CommentsDto.Details> toEntityModel(CommentEntity entity) {
         var comment = CommentsDto.Details.builder().id(entity.getId()).text(entity.getText()).build();
-        var linkSelf = link.to("tasks").slash(entity.getTaskId()).slash("comments").slash(entity.getId()).withSelfRel();
-        var linkAll = link.to("tasks").slash(entity.getTaskId()).slash("comments").withRel("all");
-        var linkTask = link.to("tasks").slash(entity.getTaskId()).withRel("task");
+        var linkSelf = link.to("tasks").slash(entity.getTask().getId()).slash("comments").slash(entity.getId()).withSelfRel();
+        var linkAll = link.to("tasks").slash(entity.getTask().getId()).slash("comments").withRel("all");
+        var linkTask = link.to("tasks").slash(entity.getTask().getId()).withRel("task");
         return EntityModel.of(comment).add(linkSelf, linkAll, linkTask);
     }
 

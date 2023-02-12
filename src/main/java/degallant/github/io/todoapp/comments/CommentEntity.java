@@ -1,5 +1,7 @@
 package degallant.github.io.todoapp.comments;
 
+import degallant.github.io.todoapp.tasks.TaskEntity;
+import degallant.github.io.todoapp.users.UserEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -9,9 +11,9 @@ import java.util.UUID;
 @Builder
 @Getter
 @Setter
+@ToString
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString
 public class CommentEntity {
 
     @Id
@@ -20,10 +22,11 @@ public class CommentEntity {
 
     private String text;
 
-    @Column(name = "user_id")
-    private UUID userId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    private UserEntity commenter;
 
-    @Column(name = "task_id")
-    private UUID taskId;
+    @OneToOne(fetch = FetchType.LAZY)
+    private TaskEntity task;
 
 }

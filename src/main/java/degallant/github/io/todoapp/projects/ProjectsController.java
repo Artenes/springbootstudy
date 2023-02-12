@@ -32,7 +32,7 @@ public class ProjectsController {
     @PostMapping
     public ResponseEntity<?> create(@RequestBody ProjectsDto.Create request, Authentication authentication) {
 
-        var userId = ((UserEntity) authentication.getPrincipal()).getId();
+        var user = (UserEntity) authentication.getPrincipal();
 
         var result = sanitizer.sanitize(
                 sanitizer.field("title").withRequiredValue(request.getTitle()).sanitize(value -> {
@@ -43,7 +43,7 @@ public class ProjectsController {
 
         var entity = ProjectEntity.builder()
                 .title(result.get("title").value())
-                .userId(userId)
+                .user(user)
                 .build();
 
         entity = repository.save(entity);

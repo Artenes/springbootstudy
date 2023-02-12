@@ -21,9 +21,8 @@ public class ProjectsFieldParser {
 
     public ProjectEntity toProject(String id, UserEntity user) throws InvalidValueException {
         try {
-            var taskId = UUID.fromString(id);
-            var example = ProjectEntity.belongsTo(taskId, user);
-            return repository.findOne(example).orElseThrow();
+            var projectId = UUID.fromString(id);
+            return repository.findByIdAndUserId(projectId, user.getId()).orElseThrow();
         } catch (IllegalArgumentException | NoSuchElementException exception) {
             throw new InvalidValueException("validation.do_not_exist", id);
         }

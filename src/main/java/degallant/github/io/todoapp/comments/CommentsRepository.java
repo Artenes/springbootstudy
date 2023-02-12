@@ -8,8 +8,8 @@ import java.util.UUID;
 
 public interface CommentsRepository extends JpaRepository<CommentEntity, UUID> {
 
-    List<CommentEntity> findByTaskIdAndUserId(UUID taskId, UUID userId);
+    List<CommentEntity> findByTaskIdAndCommenterId(UUID taskId, UUID commenterId);
 
-    Optional<CommentEntity> findByIdAndUserIdAndTaskId(UUID id, UUID userId, UUID taskId);
+    Optional<CommentEntity> findByIdAndCommenterIdAndTaskId(UUID id, UUID commenterId, UUID taskId);
 
 }

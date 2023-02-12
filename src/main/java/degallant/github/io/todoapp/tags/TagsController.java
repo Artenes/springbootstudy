@@ -39,11 +39,11 @@ public class TagsController {
                 })
         );
 
-        var userId = ((UserEntity) authentication.getPrincipal()).getId();
+        var user = (UserEntity) authentication.getPrincipal();
 
         var entity = TagEntity.builder()
                 .name(result.get("name").value())
-                .userId(userId)
+                .user(user)
                 .build();
 
         entity = repository.save(entity);

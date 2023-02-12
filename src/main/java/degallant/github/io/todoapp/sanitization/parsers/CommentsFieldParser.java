@@ -19,7 +19,7 @@ public class CommentsFieldParser {
     public CommentEntity toCommentOrThrowNoSuchElement(String id, UUID taskId, UserEntity user) throws NoSuchElementException {
         try {
             var commentId = UUID.fromString(id);
-            return repository.findByIdAndUserIdAndTaskId(commentId, user.getId(), taskId).orElseThrow();
+            return repository.findByIdAndCommenterIdAndTaskId(commentId, user.getId(), taskId).orElseThrow();
         } catch (IllegalArgumentException | NoSuchElementException exception) {
             throw new NoSuchElementException("No comment found with id " + id, exception);
         }
