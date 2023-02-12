@@ -1,17 +1,17 @@
 package degallant.github.io.todoapp.admin;
 
 import degallant.github.io.todoapp.authentication.AuthDto;
-import degallant.github.io.todoapp.comments.CommentsRepository;
+import degallant.github.io.todoapp.domain.comments.CommentsRepository;
 import degallant.github.io.todoapp.common.LinkBuilder;
-import degallant.github.io.todoapp.projects.ProjectsRepository;
-import degallant.github.io.todoapp.tags.TagsRepository;
-import degallant.github.io.todoapp.tasks.TasksRepository;
-import degallant.github.io.todoapp.users.Role;
-import degallant.github.io.todoapp.users.UserEntity;
-import degallant.github.io.todoapp.users.UsersRepository;
-import degallant.github.io.todoapp.validation.FieldParser;
-import degallant.github.io.todoapp.validation.FieldValidator;
-import degallant.github.io.todoapp.validation.Sanitizer;
+import degallant.github.io.todoapp.domain.projects.ProjectsRepository;
+import degallant.github.io.todoapp.domain.tags.TagsRepository;
+import degallant.github.io.todoapp.domain.tasks.TasksRepository;
+import degallant.github.io.todoapp.domain.users.Role;
+import degallant.github.io.todoapp.domain.users.UserEntity;
+import degallant.github.io.todoapp.domain.users.UsersRepository;
+import degallant.github.io.todoapp.sanitization.parsers.PrimitiveFieldParser;
+import degallant.github.io.todoapp.sanitization.FieldValidator;
+import degallant.github.io.todoapp.sanitization.Sanitizer;
 import lombok.RequiredArgsConstructor;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.http.ResponseEntity;
@@ -28,7 +28,7 @@ public class AdminController {
 
     private final Sanitizer sanitizer;
     private final FieldValidator rules;
-    private final FieldParser parser;
+    private final PrimitiveFieldParser parser;
     private final LinkBuilder link;
     private final UsersRepository usersRepository;
     private final TasksRepository tasksRepository;
