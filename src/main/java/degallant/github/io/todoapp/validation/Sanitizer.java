@@ -24,7 +24,7 @@ public class Sanitizer {
         for (FieldSpec spec : specs) {
             try {
                 var field = spec.sanitize();
-                sanitizedFields.put(spec.name, field);
+                sanitizedFields.put(spec.getName(), field);
             } catch (InvalidValueException exception) {
                 errors.add(makeError(spec, exception));
             }
@@ -51,6 +51,7 @@ public class Sanitizer {
         private boolean required;
         private String value;
         private SanitizeSpec rule;
+        private String sanitizedName;
 
         public FieldSpec(String name) {
             this.name = name;
@@ -71,6 +72,18 @@ public class Sanitizer {
         public FieldSpec sanitize(SanitizeSpec rule) {
             this.rule = rule;
             return this;
+        }
+
+        public FieldSpec withName(String sanitizedName) {
+            this.sanitizedName = sanitizedName;
+            return this;
+        }
+
+        public String getName() {
+            if (sanitizedName != null) {
+                return sanitizedName;
+            }
+            return name;
         }
 
         public SanitizedField sanitize() throws InvalidValueException {

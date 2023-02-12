@@ -3,7 +3,7 @@ package degallant.github.io.todoapp.comments;
 import degallant.github.io.todoapp.common.LinkBuilder;
 import degallant.github.io.todoapp.tasks.TasksRepository;
 import degallant.github.io.todoapp.users.UserEntity;
-import degallant.github.io.todoapp.validation.FieldParser;
+import degallant.github.io.todoapp.validation.PrimitiveFieldParser;
 import degallant.github.io.todoapp.validation.FieldValidator;
 import degallant.github.io.todoapp.validation.Sanitizer;
 import lombok.RequiredArgsConstructor;
@@ -27,7 +27,7 @@ public class CommentsController {
     private final CommentsRepository commentsRepository;
     private final Sanitizer sanitizer;
     private final FieldValidator rules;
-    private final FieldParser parser;
+    private final PrimitiveFieldParser parser;
     private final LinkBuilder link;
 
     @PostMapping

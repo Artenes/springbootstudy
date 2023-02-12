@@ -60,8 +60,8 @@ public class DetailsTaskService {
             response.embed(subTasks);
         }
 
-        if (entity.getParentId() != null) {
-            var parentEntity = tasksRepository.findByIdAndUserId(entity.getParentId(), userId).orElseThrow();
+        if (entity.getParent() != null) {
+            var parentEntity = tasksRepository.findByIdAndUserId(entity.getParent().getId(), userId).orElseThrow();
             var parent = TasksDto.ParentTask.builder()
                     .id(parentEntity.getId())
                     .title(parentEntity.getTitle())

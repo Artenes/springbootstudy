@@ -148,7 +148,7 @@ public class TasksCreationTests extends IntegrationTest {
                 .isBadRequest()
                 .hasField("$.errors.length()", isEqualTo(1))
                 .hasField("$.errors[0].field", isEqualTo("parent_id"))
-                .hasField("$.errors[0].type", contains("validation.is_uuid"));
+                .hasField("$.errors[0].type", contains("validation.do_not_exist"));
     }
 
     @Test

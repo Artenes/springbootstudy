@@ -28,7 +28,7 @@ import java.util.UUID;
  */
 @Component
 @RequiredArgsConstructor
-public class FieldParser {
+public class PrimitiveFieldParser {
 
     private final ObjectMapper mapper;
     private final TasksRepository tasksRepository;

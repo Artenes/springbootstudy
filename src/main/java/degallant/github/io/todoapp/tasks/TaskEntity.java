@@ -34,8 +34,8 @@ public class TaskEntity {
     @OneToOne(fetch = FetchType.LAZY)
     private UserEntity user;
 
-    @Column(name = "parent_id")
-    private UUID parentId;
+    @OneToOne(fetch = FetchType.LAZY)
+    private TaskEntity parent;
 
     @Column(name = "project_id")
     private UUID projectId;

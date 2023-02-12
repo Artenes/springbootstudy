@@ -3,16 +3,12 @@ package degallant.github.io.todoapp.tasks;
 import degallant.github.io.todoapp.common.LinkBuilder;
 import degallant.github.io.todoapp.tags.TagsRepository;
 import degallant.github.io.todoapp.users.UserEntity;
-import degallant.github.io.todoapp.validation.FieldParser;
-import degallant.github.io.todoapp.validation.FieldValidator;
-import degallant.github.io.todoapp.validation.SanitizedField;
-import degallant.github.io.todoapp.validation.Sanitizer;
+import degallant.github.io.todoapp.validation.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.net.URI;
 import java.util.Map;
-import java.util.UUID;
 
 /**
  * @noinspection ClassCanBeRecord
@@ -25,7 +21,8 @@ public class CreateTasksService {
     private final TagsRepository tagsRepository;
     private final Sanitizer sanitizer;
     private final FieldValidator rules;
-    private final FieldParser parser;
+    private final PrimitiveFieldParser primitiveParser;
+    private final TasksFieldParser tasksParser;
     private final LinkBuilder link;
 
     public URI create(TasksDto.Create request, UserEntity user) {
@@ -38,7 +35,7 @@ public class CreateTasksService {
                 .dueDate(result.get("due_date").value())
                 .priority(result.get("priority").value())
                 .tags(result.get("tags_ids").value())
-                .parentId(result.get("parent_id").value())
+                .parent(result.get("parent").value())
                 .user(user)
                 .projectId(result.get("project_id").value())
                 .complete(result.get("complete").asBool())
@@ -63,33 +60,30 @@ public class CreateTasksService {
                 }),
 
                 sanitizer.field("due_date").withOptionalValue(request.getDueDate()).sanitize(value -> {
-                    var parsed = parser.toOffsetDateTime(value);
+                    var parsed = primitiveParser.toOffsetDateTime(value);
                     rules.isPresentOrFuture(parsed);
                     return parsed;
                 }),
 
-                sanitizer.field("priority").withOptionalValue(request.getPriority()).sanitize(parser::toPriority),
+                sanitizer.field("priority").withOptionalValue(request.getPriority()).sanitize(primitiveParser::toPriority),
 
                 sanitizer.field("tags_ids").withOptionalValue(request.getTagsIds()).sanitize(value -> {
-                    var parsed = parser.toUUIDList(value);
+                    var parsed = primitiveParser.toUUIDList(value);
                     var found = tagsRepository.findAllByUserIdAndId(user.getId(), parsed);
                     rules.hasUnknownTag(parsed, found);
                     return found;
                 }),
 
-                sanitizer.field("parent_id").withOptionalValue(request.getParentId()).sanitize(value -> {
-                    var parsed = parser.toUUID(value);
-                    rules.taskBelongsToUser(parsed, user);
-                    return parsed;
-                }),
+                sanitizer.field("parent_id").withOptionalValue(request.getParentId())
+                        .sanitize(value -> tasksParser.toTask(value, user)).withName("parent"),
 
                 sanitizer.field("project_id").withOptionalValue(request.getProjectId()).sanitize(value -> {
-                    var parsed = parser.toUUID(value);
+                    var parsed = primitiveParser.toUUID(value);
                     rules.projectBelongsToUser(parsed, user.getId());
                     return parsed;
                 }),
 
-                sanitizer.field("complete").withOptionalValue(request.getComplete()).sanitize(parser::toBoolean)
+                sanitizer.field("complete").withOptionalValue(request.getComplete()).sanitize(primitiveParser::toBoolean)
 
         );
     }

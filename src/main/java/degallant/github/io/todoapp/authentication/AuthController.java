@@ -8,7 +8,7 @@ import degallant.github.io.todoapp.tasks.TasksController;
 import degallant.github.io.todoapp.users.UserEntity;
 import degallant.github.io.todoapp.users.UsersDto;
 import degallant.github.io.todoapp.users.UsersRepository;
-import degallant.github.io.todoapp.validation.FieldParser;
+import degallant.github.io.todoapp.validation.PrimitiveFieldParser;
 import degallant.github.io.todoapp.validation.FieldValidator;
 import degallant.github.io.todoapp.validation.Sanitizer;
 import lombok.RequiredArgsConstructor;
@@ -32,7 +32,7 @@ public class AuthController {
     private final AuthenticationService service;
     private final Sanitizer sanitizer;
     private final FieldValidator rules;
-    private final FieldParser parser;
+    private final PrimitiveFieldParser parser;
     private final LinkBuilder link;
     private final AppExceptionHandler handler;
     private final UsersRepository usersRepository;

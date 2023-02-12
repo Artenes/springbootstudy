@@ -2,10 +2,7 @@ package degallant.github.io.todoapp.tasks;
 
 import degallant.github.io.todoapp.tags.TagsRepository;
 import degallant.github.io.todoapp.users.UserEntity;
-import degallant.github.io.todoapp.validation.FieldParser;
-import degallant.github.io.todoapp.validation.FieldValidator;
-import degallant.github.io.todoapp.validation.SanitizedField;
-import degallant.github.io.todoapp.validation.Sanitizer;
+import degallant.github.io.todoapp.validation.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -22,7 +19,8 @@ public class PatchTasksService {
     private final TagsRepository tagsRepository;
     private final Sanitizer sanitizer;
     private final FieldValidator rules;
-    private final FieldParser parser;
+    private final PrimitiveFieldParser parser;
+    private final TasksFieldParser tasksParser;
 
     public void patch(String id, TasksDto.Create request, UserEntity user) {
 
@@ -34,7 +32,7 @@ public class PatchTasksService {
         entity.setDueDate(result.get("due_date").ifNull(entity.getDueDate()));
         entity.setPriority(result.get("priority").ifNull(entity.getPriority()));
         entity.setComplete(result.get("complete").ifNull(entity.getComplete()));
-        entity.setParentId(result.get("parent_id").ifNull(entity.getParentId()));
+        entity.setParent(result.get("parent").ifNull(entity.getParent()));
         entity.setProjectId(result.get("project_id").ifNull(entity.getProjectId()));
         entity.setTags(result.get("tags_ids").ifNull(entity.getTags()));
 
@@ -70,11 +68,8 @@ public class PatchTasksService {
                     return found;
                 }),
 
-                sanitizer.field("parent_id").withOptionalValue(request.getParentId()).sanitize(value -> {
-                    var parsed = parser.toUUID(value);
-                    rules.taskBelongsToUser(parsed, user);
-                    return parsed;
-                }),
+                sanitizer.field("parent_id").withOptionalValue(request.getParentId())
+                        .sanitize(value -> tasksParser.toTask(value, user)).withName("parent"),
 
                 sanitizer.field("project_id").withOptionalValue(request.getProjectId()).sanitize(value -> {
                     var parsed = parser.toUUID(value);

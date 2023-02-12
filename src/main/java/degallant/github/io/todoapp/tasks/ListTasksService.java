@@ -3,7 +3,7 @@ package degallant.github.io.todoapp.tasks;
 import degallant.github.io.todoapp.common.LinkBuilder;
 import degallant.github.io.todoapp.common.PagedResponse;
 import degallant.github.io.todoapp.users.UserEntity;
-import degallant.github.io.todoapp.validation.FieldParser;
+import degallant.github.io.todoapp.validation.PrimitiveFieldParser;
 import degallant.github.io.todoapp.validation.FieldValidator;
 import degallant.github.io.todoapp.validation.SanitizedField;
 import degallant.github.io.todoapp.validation.Sanitizer;
@@ -33,7 +33,7 @@ public class ListTasksService {
     private final TasksRepository tasksRepository;
     private final Sanitizer sanitizer;
     private final FieldValidator rules;
-    private final FieldParser parser;
+    private final PrimitiveFieldParser parser;
     private final PagedResponse pagedResponse;
     private final LinkBuilder link;
 
