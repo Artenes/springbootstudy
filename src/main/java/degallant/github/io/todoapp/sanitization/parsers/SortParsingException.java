@@ -1,4 +1,4 @@
-package degallant.github.io.todoapp.common;
+package degallant.github.io.todoapp.sanitization.parsers;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

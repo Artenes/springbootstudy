@@ -10,6 +10,6 @@ public interface CommentsRepository extends JpaRepository<CommentEntity, UUID> {
 
     List<CommentEntity> findByTaskIdAndUserId(UUID taskId, UUID userId);
 
-    Optional<CommentEntity> findByIdAndUserId(UUID id, UUID userId);
+    Optional<CommentEntity> findByIdAndUserIdAndTaskId(UUID id, UUID userId, UUID taskId);
 
 }

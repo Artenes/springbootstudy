@@ -2,12 +2,12 @@ package degallant.github.io.todoapp.exceptions;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import degallant.github.io.todoapp.authentication.JwtTokenException;
-import degallant.github.io.todoapp.common.SortParsingException;
+import degallant.github.io.todoapp.sanitization.parsers.SortParsingException;
 import degallant.github.io.todoapp.internationalization.Messages;
 import degallant.github.io.todoapp.openid.OpenIdExtractionException;
-import degallant.github.io.todoapp.validation.FieldAndErrorMessage;
-import degallant.github.io.todoapp.validation.FieldAndErrorType;
-import degallant.github.io.todoapp.validation.InvalidRequestException;
+import degallant.github.io.todoapp.sanitization.FieldAndErrorMessage;
+import degallant.github.io.todoapp.sanitization.FieldAndErrorType;
+import degallant.github.io.todoapp.sanitization.InvalidRequestException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;

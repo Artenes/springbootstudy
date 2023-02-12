@@ -2,9 +2,9 @@ package degallant.github.io.todoapp.tags;
 
 import degallant.github.io.todoapp.common.LinkBuilder;
 import degallant.github.io.todoapp.users.UserEntity;
-import degallant.github.io.todoapp.validation.PrimitiveFieldParser;
-import degallant.github.io.todoapp.validation.FieldValidator;
-import degallant.github.io.todoapp.validation.Sanitizer;
+import degallant.github.io.todoapp.sanitization.parsers.PrimitiveFieldParser;
+import degallant.github.io.todoapp.sanitization.FieldValidator;
+import degallant.github.io.todoapp.sanitization.Sanitizer;
 import lombok.RequiredArgsConstructor;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.mediatype.hal.HalModelBuilder;

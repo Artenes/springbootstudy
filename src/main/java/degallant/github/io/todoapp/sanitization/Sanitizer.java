@@ -1,20 +1,15 @@
-package degallant.github.io.todoapp.validation;
+package degallant.github.io.todoapp.sanitization;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 @Component
 @RequiredArgsConstructor
 public class Sanitizer {
-
-    public void fail(String field, String message, Object... args) throws InvalidRequestException {
-        throw new InvalidRequestException(List.of(new FieldAndErrorMessage(field, message, args)));
-    }
 
     public Map<String, SanitizedField> sanitize(FieldSpec... specs) throws InvalidRequestException {
 

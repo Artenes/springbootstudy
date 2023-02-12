@@ -2,11 +2,12 @@ package degallant.github.io.todoapp.tasks;
 
 import degallant.github.io.todoapp.common.LinkBuilder;
 import degallant.github.io.todoapp.common.PagedResponse;
+import degallant.github.io.todoapp.sanitization.parsers.SortingFieldParser;
 import degallant.github.io.todoapp.users.UserEntity;
-import degallant.github.io.todoapp.validation.PrimitiveFieldParser;
-import degallant.github.io.todoapp.validation.FieldValidator;
-import degallant.github.io.todoapp.validation.SanitizedField;
-import degallant.github.io.todoapp.validation.Sanitizer;
+import degallant.github.io.todoapp.sanitization.parsers.PrimitiveFieldParser;
+import degallant.github.io.todoapp.sanitization.FieldValidator;
+import degallant.github.io.todoapp.sanitization.SanitizedField;
+import degallant.github.io.todoapp.sanitization.Sanitizer;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
@@ -34,6 +35,7 @@ public class ListTasksService {
     private final Sanitizer sanitizer;
     private final FieldValidator rules;
     private final PrimitiveFieldParser parser;
+    private final SortingFieldParser sortingParser;
     private final PagedResponse pagedResponse;
     private final LinkBuilder link;
 
@@ -112,7 +114,7 @@ public class ListTasksService {
                 }),
 
                 sanitizer.field("s").withOptionalValue(sort)
-                        .sanitize(value -> parser.toSort(value, "title", "due_date")),
+                        .sanitize(value -> sortingParser.toSortOrThrowInvalidValue(value, "title", "due_date")),
 
                 sanitizer.field("title").withOptionalValue(title).sanitize(value -> {
                     rules.isNotEmpty(title);

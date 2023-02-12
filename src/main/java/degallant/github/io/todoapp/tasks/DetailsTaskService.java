@@ -2,7 +2,7 @@ package degallant.github.io.todoapp.tasks;
 
 import degallant.github.io.todoapp.common.LinkBuilder;
 import degallant.github.io.todoapp.projects.ProjectsDto;
-import degallant.github.io.todoapp.projects.ProjectsRepository;
+import degallant.github.io.todoapp.sanitization.parsers.TasksFieldParser;
 import degallant.github.io.todoapp.tags.TagEntity;
 import degallant.github.io.todoapp.tags.TagsDto;
 import degallant.github.io.todoapp.users.UserEntity;
@@ -15,8 +15,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.stream.Collectors;
 
-import static degallant.github.io.todoapp.validation.PathValidator.parseUUIDOrFail;
-
 /**
  * @noinspection ClassCanBeRecord
  */
@@ -24,14 +22,13 @@ import static degallant.github.io.todoapp.validation.PathValidator.parseUUIDOrFa
 @RequiredArgsConstructor
 public class DetailsTaskService {
 
-    private final TasksRepository tasksRepository;
+    private final TasksFieldParser taskParser;
     private final LinkBuilder link;
 
     public RepresentationModel<?> details(String rawId, Authentication authentication) {
 
-        var id = parseUUIDOrFail(rawId);
-        var userId = ((UserEntity) authentication.getPrincipal()).getId();
-        var entity = tasksRepository.findByIdAndUserId(id, userId).orElseThrow();
+        var user = (UserEntity) authentication.getPrincipal();
+        var entity = taskParser.toTaskOrThrowNoSuchElement(rawId, user);
 
         var task = TasksDto.DetailsComplete.builder()
                 .title(entity.getTitle())

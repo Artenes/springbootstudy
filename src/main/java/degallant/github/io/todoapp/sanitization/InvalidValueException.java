@@ -1,4 +1,4 @@
-package degallant.github.io.todoapp.validation;
+package degallant.github.io.todoapp.sanitization;
 
 import lombok.Getter;
 

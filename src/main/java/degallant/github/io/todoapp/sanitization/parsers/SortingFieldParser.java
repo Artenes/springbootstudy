@@ -1,13 +1,31 @@
-package degallant.github.io.todoapp.common;
+package degallant.github.io.todoapp.sanitization.parsers;
 
 import com.google.common.base.CaseFormat;
+import degallant.github.io.todoapp.sanitization.InvalidValueException;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
 
 import java.util.Set;
 
 @Component
-public class SortingParser {
+public class SortingFieldParser {
+
+    public Sort toSortOrThrowInvalidValue(String value, String... validAttributes) throws InvalidValueException {
+        try {
+            return parse(value, validAttributes);
+        } catch (SortParsingException exception) {
+            if (exception instanceof SortParsingException.InvalidAttribute) {
+                var attribute = ((SortParsingException.InvalidAttribute) exception).getAttribute();
+                throw new InvalidValueException("error.invalid_sort_attribute.detail", attribute);
+            } else if (exception instanceof SortParsingException.InvalidDirection) {
+                var direction = ((SortParsingException.InvalidDirection) exception).getDirection();
+                throw new InvalidValueException("error.invalid_sort_direction.detail", direction);
+            } else {
+                var query = ((SortParsingException.InvalidQuery) exception).getQuery();
+                throw new InvalidValueException("error.invalid_sort_query.detail", query);
+            }
+        }
+    }
 
     /**
      * Parses a string query into a valid Sort instance.
@@ -18,7 +36,7 @@ public class SortingParser {
      *
      * @throws SortParsingException in case of an invalid sort is provided
      */
-    public Sort parse(String query, String... attributes) throws SortParsingException {
+    private Sort parse(String query, String... attributes) throws SortParsingException {
         Sort sort = null;
         Set<String> validAttributes = Set.of(attributes);
         var properties = query.split(",");

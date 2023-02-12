@@ -6,7 +6,7 @@ import degallant.github.io.todoapp.openid.OpenIdUser;
 import degallant.github.io.todoapp.users.Role;
 import degallant.github.io.todoapp.users.UserEntity;
 import degallant.github.io.todoapp.users.UsersRepository;
-import degallant.github.io.todoapp.validation.InvalidValueException;
+import degallant.github.io.todoapp.sanitization.InvalidValueException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
