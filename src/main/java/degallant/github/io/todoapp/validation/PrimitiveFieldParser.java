@@ -131,16 +131,6 @@ public class PrimitiveFieldParser {
         }
     }
 
-    public TaskEntity toTask(String id, UserEntity user) throws NoSuchElementException {
-        try {
-            var taskId = UUID.fromString(id);
-            var example = TaskEntity.belongsTo(taskId, user);
-            return tasksRepository.findOne(example).orElseThrow();
-        } catch (IllegalArgumentException | NoSuchElementException exception) {
-            throw new NoSuchElementException("No task found with id " + id, exception);
-        }
-    }
-
     public CommentEntity toComment(String id, UUID taskId, UUID userId) throws NoSuchElementException {
         try {
             var commentId = UUID.fromString(id);

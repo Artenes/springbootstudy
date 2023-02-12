@@ -128,14 +128,6 @@ public class FieldValidator {
         return this;
     }
 
-    public FieldValidator taskBelongsToUser(UUID taskId, UserEntity user) throws InvalidValueException {
-        var example = TaskEntity.belongsTo(taskId, user);
-        if (!tasksRepository.exists(example)) {
-            throwError("validation.do_not_exist", taskId);
-        }
-        return this;
-    }
-
     public InlineValidation check(boolean isValid) {
         return new InlineValidation(isValid);
     }

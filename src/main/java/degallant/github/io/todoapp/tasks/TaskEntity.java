@@ -5,7 +5,6 @@ import degallant.github.io.todoapp.tags.TagEntity;
 import degallant.github.io.todoapp.users.UserEntity;
 import jakarta.persistence.*;
 import lombok.*;
-import org.springframework.data.domain.Example;
 
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -55,9 +54,5 @@ public class TaskEntity {
     @OneToMany(fetch = FetchType.LAZY)
     @JoinColumn(name = "parent_id")
     private List<TaskEntity> subTasks;
-
-    public static Example<TaskEntity> belongsTo(UUID id, UserEntity user) {
-        return Example.of(TaskEntity.builder().id(id).user(user).build());
-    }
 
 }

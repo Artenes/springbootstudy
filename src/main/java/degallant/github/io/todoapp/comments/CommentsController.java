@@ -6,6 +6,7 @@ import degallant.github.io.todoapp.users.UserEntity;
 import degallant.github.io.todoapp.validation.PrimitiveFieldParser;
 import degallant.github.io.todoapp.validation.FieldValidator;
 import degallant.github.io.todoapp.validation.Sanitizer;
+import degallant.github.io.todoapp.validation.TasksFieldParser;
 import lombok.RequiredArgsConstructor;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.mediatype.hal.HalModelBuilder;
@@ -28,13 +29,14 @@ public class CommentsController {
     private final Sanitizer sanitizer;
     private final FieldValidator rules;
     private final PrimitiveFieldParser parser;
+    private final TasksFieldParser taskParser;
     private final LinkBuilder link;
 
     @PostMapping
     public ResponseEntity<?> create(@PathVariable String id, @RequestBody CommentsDto.Create request, Authentication authentication) {
 
         var user = (UserEntity) authentication.getPrincipal();
-        var task = parser.toTask(id, user);
+        var task = taskParser.toTaskOrThrowNoSuchElement(id, user);
 
         var result = sanitizer.sanitize(
                 sanitizer.field("text").withRequiredValue(request.getText()).sanitize(value -> {
@@ -62,7 +64,7 @@ public class CommentsController {
     public ResponseEntity<?> details(@PathVariable String id, @PathVariable String commentId, Authentication authentication) {
 
         var user = (UserEntity) authentication.getPrincipal();
-        var task = parser.toTask(id, user);
+        var task = taskParser.toTaskOrThrowNoSuchElement(id, user);
         var comment = parser.toComment(commentId, task.getId(), user.getId());
 
         var response = toEntityModel(comment);

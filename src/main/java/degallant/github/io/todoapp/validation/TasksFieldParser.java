@@ -18,14 +18,25 @@ public class TasksFieldParser {
 
     private final TasksRepository repository;
 
-    public TaskEntity toTask(String id, UserEntity user) throws InvalidValueException {
+    public TaskEntity toTaskOrThrowNoSuchElement(String id, UserEntity user) throws NoSuchElementException {
         try {
-            var taskId = UUID.fromString(id);
-            var example = TaskEntity.belongsTo(taskId, user);
-            return repository.findOne(example).orElseThrow();
+            return parse(id, user);
+        } catch (IllegalArgumentException | NoSuchElementException exception) {
+            throw new NoSuchElementException("Task with id " + id + " not found", exception);
+        }
+    }
+
+    public TaskEntity toTaskOrThrowInvalidValue(String id, UserEntity user) throws InvalidValueException {
+        try {
+            return parse(id, user);
         } catch (IllegalArgumentException | NoSuchElementException exception) {
             throw new InvalidValueException("validation.do_not_exist", id);
         }
+    }
+
+    private TaskEntity parse(String id, UserEntity user) {
+        var taskId = UUID.fromString(id);
+        return repository.findByIdAndUserId(taskId, user.getId()).orElseThrow();
     }
 
 }

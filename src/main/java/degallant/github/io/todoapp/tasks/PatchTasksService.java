@@ -25,7 +25,7 @@ public class PatchTasksService {
 
     public void patch(String id, TasksDto.Create request, UserEntity user) {
 
-        var entity = parser.toTask(id, user);
+        var entity = tasksParser.toTaskOrThrowNoSuchElement(id, user);
         var result = sanitizeRequest(request, user);
 
         entity.setTitle(result.get("title").ifNull(entity.getTitle()));
@@ -70,7 +70,7 @@ public class PatchTasksService {
                 }),
 
                 sanitizer.field("parent_id").withOptionalValue(request.getParentId())
-                        .sanitize(value -> tasksParser.toTask(value, user)).withName("parent"),
+                        .sanitize(value -> tasksParser.toTaskOrThrowInvalidValue(value, user)).withName("parent"),
 
                 sanitizer.field("project_id").withOptionalValue(request.getProjectId())
                         .sanitize(value -> projectParser.toProject(value, user)).withName("project"),

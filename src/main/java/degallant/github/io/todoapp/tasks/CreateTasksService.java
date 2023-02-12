@@ -76,7 +76,7 @@ public class CreateTasksService {
                 }),
 
                 sanitizer.field("parent_id").withOptionalValue(request.getParentId())
-                        .sanitize(value -> tasksParser.toTask(value, user)).withName("parent"),
+                        .sanitize(value -> tasksParser.toTaskOrThrowInvalidValue(value, user)).withName("parent"),
 
                 sanitizer.field("project_id").withOptionalValue(request.getProjectId())
                         .sanitize(value -> projectsParser.toProject(value, user)).withName("project"),
