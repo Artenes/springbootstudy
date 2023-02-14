@@ -64,7 +64,7 @@ public class ListTasksService {
                             .id(entity.getId())
                             .title(entity.getTitle())
                             .description(entity.getDescription())
-                            .dueDate(entity.getDueDate())
+                            .dueDate(entity.getDueDateWithOffset(user.getTimeZoneOrDefault()))
                             .complete(entity.getComplete())
                             .build();
                     var linkSelf = link.to("tasks").slash(entity.getId()).withSelfRel();

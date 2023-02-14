@@ -133,6 +133,36 @@ public class AuthTests extends IntegrationTest {
     }
 
     @Test
+    public void patch_failsWithEmptyTimeZone() {
+
+        request.asUser(DEFAULT_USER).to("auth/profile")
+                .withField("time_zone", "")
+                .patch().isBadRequest()
+                .hasField("$.errors[0].type", contains("validation.not_a_timezone"));
+
+    }
+
+    @Test
+    public void patch_failsWithInvalidTimeZone() {
+
+        request.asUser(DEFAULT_USER).to("auth/profile")
+                .withField("time_zone", "invalid")
+                .patch().isBadRequest()
+                .hasField("$.errors[0].type", contains("validation.not_a_timezone"));
+
+    }
+
+    @Test
+    public void patch_failsWithOutOfRangeTimeZone() {
+
+        request.asUser(DEFAULT_USER).to("auth/profile")
+                .withField("time_zone", "+38:00")
+                .patch().isBadRequest()
+                .hasField("$.errors[0].type", contains("validation.not_a_timezone"));
+
+    }
+
+    @Test
     public void patch_successChangesName() {
 
         request.asUser(DEFAULT_USER).to("auth/profile")

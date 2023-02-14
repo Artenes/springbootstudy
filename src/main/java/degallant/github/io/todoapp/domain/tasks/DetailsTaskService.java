@@ -13,6 +13,9 @@ import org.springframework.hateoas.mediatype.hal.HalModelBuilder;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.util.stream.Collectors;
 
 /**
@@ -33,7 +36,7 @@ public class DetailsTaskService {
         var task = TasksDto.DetailsComplete.builder()
                 .title(entity.getTitle())
                 .description(entity.getDescription())
-                .dueDate(entity.getDueDate())
+                .dueDate(entity.getDueDateWithOffset(user.getTimeZoneOrDefault()))
                 .priority(entity.getPriority())
                 .complete(entity.getComplete());
 

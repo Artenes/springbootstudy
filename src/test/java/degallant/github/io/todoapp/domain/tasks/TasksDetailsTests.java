@@ -41,6 +41,26 @@ public class TasksDetailsTests extends IntegrationTest {
     }
 
     @Test
+    public void details_changeDateTimeDisplay() {
+
+        var dueDate = "2030-01-01T12:50:29.790511-04:00";
+        var task = entityRequest.asUser(DEFAULT_USER).makeTaskWithDetails("title", "Task A", "due_date", dueDate);
+
+        request.asUser(DEFAULT_USER).to(task.uri())
+                .get().isOk()
+                .hasField("$.due_date", isEqualTo(dueDate));
+
+        request.asUser(DEFAULT_USER).to("auth/profile")
+                .withField("time_zone", "+02:00")
+                .patch().isOk();
+
+        request.asUser(DEFAULT_USER).to(task.uri())
+                .get().isOk()
+                .hasField("$.due_date", isEqualTo("2030-01-01T18:50:29.790511+02:00"));
+
+    }
+
+    @Test
     public void user_canSeeOnlyItsTask() {
 
         var uri = entityRequest.asUser("another@gmail.com").makeTasks("Task A").get(0).uri();

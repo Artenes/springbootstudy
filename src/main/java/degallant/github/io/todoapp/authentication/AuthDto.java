@@ -44,6 +44,9 @@ public class AuthDto {
 
         private String role;
 
+        @JsonProperty("time_zone")
+        private String timeZone;
+
     }
 
     @Getter

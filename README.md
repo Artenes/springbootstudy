@@ -1,10 +1,10 @@
 # TO DO
 
-- check about relationships in hibernate for lazy loading relationships
-
 - fix timestamp handling, needs to save as +0 and retrieve in -4
 
 - check about created at, updated at columns (maybe add an enable option to users?)
+
+- add api keys management for client access and track usage
 
 - deal with logging and monitoring
 
@@ -24,6 +24,18 @@
 
 - practice regex?
 
+- check about docker
+
+- write about everything
+
+# Explanations
+
+## Timezone
+- when saving dates in database, the datetime field will be normalized to UTC+0 by spring JPA
+- when retrieving dates in database, the datetime field will be normalized to UTC+/- current JVM timezone
+- so, when sending a response to the client, the datetime must be changed to the user's preferred timezone
+- there might be a need to configure either mysql or postgres to use UTC by default as timezone when saving datetime information
+- we use ISO 8601 to display the date back to user
 # References
 
 - rest api design https://stackoverflow.blog/2020/03/02/best-practices-for-rest-api-design/

@@ -40,6 +40,27 @@ public class TasksListTests extends IntegrationTest {
     }
 
     @Test
+    public void list_changesDueDateDisplay() {
+
+        entityRequest.asUser(DEFAULT_USER).makeTaskWithDetails(
+                "title", "Task A",
+                "description", "task description",
+                "due_date", "2030-01-01T12:50:29.790511-04:00"
+        );
+
+        request.asUser(DEFAULT_USER).to("tasks").get().isOk()
+                .hasField("$._embedded.tasks[0].due_date", isEqualTo("2030-01-01T12:50:29.790511-04:00"));
+
+        request.asUser(DEFAULT_USER).to("auth/profile")
+                .withField("time_zone", "+02:00")
+                .patch().isOk();
+
+        request.asUser(DEFAULT_USER).to("tasks").get().isOk()
+                .hasField("$._embedded.tasks[0].due_date", isEqualTo("2030-01-01T18:50:29.790511+02:00"));
+
+    }
+
+    @Test
     public void pagination_hasPageInformation() {
 
         entityRequest.asUser(DEFAULT_USER).makeTasks("Task A", "Task B");

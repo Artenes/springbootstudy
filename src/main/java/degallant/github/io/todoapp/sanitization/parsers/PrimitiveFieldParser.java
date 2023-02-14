@@ -7,8 +7,7 @@ import degallant.github.io.todoapp.domain.tasks.Priority;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDate;
-import java.time.OffsetDateTime;
+import java.time.*;
 import java.time.format.DateTimeParseException;
 import java.util.Arrays;
 import java.util.List;
@@ -95,4 +94,11 @@ public class PrimitiveFieldParser {
         }
     }
 
+    public ZoneOffset toTimezone(String value) throws InvalidValueException {
+        try {
+            return ZoneOffset.of(value);
+        } catch (DateTimeException exception) {
+            throw new InvalidValueException(exception, "validation.not_a_timezone", value);
+        }
+    }
 }

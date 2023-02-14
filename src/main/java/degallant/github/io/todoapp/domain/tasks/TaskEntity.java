@@ -7,6 +7,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.UUID;
 
@@ -29,6 +30,7 @@ public class TaskEntity {
 
     private Boolean complete;
 
+    @Enumerated(value = EnumType.STRING)
     private Priority priority;
 
     @OneToOne(fetch = FetchType.LAZY)
@@ -54,5 +56,12 @@ public class TaskEntity {
     @OneToMany(fetch = FetchType.LAZY)
     @JoinColumn(name = "parent_id")
     private List<TaskEntity> subTasks;
+
+    public OffsetDateTime getDueDateWithOffset(ZoneOffset zoneOffset) {
+        if (dueDate == null) {
+            return null;
+        }
+        return dueDate.withOffsetSameInstant(zoneOffset);
+    }
 
 }
