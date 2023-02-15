@@ -1,7 +1,5 @@
 # TO DO
 
-- fix timestamp handling, needs to save as +0 and retrieve in -4
-
 - check about created at, updated at columns (maybe add an enable option to users?)
 
 - add api keys management for client access and track usage

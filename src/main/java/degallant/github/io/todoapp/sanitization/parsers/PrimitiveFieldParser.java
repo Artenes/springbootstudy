@@ -2,17 +2,17 @@ package degallant.github.io.todoapp.sanitization.parsers;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import degallant.github.io.todoapp.sanitization.InvalidValueException;
 import degallant.github.io.todoapp.domain.tasks.Priority;
+import degallant.github.io.todoapp.sanitization.InvalidValueException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
-import java.time.*;
+import java.time.DateTimeException;
+import java.time.LocalDate;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.time.format.DateTimeParseException;
-import java.util.Arrays;
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * @noinspection ClassCanBeRecord
@@ -98,7 +98,20 @@ public class PrimitiveFieldParser {
         try {
             return ZoneOffset.of(value);
         } catch (DateTimeException exception) {
-            throw new InvalidValueException(exception, "validation.not_a_timezone", value);
+            throw new InvalidValueException(exception, "validation.not_an_offset", value);
         }
     }
+
+    public Locale toLocale(String value) throws InvalidValueException {
+        try {
+            var validLocales = List.of("en-US", "pt-BR");
+            if (!validLocales.contains(value)) {
+                throw new IllformedLocaleException();
+            }
+            return Locale.forLanguageTag(value);
+        } catch (IllformedLocaleException exception) {
+            throw new InvalidValueException(exception, "validation.not_a_locale", value);
+        }
+    }
+
 }

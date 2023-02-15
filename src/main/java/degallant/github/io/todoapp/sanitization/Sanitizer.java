@@ -11,14 +11,6 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class Sanitizer {
 
-    public SanitizedValue sanitizeSingle(ValueSpec spec) {
-        try {
-            return spec.sanitize();
-        } catch (InvalidValueException exception) {
-            throw new InvalidRequestException(makeError(spec, exception));
-        }
-    }
-
     public Map<String, SanitizedValue> sanitize(ValueSpec... specs) throws InvalidRequestException {
 
         var sanitizedFields = new HashMap<String, SanitizedValue>();
