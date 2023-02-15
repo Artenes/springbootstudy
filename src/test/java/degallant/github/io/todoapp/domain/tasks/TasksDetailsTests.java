@@ -50,11 +50,8 @@ public class TasksDetailsTests extends IntegrationTest {
                 .get().isOk()
                 .hasField("$.due_date", isEqualTo(dueDate));
 
-        request.asUser(DEFAULT_USER).to("auth/profile")
-                .withField("time_zone", "+02:00")
-                .patch().isOk();
-
         request.asUser(DEFAULT_USER).to(task.uri())
+                .withHeader("Accept-Offset", "+02:00")
                 .get().isOk()
                 .hasField("$.due_date", isEqualTo("2030-01-01T18:50:29.790511+02:00"));
 

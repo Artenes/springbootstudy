@@ -115,14 +115,11 @@ public class AuthController {
                     rules.isNotEmpty(value);
                     rules.isURL(value);
                     return value;
-                }),
-
-                sanitizer.field("time_zone").withOptionalValue(request.getTimeZone()).sanitize(parser::toTimezone)
+                })
         );
 
         user.setName(result.get("name").ifNull(user.getName()));
         user.setPictureUrl(result.get("picture_url").ifNull(user.getPictureUrl()));
-        user.setTimeZone(result.get("time_zone").ifNull(user.getTimeZone()));
 
         usersRepository.save(user);
 

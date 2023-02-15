@@ -94,7 +94,7 @@ public class PrimitiveFieldParser {
         }
     }
 
-    public ZoneOffset toTimezone(String value) throws InvalidValueException {
+    public ZoneOffset toOffset(String value) throws InvalidValueException {
         try {
             return ZoneOffset.of(value);
         } catch (DateTimeException exception) {

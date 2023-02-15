@@ -1,11 +1,12 @@
 package degallant.github.io.todoapp.domain.tasks;
 
+import degallant.github.io.todoapp.OffsetHolder;
 import degallant.github.io.todoapp.common.LinkBuilder;
 import degallant.github.io.todoapp.domain.projects.ProjectsDto;
-import degallant.github.io.todoapp.sanitization.parsers.TasksFieldParser;
 import degallant.github.io.todoapp.domain.tags.TagEntity;
 import degallant.github.io.todoapp.domain.tags.TagsDto;
 import degallant.github.io.todoapp.domain.users.UserEntity;
+import degallant.github.io.todoapp.sanitization.parsers.TasksFieldParser;
 import lombok.RequiredArgsConstructor;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.RepresentationModel;
@@ -13,9 +14,6 @@ import org.springframework.hateoas.mediatype.hal.HalModelBuilder;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
-import java.time.OffsetDateTime;
-import java.time.ZoneId;
-import java.time.ZoneOffset;
 import java.util.stream.Collectors;
 
 /**
@@ -27,6 +25,7 @@ public class DetailsTaskService {
 
     private final TasksFieldParser taskParser;
     private final LinkBuilder link;
+    private final OffsetHolder offsetHolder;
 
     public RepresentationModel<?> details(String rawId, Authentication authentication) {
 
@@ -36,7 +35,7 @@ public class DetailsTaskService {
         var task = TasksDto.DetailsComplete.builder()
                 .title(entity.getTitle())
                 .description(entity.getDescription())
-                .dueDate(entity.getDueDateWithOffset(user.getTimeZoneOrDefault()))
+                .dueDate(entity.getDueDateWithOffset(offsetHolder.getOffset()))
                 .priority(entity.getPriority())
                 .complete(entity.getComplete());
 

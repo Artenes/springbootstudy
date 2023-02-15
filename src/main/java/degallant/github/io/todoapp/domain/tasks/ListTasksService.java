@@ -1,13 +1,14 @@
 package degallant.github.io.todoapp.domain.tasks;
 
+import degallant.github.io.todoapp.OffsetHolder;
 import degallant.github.io.todoapp.common.LinkBuilder;
 import degallant.github.io.todoapp.common.PagedResponse;
-import degallant.github.io.todoapp.sanitization.parsers.SortingFieldParser;
 import degallant.github.io.todoapp.domain.users.UserEntity;
-import degallant.github.io.todoapp.sanitization.parsers.PrimitiveFieldParser;
 import degallant.github.io.todoapp.sanitization.FieldValidator;
-import degallant.github.io.todoapp.sanitization.SanitizedField;
+import degallant.github.io.todoapp.sanitization.SanitizedValue;
 import degallant.github.io.todoapp.sanitization.Sanitizer;
+import degallant.github.io.todoapp.sanitization.parsers.PrimitiveFieldParser;
+import degallant.github.io.todoapp.sanitization.parsers.SortingFieldParser;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
@@ -38,6 +39,7 @@ public class ListTasksService {
     private final SortingFieldParser sortingParser;
     private final PagedResponse pagedResponse;
     private final LinkBuilder link;
+    private final OffsetHolder offsetHolder;
 
     public RepresentationModel<?> list(
             String page,
@@ -48,7 +50,7 @@ public class ListTasksService {
             UserEntity user
     ) {
 
-        var result = sanitizeFields(page, sort, title, dueDate, complete);
+        var result = sanitizeParams(page, sort, title, dueDate, complete);
 
         var linkBuilder = link.to("tasks").withParams().addSort(sort);
         var pageRequest = PageRequest.of(result.get("p").asInt() - 1, 10, result.get("s").or(Sort.unsorted()));
@@ -64,7 +66,7 @@ public class ListTasksService {
                             .id(entity.getId())
                             .title(entity.getTitle())
                             .description(entity.getDescription())
-                            .dueDate(entity.getDueDateWithOffset(user.getTimeZoneOrDefault()))
+                            .dueDate(entity.getDueDateWithOffset(offsetHolder.getOffset()))
                             .complete(entity.getComplete())
                             .build();
                     var linkSelf = link.to("tasks").slash(entity.getId()).withSelfRel();
@@ -105,25 +107,25 @@ public class ListTasksService {
         };
     }
 
-    private Map<String, SanitizedField> sanitizeFields(String page, String sort, String title, String dueDate, String complete) {
+    private Map<String, SanitizedValue> sanitizeParams(String page, String sort, String title, String dueDate, String complete) {
         return sanitizer.sanitize(
-                sanitizer.field("p").withOptionalValue(page).sanitize(value -> {
+                sanitizer.param("p").withOptionalValue(page).sanitize(value -> {
                     var parsed = parser.toInteger(value);
                     rules.isPositive(parsed);
                     return parsed;
                 }),
 
-                sanitizer.field("s").withOptionalValue(sort)
+                sanitizer.param("s").withOptionalValue(sort)
                         .sanitize(value -> sortingParser.toSortOrThrowInvalidValue(value, "title", "due_date")),
 
-                sanitizer.field("title").withOptionalValue(title).sanitize(value -> {
+                sanitizer.param("title").withOptionalValue(title).sanitize(value -> {
                     rules.isNotEmpty(title);
                     return value;
                 }),
 
-                sanitizer.field("due_date").withOptionalValue(dueDate).sanitize(parser::toLocalDate),
+                sanitizer.param("due_date").withOptionalValue(dueDate).sanitize(parser::toLocalDate),
 
-                sanitizer.field("complete").withOptionalValue(complete).sanitize(parser::toBoolean)
+                sanitizer.param("complete").withOptionalValue(complete).sanitize(parser::toBoolean)
         );
     }
 

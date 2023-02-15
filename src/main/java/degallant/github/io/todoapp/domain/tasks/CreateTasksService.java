@@ -50,7 +50,7 @@ public class CreateTasksService {
         return link.to("tasks").slash(entity.getId()).withSelfRel().toUri();
     }
 
-    private Map<String, SanitizedField> sanitizeRequest(TasksDto.Create request, UserEntity user) {
+    private Map<String, SanitizedValue> sanitizeRequest(TasksDto.Create request, UserEntity user) {
         return sanitizer.sanitize(
 
                 sanitizer.field("title").withRequiredValue(request.getTitle()).sanitize(value -> {

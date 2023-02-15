@@ -4,8 +4,6 @@ CREATE TABLE users (
 	name varchar(255) NOT NULL,
 	picture_url varchar(255),
 	role varchar(255) NOT NULL,
-	time_zone varchar(255),
-	language varchar(255),
 	PRIMARY KEY (id)
 );
 

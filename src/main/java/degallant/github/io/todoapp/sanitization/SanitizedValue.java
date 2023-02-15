@@ -1,15 +1,14 @@
 package degallant.github.io.todoapp.sanitization;
 
+import lombok.RequiredArgsConstructor;
+
 /**
  * @noinspection ClassCanBeRecord, unchecked
  */
-public class SanitizedField {
+@RequiredArgsConstructor
+public class SanitizedValue {
 
     private final Object object;
-
-    public SanitizedField(Object object) {
-        this.object = object;
-    }
 
     public Integer asInt() {
         return (Integer) object;

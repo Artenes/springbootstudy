@@ -13,11 +13,13 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @RequiredArgsConstructor
 public class WebConfiguration implements WebMvcConfigurer {
 
-    private final LocaleHeaderInterceptor interceptor;
+    private final LocaleHeaderInterceptor localeHeaderInterceptor;
+    private final ZoneOffsetHeaderInterceptor offsetHeaderInterceptor;
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
-        registry.addInterceptor(interceptor);
+        registry.addInterceptor(localeHeaderInterceptor);
+        registry.addInterceptor(offsetHeaderInterceptor);
     }
 
 }
