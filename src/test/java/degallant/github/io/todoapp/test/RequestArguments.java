@@ -15,6 +15,7 @@ class RequestArguments {
     private final Authenticator authenticator;
     private final Map<String, Object> body = new HashMap<>();
     private final Map<String, Object> params = new HashMap<>();
+    private final Map<String, Object> headers = new HashMap<>();
     private Request.AuthInfo authInfo;
     private String version;
     private URI uri;
@@ -114,4 +115,7 @@ class RequestArguments {
         this.response = response;
     }
 
+    public Map<String, Object> getHeaders() {
+        return headers;
+    }
 }

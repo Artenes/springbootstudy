@@ -5,12 +5,20 @@ import org.springframework.http.HttpHeaders;
 
 public record AuthorizedRequest(HttpServletRequest raw) {
 
-    public String getHeader() {
+    public String getTimeZone() {
+        return raw.getHeader("Accept-Offset");
+    }
+
+    public String getAuthorization() {
         return raw.getHeader(HttpHeaders.AUTHORIZATION);
     }
 
+    public String getLanguage() {
+        return raw.getHeader(HttpHeaders.ACCEPT_LANGUAGE);
+    }
+
     public String getToken() {
-        return getTokenFromHeader(getHeader());
+        return getTokenFromHeader(getAuthorization());
     }
 
     private String getTokenFromHeader(String header) {
@@ -24,4 +32,8 @@ public record AuthorizedRequest(HttpServletRequest raw) {
         return parts[1];
     }
 
+    @Override
+    public String toString() {
+        return "AuthorizedRequest{auth=" + getAuthorization() + ", lang=" + getLanguage() + ", offset=" + getTimeZone() + "}";
+    }
 }

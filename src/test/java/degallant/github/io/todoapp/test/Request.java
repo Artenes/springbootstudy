@@ -103,6 +103,11 @@ public class Request {
             return this;
         }
 
+        public Destination withHeader(String header, Object value) {
+            arguments.getHeaders().put(header, value);
+            return this;
+        }
+
         public Destination withField(String key, Object value) {
             arguments.getBody().put(key, value);
             return this;
@@ -125,7 +130,7 @@ public class Request {
 
         public ExecutedRequest get() {
             authenticate();
-            setAcceptType();
+            setHeaders();
             if (!arguments.getParams().isEmpty()) {
                 var params = parseParams();
                 arguments.setPath(arguments.getPath() + "?" + params);
@@ -136,7 +141,8 @@ public class Request {
 
         public ExecutedRequest post() {
             authenticate();
-            setAcceptType();
+            setHeaders();
+
             var spec = resolveUri(arguments.getClient().post());
 
             if (arguments.getRawBody() != null) {
@@ -155,7 +161,7 @@ public class Request {
 
         public ExecutedRequest patch() {
             authenticate();
-            setAcceptType();
+            setHeaders();
             arguments.setResponseSpec(resolveUri(arguments.getClient().patch()).bodyValue(arguments.getBody()).exchange());
             return new ExecutedRequest(arguments);
         }
@@ -190,9 +196,12 @@ public class Request {
             }
         }
 
-        private void setAcceptType() {
+        private void setHeaders() {
             arguments.getClient().mutateWith((builder, httpHandlerBuilder, connector) -> {
                 builder.defaultHeader(HttpHeaders.ACCEPT, "application/json");
+                for (String header : arguments.getHeaders().keySet()) {
+                    builder.defaultHeader(header, arguments.getHeaders().get(header).toString());
+                }
             });
         }
 
