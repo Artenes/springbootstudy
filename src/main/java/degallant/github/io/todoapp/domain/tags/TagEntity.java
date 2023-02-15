@@ -1,23 +1,20 @@
 package degallant.github.io.todoapp.domain.tags;
 
+import degallant.github.io.todoapp.common.BaseEntity;
 import degallant.github.io.todoapp.domain.users.UserEntity;
-import jakarta.persistence.*;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.OneToOne;
 import lombok.*;
 
-import java.util.UUID;
-
-@Entity(name = "tags")
 @Builder
 @Getter
 @Setter
+@ToString
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString
-public class TagEntity {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+@Entity(name = "tags")
+public class TagEntity extends BaseEntity {
 
     private String name;
 

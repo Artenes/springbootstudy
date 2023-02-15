@@ -88,6 +88,10 @@ public abstract class IntegrationTest {
         return JsonPathAssertions::exists;
     }
 
+    protected Consumer<JsonPathAssertions> doesNotExists() {
+        return JsonPathAssertions::doesNotExist;
+    }
+
     protected Consumer<JsonPathAssertions> contains(String value) {
         return v -> v.value(containsString(value));
     }

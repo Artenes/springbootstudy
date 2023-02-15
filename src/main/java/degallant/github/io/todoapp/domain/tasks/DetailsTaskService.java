@@ -35,9 +35,11 @@ public class DetailsTaskService {
         var task = TasksDto.DetailsComplete.builder()
                 .title(entity.getTitle())
                 .description(entity.getDescription())
-                .dueDate(entity.getDueDateWithOffset(offsetHolder.getOffset()))
+                .dueDate(offsetHolder.applyTo(entity.getDueDate()))
                 .priority(entity.getPriority())
-                .complete(entity.getComplete());
+                .complete(entity.getComplete())
+                .createdAt(offsetHolder.applyTo(entity.getCreatedAt()))
+                .updatedAt(offsetHolder.applyTo(entity.getUpdatedAt()));
 
         var response = HalModelBuilder.emptyHalModel();
 

@@ -15,9 +15,35 @@ public class TasksPatchTests extends IntegrationTest {
     }
 
     @Test
-    public void failToFindInvalidId() {
+    public void taskPatched_failsToFindInvalidId() {
         request.asUser(DEFAULT_USER).to("tasks/invalid").patch().isNotFound();
         request.asUser(DEFAULT_USER).to("tasks/" + UUID.randomUUID()).patch().isNotFound();
+    }
+
+    @Test
+    public void taskPatched_failsWhenTaskWasDeleted() {
+
+        var taskId = entityRequest.asUser(DEFAULT_USER).makeTask("Task A");
+
+        request.asUser(DEFAULT_USER).to(taskId.uri()).delete().isNoContent();
+
+        request.asUser(DEFAULT_USER).to(taskId.uri()).patch().isNotFound();
+
+    }
+
+    @Test
+    public void taskPatched_updatesTaskTime() {
+
+        var taskId = entityRequest.asUser(DEFAULT_USER).makeTask("Task A");
+
+        request.asUser(DEFAULT_USER).to(taskId.uri()).get().isOk().hasField("$.updated_at", doesNotExists());
+
+        request.asUser(DEFAULT_USER).to(taskId.uri())
+                .withField("complete", true)
+                .patch().isOk();
+
+        request.asUser(DEFAULT_USER).to(taskId.uri()).get().isOk().hasField("$.updated_at", exists());
+
     }
 
     @Test

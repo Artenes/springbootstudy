@@ -1,11 +1,14 @@
 package degallant.github.io.todoapp.domain.tasks;
 
 import degallant.github.io.todoapp.domain.users.UserEntity;
+import degallant.github.io.todoapp.sanitization.parsers.TasksFieldParser;
 import lombok.RequiredArgsConstructor;
 import org.springframework.hateoas.RepresentationModel;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+
+import java.time.OffsetDateTime;
 
 /**
  * @noinspection ClassCanBeRecord, unused
@@ -19,6 +22,8 @@ public class TasksController {
     private final DetailsTaskService detailService;
     private final CreateTasksService createService;
     private final PatchTasksService patchService;
+    private final TasksRepository repository;
+    private final TasksFieldParser parser;
 
     @PostMapping
     public ResponseEntity<?> create(@RequestBody TasksDto.Create request, Authentication authentication) {
@@ -67,6 +72,19 @@ public class TasksController {
         RepresentationModel<?> response = detailService.details(id, authentication);
 
         return ResponseEntity.ok(response);
+
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> delete(@PathVariable String id, Authentication authentication) {
+
+        var user = (UserEntity) authentication.getPrincipal();
+        var task = parser.toTaskOrThrowNoSuchElement(id, user);
+
+        task.setDeletedAt(OffsetDateTime.now());
+        repository.save(task);
+
+        return ResponseEntity.noContent().build();
 
     }
 

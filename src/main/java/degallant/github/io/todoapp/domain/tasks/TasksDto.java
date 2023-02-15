@@ -43,6 +43,10 @@ public class TasksDto {
         private OffsetDateTime dueDate;
         private Priority priority;
         private boolean complete;
+        @JsonProperty("created_at")
+        private OffsetDateTime createdAt;
+        @JsonProperty("updated_at")
+        private OffsetDateTime updatedAt;
 
     }
 

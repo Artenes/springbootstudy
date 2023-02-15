@@ -1,24 +1,19 @@
 package degallant.github.io.todoapp.domain.comments;
 
+import degallant.github.io.todoapp.common.BaseEntity;
 import degallant.github.io.todoapp.domain.tasks.TaskEntity;
 import degallant.github.io.todoapp.domain.users.UserEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.util.UUID;
-
-@Entity(name = "comments")
 @Builder
 @Getter
 @Setter
 @ToString
 @NoArgsConstructor
 @AllArgsConstructor
-public class CommentEntity {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+@Entity(name = "comments")
+public class CommentEntity extends BaseEntity {
 
     private String text;
 

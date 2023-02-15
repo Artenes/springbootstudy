@@ -37,7 +37,7 @@ public class TasksFieldParser {
 
     private TaskEntity parse(String id, UserEntity user) {
         var taskId = UUID.fromString(id);
-        return repository.findByIdAndUserId(taskId, user.getId()).orElseThrow();
+        return repository.findByIdAndUserIdAndDeletedAtIsNull(taskId, user.getId()).orElseThrow();
     }
 
 }

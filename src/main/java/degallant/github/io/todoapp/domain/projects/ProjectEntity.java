@@ -1,22 +1,20 @@
 package degallant.github.io.todoapp.domain.projects;
 
+import degallant.github.io.todoapp.common.BaseEntity;
 import degallant.github.io.todoapp.domain.users.UserEntity;
-import jakarta.persistence.*;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.OneToOne;
 import lombok.*;
 
-import java.util.UUID;
-
-@Entity(name = "projects")
 @Builder
-@NoArgsConstructor
-@AllArgsConstructor
 @Getter
 @Setter
-public class ProjectEntity {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+@ToString
+@NoArgsConstructor
+@AllArgsConstructor
+@Entity(name = "projects")
+public class ProjectEntity extends BaseEntity {
 
     private String title;
 

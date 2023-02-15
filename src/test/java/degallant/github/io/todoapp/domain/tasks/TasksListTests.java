@@ -40,6 +40,20 @@ public class TasksListTests extends IntegrationTest {
     }
 
     @Test
+    public void list_ignoresDeletedOnes() {
+
+        var taskIds = entityRequest.asUser(DEFAULT_USER).makeTasks("Task A", "Task B", "Task C");
+
+        request.asUser(DEFAULT_USER).to(taskIds.get(1).uri())
+                .delete().isNoContent();
+
+        request.asUser(DEFAULT_USER).to("tasks").get().isOk()
+                .hasField("$._embedded.tasks.length()", isEqualTo(2))
+                .hasField("$._embedded.tasks[?(@.title == 'Task B')]", doesNotExists());
+
+    }
+
+    @Test
     public void list_changesDueDateDisplay() {
 
         entityRequest.asUser(DEFAULT_USER).makeTaskWithDetails(

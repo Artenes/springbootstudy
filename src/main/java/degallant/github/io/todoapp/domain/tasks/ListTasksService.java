@@ -66,7 +66,7 @@ public class ListTasksService {
                             .id(entity.getId())
                             .title(entity.getTitle())
                             .description(entity.getDescription())
-                            .dueDate(entity.getDueDateWithOffset(offsetHolder.getOffset()))
+                            .dueDate(offsetHolder.applyTo(entity.getDueDate()))
                             .complete(entity.getComplete())
                             .build();
                     var linkSelf = link.to("tasks").slash(entity.getId()).withSelfRel();
@@ -86,6 +86,7 @@ public class ListTasksService {
             List<Predicate> predicates = new ArrayList<>();
 
             predicates.add(builder.equal(root.get("user"), user));
+            predicates.add(builder.isNull(root.get("deletedAt")));
 
             if (title != null && !title.isEmpty()) {
                 predicates.add(builder.like(root.get("title"), "%" + title + "%"));

@@ -23,6 +23,10 @@ public class ClientProxy {
         return client.patch();
     }
 
+    public WebTestClient.RequestHeadersUriSpec<?> delete() {
+        return client.delete();
+    }
+
     public void mutateWith(WebTestClientConfigurer configure) {
         client = client.mutateWith(configure);
     }

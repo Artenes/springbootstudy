@@ -77,7 +77,7 @@ public class CommentsController {
     public ResponseEntity<?> list(@PathVariable String id, Authentication authentication) {
 
         var userId = ((UserEntity) authentication.getPrincipal()).getId();
-        var task = tasksRepository.findByIdAndUserId(parser.toUuidOrThrow(id), userId).orElseThrow();
+        var task = tasksRepository.findByIdAndUserIdAndDeletedAtIsNull(parser.toUuidOrThrow(id), userId).orElseThrow();
         var entities = commentsRepository.findByTaskIdAndCommenterId(task.getId(), userId);
 
         var comments = entities.stream()

@@ -1,5 +1,6 @@
 package degallant.github.io.todoapp.domain.users;
 
+import degallant.github.io.todoapp.common.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
@@ -8,14 +9,14 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import java.util.List;
 import java.util.UUID;
 
-@Entity(name = "users")
 @Builder
 @Getter
 @Setter
+@ToString
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString
-public class UserEntity {
+@Entity(name = "users")
+public class UserEntity extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)

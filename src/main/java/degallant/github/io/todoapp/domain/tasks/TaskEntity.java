@@ -1,5 +1,6 @@
 package degallant.github.io.todoapp.domain.tasks;
 
+import degallant.github.io.todoapp.common.BaseEntity;
 import degallant.github.io.todoapp.domain.projects.ProjectEntity;
 import degallant.github.io.todoapp.domain.tags.TagEntity;
 import degallant.github.io.todoapp.domain.users.UserEntity;
@@ -9,20 +10,15 @@ import lombok.*;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
-import java.util.UUID;
 
-@Entity(name = "tasks")
 @Builder
 @Getter
 @Setter
+@ToString
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString
-public class TaskEntity {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+@Entity(name = "tasks")
+public class TaskEntity extends BaseEntity {
 
     private String title;
 
@@ -56,12 +52,5 @@ public class TaskEntity {
     @OneToMany(fetch = FetchType.LAZY)
     @JoinColumn(name = "parent_id")
     private List<TaskEntity> subTasks;
-
-    public OffsetDateTime getDueDateWithOffset(ZoneOffset zoneOffset) {
-        if (dueDate == null) {
-            return null;
-        }
-        return dueDate.withOffsetSameInstant(zoneOffset);
-    }
 
 }

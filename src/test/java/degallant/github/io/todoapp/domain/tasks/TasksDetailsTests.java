@@ -8,6 +8,19 @@ import java.util.UUID;
 public class TasksDetailsTests extends IntegrationTest {
 
     @Test
+    public void details_failsWhenTaskWasDeleted() {
+
+        var taskId = entityRequest.asUser(DEFAULT_USER).makeTask("Task A");
+
+        request.asUser(DEFAULT_USER).to(taskId.uri())
+                .delete().isNoContent();
+
+        request.asUser(DEFAULT_USER).to(taskId.uri())
+                .get().isNotFound();
+
+    }
+
+    @Test
     public void detail_failsWhenIdIsInvalid() {
 
         request.asUser(DEFAULT_USER).to("tasks/invalid")

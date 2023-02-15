@@ -4,6 +4,9 @@ CREATE TABLE users (
 	name varchar(255) NOT NULL,
 	picture_url varchar(255),
 	role varchar(255) NOT NULL,
+	created_at timestamp with time zone,
+	updated_at timestamp with time zone,
+	deleted_at timestamp with time zone,
 	PRIMARY KEY (id)
 );
 
@@ -11,6 +14,9 @@ CREATE TABLE projects(
     id uuid NOT NULL,
     title varchar(255) NOT NULL,
     user_id uuid NOT NULL,
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone,
+    deleted_at timestamp with time zone,
     PRIMARY KEY (id),
     CONSTRAINT fk_user
         FOREIGN KEY(user_id)
@@ -27,6 +33,9 @@ CREATE TABLE tasks (
 	parent_id uuid,
 	project_id uuid,
 	user_id uuid NOT NULL,
+	created_at timestamp with time zone,
+    updated_at timestamp with time zone,
+    deleted_at timestamp with time zone,
 	PRIMARY KEY (id),
 	CONSTRAINT fk_task
 	    FOREIGN KEY(parent_id)
@@ -43,6 +52,9 @@ CREATE TABLE tags(
     id uuid NOT NULL,
     name varchar(255) NOT NULL,
     user_id uuid NOT NULL,
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone,
+    deleted_at timestamp with time zone,
     PRIMARY KEY (id),
     CONSTRAINT fk_user
         FOREIGN KEY(user_id)
@@ -65,6 +77,9 @@ CREATE TABLE comments(
     text varchar(255) NOT NULL,
     user_id uuid NOT NULL,
     task_id uuid NOT NULL,
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone,
+    deleted_at timestamp with time zone,
     PRIMARY KEY (id),
     CONSTRAINT fk_user
         FOREIGN KEY(user_id)

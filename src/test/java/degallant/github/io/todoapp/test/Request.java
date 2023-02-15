@@ -139,6 +139,13 @@ public class Request {
             return new ExecutedRequest(arguments);
         }
 
+        public ExecutedRequest delete() {
+            authenticate();
+            setHeaders();
+            arguments.setResponseSpec(resolveUri(arguments.getClient().delete()).exchange());
+            return new ExecutedRequest(arguments);
+        }
+
         public ExecutedRequest post() {
             authenticate();
             setHeaders();
@@ -248,6 +255,11 @@ public class Request {
 
         public ExecutedRequest isOk() {
             arguments.setResponseSpec(arguments.getResponseSpec().expectStatus().isOk());
+            return this;
+        }
+
+        public ExecutedRequest isNoContent() {
+            arguments.setResponseSpec(arguments.getResponseSpec().expectStatus().isNoContent());
             return this;
         }
 

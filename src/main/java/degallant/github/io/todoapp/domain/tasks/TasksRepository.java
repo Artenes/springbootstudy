@@ -10,6 +10,6 @@ import java.util.UUID;
 @Repository
 public interface TasksRepository extends JpaRepository<TaskEntity, UUID>, JpaSpecificationExecutor<TaskEntity> {
 
-    Optional<TaskEntity> findByIdAndUserId(UUID id, UUID userId);
+    Optional<TaskEntity> findByIdAndUserIdAndDeletedAtIsNull(UUID id, UUID userId);
 
 }
