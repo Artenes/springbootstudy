@@ -84,6 +84,10 @@ public abstract class IntegrationTest {
         return v -> v.isEqualTo(value.toString());
     }
 
+    protected Consumer<JsonPathAssertions> existsAndNotNull() {
+        return JsonPathAssertions::exists;
+    }
+
     protected Consumer<JsonPathAssertions> exists() {
         return JsonPathAssertions::hasJsonPath;
     }

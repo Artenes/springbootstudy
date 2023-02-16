@@ -11,7 +11,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.net.URI;
-import java.util.Map;
 
 /**
  * @noinspection ClassCanBeRecord
@@ -82,7 +81,7 @@ public class CreateTasksService {
                         .sanitize(value -> tasksParser.toTaskOrThrowInvalidValue(value, user)).withName("parent"),
 
                 sanitizer.field("project_id").withOptionalValue(request.getProjectId())
-                        .sanitize(value -> projectsParser.toProject(value, user)).withName("project"),
+                        .sanitize(value -> projectsParser.toProjectOrThrowInvalidValue(value, user)).withName("project"),
 
                 sanitizer.field("complete").withOptionalValue(request.getComplete()).sanitize(primitiveParser::toBoolean)
 

@@ -108,6 +108,9 @@ public class CommentsTests extends IntegrationTest {
         request.asUser(DEFAULT_USER).to("tasks/" + taskId.uuid() + "/comments").withField("text", "")
                 .post().isBadRequest().hasField("$.errors[0].type", contains("validation.is_empty"));
 
+        request.asUser(DEFAULT_USER).to("tasks/" + taskId.uuid() + "/comments").withField("random", "")
+                .post().isBadRequest().hasField("$.errors[0].type", contains("validation.is_required"));
+
     }
 
     @Test

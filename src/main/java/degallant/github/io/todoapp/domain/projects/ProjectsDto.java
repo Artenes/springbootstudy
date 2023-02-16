@@ -1,11 +1,13 @@
 package degallant.github.io.todoapp.domain.projects;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.springframework.hateoas.server.core.Relation;
 
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 public class ProjectsDto {
@@ -14,7 +16,7 @@ public class ProjectsDto {
     @NoArgsConstructor
     @AllArgsConstructor
     @Builder
-    public static class Create {
+    public static class Project {
 
         private String title;
 
@@ -29,6 +31,10 @@ public class ProjectsDto {
 
         private UUID id;
         private String title;
+        @JsonProperty("created_at")
+        private OffsetDateTime createdAt;
+        @JsonProperty("updated_at")
+        private OffsetDateTime updatedAt;
 
     }
 

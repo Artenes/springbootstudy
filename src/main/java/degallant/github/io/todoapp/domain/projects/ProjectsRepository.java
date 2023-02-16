@@ -8,8 +8,8 @@ import java.util.UUID;
 
 public interface ProjectsRepository extends JpaRepository<ProjectEntity, UUID> {
 
-    Optional<ProjectEntity> findByIdAndUserId(UUID id, UUID userId);
+    Optional<ProjectEntity> findByIdAndUserIdAndDeletedAtIsNull(UUID id, UUID userId);
 
-    List<ProjectEntity> findByUserId(UUID userId);
+    List<ProjectEntity> findByUserIdAndDeletedAtIsNull(UUID userId);
 
 }

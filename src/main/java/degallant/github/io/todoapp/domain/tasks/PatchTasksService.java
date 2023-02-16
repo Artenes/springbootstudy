@@ -9,8 +9,6 @@ import degallant.github.io.todoapp.sanitization.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.Map;
-
 /**
  * @noinspection ClassCanBeRecord
  */
@@ -76,7 +74,7 @@ public class PatchTasksService {
                         .sanitize(value -> tasksParser.toTaskOrThrowInvalidValue(value, user)).withName("parent"),
 
                 sanitizer.field("project_id").withOptionalValue(request.getProjectId())
-                        .sanitize(value -> projectParser.toProject(value, user)).withName("project"),
+                        .sanitize(value -> projectParser.toProjectOrThrowInvalidValue(value, user)).withName("project"),
 
                 sanitizer.field("complete").withOptionalValue(request.getComplete()).sanitize(parser::toBoolean)
 
