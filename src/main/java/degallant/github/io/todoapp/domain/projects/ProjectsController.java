@@ -1,5 +1,6 @@
 package degallant.github.io.todoapp.domain.projects;
 
+import degallant.github.io.todoapp.OffsetHolder;
 import degallant.github.io.todoapp.common.LinkBuilder;
 import degallant.github.io.todoapp.domain.users.UserEntity;
 import degallant.github.io.todoapp.sanitization.FieldValidator;
@@ -28,6 +29,7 @@ public class ProjectsController {
     private final FieldValidator rules;
     private final LinkBuilder link;
     private final ProjectsFieldParser projectsParser;
+    private final OffsetHolder offsetHolder;
 
     @PostMapping
     public ResponseEntity<?> create(@RequestBody ProjectsDto.Project request, Authentication authentication) {
@@ -121,8 +123,8 @@ public class ProjectsController {
         var project = ProjectsDto.Details.builder()
                 .id(entity.getId())
                 .title(entity.getTitle())
-                .createdAt(entity.getCreatedAt())
-                .updatedAt(entity.getUpdatedAt())
+                .createdAt(offsetHolder.applyTo(entity.getCreatedAt()))
+                .updatedAt(offsetHolder.applyTo(entity.getUpdatedAt()))
                 .build();
         var linkSelf = link.to("projects").slash(entity.getId()).withSelfRel();
         var linkAll = link.to("projects").withRel("all");

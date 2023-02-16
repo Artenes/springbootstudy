@@ -1,5 +1,6 @@
 package degallant.github.io.todoapp.domain.comments;
 
+import degallant.github.io.todoapp.OffsetHolder;
 import degallant.github.io.todoapp.common.LinkBuilder;
 import degallant.github.io.todoapp.domain.users.UserEntity;
 import degallant.github.io.todoapp.sanitization.FieldValidator;
@@ -30,6 +31,7 @@ public class CommentsController {
     private final TasksFieldParser taskParser;
     private final CommentsFieldParser commentParser;
     private final LinkBuilder link;
+    private final OffsetHolder offsetHolder;
 
     @PostMapping
     public ResponseEntity<?> create(@PathVariable String id, @RequestBody CommentsDto.Create request, Authentication authentication) {
@@ -134,8 +136,8 @@ public class CommentsController {
         var comment = CommentsDto.Details.builder()
                 .id(entity.getId())
                 .text(entity.getText())
-                .commentedAt(entity.getCreatedAt())
-                .editedAt(entity.getUpdatedAt())
+                .commentedAt(offsetHolder.applyTo(entity.getCreatedAt()))
+                .editedAt(offsetHolder.applyTo(entity.getUpdatedAt()))
                 .build();
         var linkSelf = link.to("tasks").slash(entity.getTask().getId()).slash("comments").slash(entity.getId()).withSelfRel();
         var linkAll = link.to("tasks").slash(entity.getTask().getId()).slash("comments").withRel("all");

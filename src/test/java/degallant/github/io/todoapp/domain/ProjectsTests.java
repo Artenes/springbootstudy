@@ -3,6 +3,8 @@ package degallant.github.io.todoapp.domain;
 import degallant.github.io.todoapp.test.IntegrationTest;
 import org.junit.jupiter.api.Test;
 
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.UUID;
 
 class ProjectsTests extends IntegrationTest {
@@ -152,6 +154,26 @@ class ProjectsTests extends IntegrationTest {
                 .hasField("$._embedded.projects[0]._links.self", existsAndNotNull())
                 .hasField("$._embedded.projects[0]._links.all", existsAndNotNull())
                 .hasField("$._embedded.projects[1].title", isEqualTo("Project B"));
+
+    }
+
+    @Test
+    public void get_showsTimeAccordingToTimezone() {
+
+        var project = entityRequest.asUser(DEFAULT_USER).makeProject("Project A");
+        request.asUser(DEFAULT_USER).to(project.uri()).withField("title", "New title").patch().isOk();
+
+        var body = request.asUser(DEFAULT_USER).to(project.uri()).get().isOk().getResponse().body();
+        var createdAt = OffsetDateTime.parse(body.get("created_at").asText());
+        var updatedAt = OffsetDateTime.parse(body.get("updated_at").asText());
+
+        var newCreatedAt = createdAt.withOffsetSameInstant(ZoneOffset.of("+05:00")).toString();
+        var newUpdatedAt = updatedAt.withOffsetSameInstant(ZoneOffset.of("+05:00")).toString();
+
+        request.asUser(DEFAULT_USER).to(project.uri())
+                .withHeader("Accept-Offset", "+05:00").get().isOk()
+                .hasField("$.created_at", isEqualTo(newCreatedAt))
+                .hasField("$.updated_at", isEqualTo(newUpdatedAt));
 
     }
 
