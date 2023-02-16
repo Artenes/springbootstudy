@@ -11,7 +11,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class Sanitizer {
 
-    public Map<String, SanitizedValue> sanitize(ValueSpec... specs) throws InvalidRequestException {
+    public SanitizedCollection sanitize(ValueSpec... specs) throws InvalidRequestException {
 
         var sanitizedFields = new HashMap<String, SanitizedValue>();
         var errors = new ArrayList<FieldAndErrorMessage>();
@@ -29,7 +29,7 @@ public class Sanitizer {
             throw new InvalidRequestException(errors);
         }
 
-        return sanitizedFields;
+        return new SanitizedCollection(sanitizedFields);
     }
 
     public ValueSpec field(String name) {

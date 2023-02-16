@@ -31,7 +31,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 public abstract class IntegrationTest {
 
     protected static final String DEFAULT_USER = "default@gmail.com";
-
+    protected static final String ANOTHER_USER = "another@gmail.com";
     protected static final String ADMIN_USER = "admin@gmail.com";
 
     @Autowired
@@ -85,7 +85,11 @@ public abstract class IntegrationTest {
     }
 
     protected Consumer<JsonPathAssertions> exists() {
-        return JsonPathAssertions::exists;
+        return JsonPathAssertions::hasJsonPath;
+    }
+
+    protected Consumer<JsonPathAssertions> isEmpty() {
+        return JsonPathAssertions::isEmpty;
     }
 
     protected Consumer<JsonPathAssertions> doesNotExists() {

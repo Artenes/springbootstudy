@@ -5,6 +5,7 @@ import degallant.github.io.todoapp.common.LinkBuilder;
 import degallant.github.io.todoapp.common.PagedResponse;
 import degallant.github.io.todoapp.domain.users.UserEntity;
 import degallant.github.io.todoapp.sanitization.FieldValidator;
+import degallant.github.io.todoapp.sanitization.SanitizedCollection;
 import degallant.github.io.todoapp.sanitization.SanitizedValue;
 import degallant.github.io.todoapp.sanitization.Sanitizer;
 import degallant.github.io.todoapp.sanitization.parsers.PrimitiveFieldParser;
@@ -108,7 +109,7 @@ public class ListTasksService {
         };
     }
 
-    private Map<String, SanitizedValue> sanitizeParams(String page, String sort, String title, String dueDate, String complete) {
+    private SanitizedCollection sanitizeParams(String page, String sort, String title, String dueDate, String complete) {
         return sanitizer.sanitize(
                 sanitizer.param("p").withOptionalValue(page).sanitize(value -> {
                     var parsed = parser.toInteger(value);

@@ -44,7 +44,7 @@ public class PatchTasksService {
 
     }
 
-    private Map<String, SanitizedValue> sanitizeRequest(TasksDto.Create request, UserEntity user) {
+    private SanitizedCollection sanitizeRequest(TasksDto.Create request, UserEntity user) {
         return sanitizer.sanitize(
 
                 sanitizer.field("title").withOptionalValue(request.getTitle()).sanitize(value -> {

@@ -1,12 +1,11 @@
 package degallant.github.io.todoapp.domain.comments;
 
 import degallant.github.io.todoapp.common.LinkBuilder;
-import degallant.github.io.todoapp.sanitization.parsers.CommentsFieldParser;
-import degallant.github.io.todoapp.sanitization.parsers.PrimitiveFieldParser;
-import degallant.github.io.todoapp.sanitization.parsers.TasksFieldParser;
-import degallant.github.io.todoapp.domain.tasks.TasksRepository;
 import degallant.github.io.todoapp.domain.users.UserEntity;
-import degallant.github.io.todoapp.sanitization.*;
+import degallant.github.io.todoapp.sanitization.FieldValidator;
+import degallant.github.io.todoapp.sanitization.Sanitizer;
+import degallant.github.io.todoapp.sanitization.parsers.CommentsFieldParser;
+import degallant.github.io.todoapp.sanitization.parsers.TasksFieldParser;
 import lombok.RequiredArgsConstructor;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.mediatype.hal.HalModelBuilder;
@@ -14,21 +13,20 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.OffsetDateTime;
 import java.util.stream.Collectors;
 
 /**
- * @noinspection ClassCanBeRecord
+ * @noinspection ClassCanBeRecord, unused
  */
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/v1/tasks/{id}/comments")
 public class CommentsController {
 
-    private final TasksRepository tasksRepository;
     private final CommentsRepository commentsRepository;
     private final Sanitizer sanitizer;
     private final FieldValidator rules;
-    private final PrimitiveFieldParser parser;
     private final TasksFieldParser taskParser;
     private final CommentsFieldParser commentParser;
     private final LinkBuilder link;
@@ -59,26 +57,51 @@ public class CommentsController {
                 .withSelfRel();
 
         return ResponseEntity.created(linkSelf.toUri()).build();
+
     }
 
     @GetMapping("/{commentId}")
     public ResponseEntity<?> details(@PathVariable String id, @PathVariable String commentId, Authentication authentication) {
 
         var user = (UserEntity) authentication.getPrincipal();
-        var task = taskParser.toTaskOrThrowNoSuchElement(id, user);
-        var comment = commentParser.toCommentOrThrowNoSuchElement(commentId, task.getId(), user);
+        var comment = commentParser.toCommentOrThrowNoSuchElement(id, commentId, user);
 
         var response = toEntityModel(comment);
 
         return ResponseEntity.ok(response);
+
+    }
+
+    @PatchMapping("/{commentId}")
+    public ResponseEntity<?> patch(@PathVariable String id, @PathVariable String commentId, @RequestBody CommentsDto.Patch request, Authentication authentication) {
+
+        var user = (UserEntity) authentication.getPrincipal();
+        var comment = commentParser.toCommentOrThrowNoSuchElement(id, commentId, user);
+
+        var result = sanitizer.sanitize(
+                sanitizer.field("text").withOptionalValue(request.getText()).sanitize(value -> {
+                    rules.isNotEmpty(value);
+                    return value;
+                })
+        );
+
+        if (!result.hasAnyFieldWithValue()) {
+            return ResponseEntity.noContent().build();
+        }
+
+        result.get("text").consumeIfExists(comment::setText);
+        commentsRepository.save(comment);
+
+        return ResponseEntity.ok().build();
+
     }
 
     @GetMapping
     public ResponseEntity<?> list(@PathVariable String id, Authentication authentication) {
 
-        var userId = ((UserEntity) authentication.getPrincipal()).getId();
-        var task = tasksRepository.findByIdAndUserIdAndDeletedAtIsNull(parser.toUuidOrThrow(id), userId).orElseThrow();
-        var entities = commentsRepository.findByTaskIdAndCommenterId(task.getId(), userId);
+        var user = (UserEntity) authentication.getPrincipal();
+        var task = taskParser.toTaskOrThrowNoSuchElement(id, user);
+        var entities = task.getComments();
 
         var comments = entities.stream()
                 .map(this::toEntityModel)
@@ -91,10 +114,29 @@ public class CommentsController {
                 .build();
 
         return ResponseEntity.ok(response);
+
+    }
+
+    @DeleteMapping("/{commentId}")
+    public ResponseEntity<?> delete(@PathVariable String id, @PathVariable String commentId, Authentication authentication) {
+
+        var user = (UserEntity) authentication.getPrincipal();
+        var comment = commentParser.toCommentOrThrowNoSuchElement(id, commentId, user);
+
+        comment.setDeletedAt(OffsetDateTime.now());
+        commentsRepository.save(comment);
+
+        return ResponseEntity.noContent().build();
+
     }
 
     private EntityModel<CommentsDto.Details> toEntityModel(CommentEntity entity) {
-        var comment = CommentsDto.Details.builder().id(entity.getId()).text(entity.getText()).build();
+        var comment = CommentsDto.Details.builder()
+                .id(entity.getId())
+                .text(entity.getText())
+                .commentedAt(entity.getCreatedAt())
+                .editedAt(entity.getUpdatedAt())
+                .build();
         var linkSelf = link.to("tasks").slash(entity.getTask().getId()).slash("comments").slash(entity.getId()).withSelfRel();
         var linkAll = link.to("tasks").slash(entity.getTask().getId()).slash("comments").withRel("all");
         var linkTask = link.to("tasks").slash(entity.getTask().getId()).withRel("task");

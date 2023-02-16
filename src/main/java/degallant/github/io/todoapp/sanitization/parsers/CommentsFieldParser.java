@@ -16,12 +16,11 @@ public class CommentsFieldParser {
 
     private final CommentsRepository repository;
 
-    public CommentEntity toCommentOrThrowNoSuchElement(String id, UUID taskId, UserEntity user) throws NoSuchElementException {
+    public CommentEntity toCommentOrThrowNoSuchElement(String taskId, String commentId, UserEntity user) throws NoSuchElementException {
         try {
-            var commentId = UUID.fromString(id);
-            return repository.findByIdAndCommenterIdAndTaskId(commentId, user.getId(), taskId).orElseThrow();
+            return repository.findBy(UUID.fromString(taskId), UUID.fromString(commentId), user.getId()).orElseThrow();
         } catch (IllegalArgumentException | NoSuchElementException exception) {
-            throw new NoSuchElementException("No comment found with id " + id, exception);
+            throw new NoSuchElementException(String.format("No comment found with the ids task:%s, comment:%s, user:%s", taskId, commentId, user.getId()), exception);
         }
     }
 

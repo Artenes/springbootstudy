@@ -2,6 +2,8 @@ package degallant.github.io.todoapp.sanitization;
 
 import lombok.RequiredArgsConstructor;
 
+import java.util.function.Consumer;
+
 /**
  * @noinspection ClassCanBeRecord, unchecked
  */
@@ -28,6 +30,16 @@ public class SanitizedValue {
 
     public <T> T ifNull(T defaultValue) {
         return object == null ? defaultValue : (T) object;
+    }
+
+    public <T> void consumeIfExists(Consumer<T> consumer) {
+        if (object != null) {
+            consumer.accept((T) object);
+        }
+    }
+
+    public boolean exists() {
+        return object != null;
     }
 
 }

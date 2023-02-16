@@ -1,11 +1,14 @@
 package degallant.github.io.todoapp.domain.tasks;
 
 import degallant.github.io.todoapp.common.BaseEntity;
+import degallant.github.io.todoapp.domain.comments.CommentEntity;
 import degallant.github.io.todoapp.domain.projects.ProjectEntity;
 import degallant.github.io.todoapp.domain.tags.TagEntity;
 import degallant.github.io.todoapp.domain.users.UserEntity;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.Filter;
+import org.hibernate.annotations.Where;
 
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
@@ -52,5 +55,10 @@ public class TaskEntity extends BaseEntity {
     @OneToMany(fetch = FetchType.LAZY)
     @JoinColumn(name = "parent_id")
     private List<TaskEntity> subTasks;
+
+    @OneToMany(fetch = FetchType.LAZY)
+    @JoinColumn(name = "task_id")
+    @Where(clause = "deleted_at IS NULL")
+    private List<CommentEntity> comments;
 
 }
