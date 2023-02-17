@@ -29,6 +29,7 @@ public class PatchTasksService {
         var entity = tasksParser.toTaskOrThrowNoSuchElement(id, user);
         var result = sanitizeRequest(request, user);
 
+        //TODO refactor to new update scheme
         entity.setTitle(result.get("title").ifNull(entity.getTitle()));
         entity.setDescription(result.get("description").ifNull(entity.getDescription()));
         entity.setDueDate(result.get("due_date").ifNull(entity.getDueDate()));

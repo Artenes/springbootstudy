@@ -34,6 +34,45 @@
 - so, when sending a response to the client, the datetime must be changed to the user's preferred timezone
 - there might be a need to configure either mysql or postgres to use UTC by default as timezone when saving datetime information
 - we use ISO 8601 to display the date back to user
+
+# Resources test cases
+
+- **get (resource)**
+    - id is not a valid UUID
+    - id is UUID but does not exist
+    - id is of resource that belongs to another user
+    - id is of resource that was deleted
+    - show dates according to offset in header
+    
+    
+- **patch (resource)**
+    - id is not a valid UUID
+    - id is UUID but does not exist
+    - id is of resource that belongs to another user
+    - id is of resource that was deleted
+    - request body is invalid
+    - returns status "no content" if resource was not updated 
+    - show translated error messages
+      
+
+- **delete (resource)**
+    - id is not a valid UUID
+    - id is UUID but does not exist
+    - id is of resource that belongs to another user
+    - id is of resource that was deleted
+
+
+- **post (new resource)**
+    - request body is invalid
+    - show translated error messages
+    
+
+- **get (resource list)**
+    - shows no items
+    - ignore deleted items
+    - show dates according to offset in header
+    - ignore resources that belong to other users
+
 # References
 
 - rest api design https://stackoverflow.blog/2020/03/02/best-practices-for-rest-api-design/

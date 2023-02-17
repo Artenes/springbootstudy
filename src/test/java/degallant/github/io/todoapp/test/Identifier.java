@@ -30,6 +30,10 @@ public record Identifier(URI uri) {
             return list;
         }
 
+        public Identifier get(int index) {
+            return list.get(index);
+        }
+
         public String asString() {
             var ids = list.stream().map(id -> String.format("\"%s\"", id.uuid())).collect(Collectors.toList());
             return String.format("[%s]", Strings.join(ids, ','));
