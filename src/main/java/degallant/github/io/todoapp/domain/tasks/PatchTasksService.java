@@ -24,23 +24,27 @@ public class PatchTasksService {
     private final TasksFieldParser tasksParser;
     private final ProjectsFieldParser projectParser;
 
-    public void patch(String id, TasksDto.Create request, UserEntity user) {
+    public boolean patch(String id, TasksDto.Create request, UserEntity user) {
 
         var entity = tasksParser.toTaskOrThrowNoSuchElement(id, user);
         var result = sanitizeRequest(request, user);
 
-        //TODO refactor to new update scheme
-        entity.setTitle(result.get("title").ifNull(entity.getTitle()));
-        entity.setDescription(result.get("description").ifNull(entity.getDescription()));
-        entity.setDueDate(result.get("due_date").ifNull(entity.getDueDate()));
-        entity.setPriority(result.get("priority").ifNull(entity.getPriority()));
-        entity.setComplete(result.get("complete").ifNull(entity.getComplete()));
-        entity.setParent(result.get("parent").ifNull(entity.getParent()));
-        entity.setProject(result.get("project").ifNull(entity.getProject()));
-        entity.setTags(result.get("tags_ids").ifNull(entity.getTags()));
+        if (!result.hasAnyFieldWithValue()) {
+            return false;
+        }
+
+        result.get("title").consumeIfExists(entity::setTitle);
+        result.get("description").consumeIfExists(entity::setDescription);
+        result.get("due_date").consumeIfExists(entity::setDueDate);
+        result.get("priority").consumeIfExists(entity::setPriority);
+        result.get("complete").consumeIfExists(entity::setComplete);
+        result.get("parent").consumeIfExists(entity::setParent);
+        result.get("project").consumeIfExists(entity::setProject);
+        result.get("tags").consumeIfExists(entity::setTags);
 
         tasksRepository.save(entity);
 
+        return true;
     }
 
     private SanitizedCollection sanitizeRequest(TasksDto.Create request, UserEntity user) {
@@ -69,7 +73,7 @@ public class PatchTasksService {
                     var found = tagsRepository.findAllByUserIdAndId(user.getId(), parsed);
                     rules.hasUnknownTag(parsed, found);
                     return found;
-                }),
+                }).withName("tags"),
 
                 sanitizer.field("parent_id").withOptionalValue(request.getParentId())
                         .sanitize(value -> tasksParser.toTaskOrThrowInvalidValue(value, user)).withName("parent"),

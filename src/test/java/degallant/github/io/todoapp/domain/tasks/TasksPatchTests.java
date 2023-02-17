@@ -114,7 +114,7 @@ public class TasksPatchTests extends IntegrationTest {
                 .withField("tags_ids", tags)
                 .post().isCreated().getLocation();
 
-        request.asUser(DEFAULT_USER).to(taskUri).patch().isOk();
+        request.asUser(DEFAULT_USER).to(taskUri).patch().isNoContent();
 
         request.asUser(DEFAULT_USER).to(taskUri)
                 .get().isOk()

@@ -15,8 +15,7 @@ public interface TagsRepository extends JpaRepository<TagEntity, UUID> {
 
     List<TagEntity> findByUserIdAndDeletedAtIsNull(UUID userId);
 
-    //TODO update this to new soft delete rules
-    @Query(value = "select * from tags where user_id = :userId and id in :ids", nativeQuery = true)
+    @Query(value = "SELECT * FROM tags WHERE user_id = :userId AND id in :ids AND deleted_at IS NULL", nativeQuery = true)
     List<TagEntity> findAllByUserIdAndId(UUID userId, Iterable<UUID> ids);
 
 }

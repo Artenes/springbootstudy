@@ -37,9 +37,11 @@ public class TasksController {
     @PatchMapping("/{id}")
     public ResponseEntity<?> patch(@PathVariable String id, @RequestBody TasksDto.Create request, Authentication authentication) {
 
-        patchService.patch(id, request, (UserEntity) authentication.getPrincipal());
+        if (patchService.patch(id, request, (UserEntity) authentication.getPrincipal())) {
+            return ResponseEntity.ok().build();
+        }
 
-        return ResponseEntity.ok().build();
+        return ResponseEntity.noContent().build();
 
     }
 
