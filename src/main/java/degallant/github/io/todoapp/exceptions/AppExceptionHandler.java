@@ -2,12 +2,12 @@ package degallant.github.io.todoapp.exceptions;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import degallant.github.io.todoapp.authentication.JwtTokenException;
-import degallant.github.io.todoapp.sanitization.parsers.SortParsingException;
 import degallant.github.io.todoapp.i18n.Messages;
 import degallant.github.io.todoapp.openid.OpenIdExtractionException;
 import degallant.github.io.todoapp.sanitization.FieldAndErrorMessage;
 import degallant.github.io.todoapp.sanitization.FieldAndErrorType;
 import degallant.github.io.todoapp.sanitization.InvalidRequestException;
+import degallant.github.io.todoapp.sanitization.parsers.SortParsingException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -47,6 +47,21 @@ public class AppExceptionHandler {
                 .withStatus(HttpStatus.BAD_REQUEST)
                 .withType(ErrorType.INVALID_REQUEST)
                 .withProperty("errors", exception.getErrors().stream().map(this::toFieldAndErrorType).collect(Collectors.toList()))
+                .withDebug(debug)
+                .build();
+
+    }
+
+    @ExceptionHandler(InvalidStateException.class)
+    public ErrorResponse handleInvalidStateException(InvalidStateException exception) {
+
+        printStack(exception);
+
+        return ErrorResponseBuilder.from(exception)
+                .withTitle(messages.get("error.invalid_state.title"))
+                .withDetail(messages.get(exception.getMessageId(), exception.getArgs()))
+                .withStatus(HttpStatus.CONFLICT)
+                .withType(makeType(exception.getMessageId()))
                 .withDebug(debug)
                 .build();
 
@@ -218,6 +233,7 @@ public class AppExceptionHandler {
         );
     }
 
+    //TODO change all typing to this
     private URI makeType(String type) {
         return URI.create("https://todoapp.com/" + type);
     }

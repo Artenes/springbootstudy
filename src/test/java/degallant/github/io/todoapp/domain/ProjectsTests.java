@@ -198,6 +198,4 @@ class ProjectsTests extends IntegrationTest {
 
     }
 
-    //TODO if user is deleted?
-
 }

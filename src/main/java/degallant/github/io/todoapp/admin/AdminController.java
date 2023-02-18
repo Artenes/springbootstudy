@@ -9,14 +9,18 @@ import degallant.github.io.todoapp.domain.tasks.TasksRepository;
 import degallant.github.io.todoapp.domain.users.Role;
 import degallant.github.io.todoapp.domain.users.UserEntity;
 import degallant.github.io.todoapp.domain.users.UsersRepository;
+import degallant.github.io.todoapp.exceptions.InvalidStateException;
 import degallant.github.io.todoapp.sanitization.parsers.PrimitiveFieldParser;
 import degallant.github.io.todoapp.sanitization.FieldValidator;
 import degallant.github.io.todoapp.sanitization.Sanitizer;
+import degallant.github.io.todoapp.sanitization.parsers.UsersFieldParser;
 import lombok.RequiredArgsConstructor;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+
+import java.time.OffsetDateTime;
 
 /**
  * @noinspection ClassCanBeRecord, unused
@@ -35,6 +39,7 @@ public class AdminController {
     private final TagsRepository tagsRepository;
     private final CommentsRepository commentsRepository;
     private final ProjectsRepository projectsRepository;
+    private final UsersFieldParser userParser;
 
     @PostMapping("/promote")
     public ResponseEntity<?> promote(@RequestBody AuthDto.Promote request, Authentication authentication) {
@@ -77,6 +82,42 @@ public class AdminController {
                 .build(), linkSelf);
 
         return ResponseEntity.ok(model);
+
+    }
+
+    @DeleteMapping("/users/{id}")
+    public ResponseEntity<?> removeUser(@PathVariable String id, Authentication authentication) {
+
+        var admin = (UserEntity) authentication.getPrincipal();
+        var user = userParser.toUserOrThrowNoSuchElement(id);
+
+        if (admin.getId().equals(user.getId())) {
+            throw new InvalidStateException("error.cannot_delete_current_user");
+        }
+
+        user.setDeletedAt(OffsetDateTime.now());
+        usersRepository.save(user);
+        return ResponseEntity.noContent().build();
+
+    }
+
+    @PatchMapping("/users/{id}/restore")
+    public ResponseEntity<?> restoreUser(@PathVariable String id, Authentication authentication) {
+
+        var admin = (UserEntity) authentication.getPrincipal();
+        var user = userParser.toAbsoluteUserOrThrowNoSuchElement(id);
+
+        if (admin.getId().equals(user.getId())) {
+            throw new InvalidStateException("error.cannot_restore_current_user");
+        }
+
+        if (!user.isDeleted()) {
+            throw new InvalidStateException("error.cannot_restore_not_deleted_user");
+        }
+
+        user.setDeletedAt(null);
+        usersRepository.save(user);
+        return ResponseEntity.ok().build();
 
     }
 

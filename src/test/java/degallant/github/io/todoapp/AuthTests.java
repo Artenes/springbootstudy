@@ -5,7 +5,42 @@ import org.junit.jupiter.api.Test;
 
 import java.util.UUID;
 
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 public class AuthTests extends IntegrationTest {
+
+    @Test
+    public void all_fails_user_authentication_when_deleted() {
+
+        var body = request.asUser(DEFAULT_USER).to("auth/profile").get().isOk().getBody();
+        var id = body.get("id").asText();
+
+        request.asUser(ADMIN_USER).to("admin/users/" + id).delete().isNoContent();
+
+        try {
+            request.asUser(DEFAULT_USER).to("auth/profile").get();
+        } catch (AssertionError error) {
+            assertTrue(error.getMessage().contains("failed with status 409 BAD_REQUEST"), "Unexpected error " + error.getMessage());
+        }
+
+    }
+
+    @Test
+    public void all_fails_token_belongs_to_deleted_user() {
+
+        var body = request.asGuest().to("auth")
+                .withField("open_id_token", authenticator.makeOpenIdTokenFor(DEFAULT_USER))
+                .post().isCreated().getBody();
+        var token = body.get("access_token").asText();
+
+        var id = request.asUser(DEFAULT_USER).to("auth/profile").get().getBody().get("id").asText();
+
+        request.asUser(ADMIN_USER).to("admin/users/" + id).delete().isNoContent();
+
+        request.withToken(token).to("auth/profile")
+                .get().isBadRequest().hasField("$.type", contains("error.token_unknown_subject"));
+
+    }
 
     @Test
     public void authenticate_fails_whenOpenIdTokenIsNotProvided() {

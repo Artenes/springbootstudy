@@ -5,9 +5,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import degallant.github.io.todoapp.openid.OpenIdExtractionException;
 import degallant.github.io.todoapp.openid.OpenIdTokenParser;
 import degallant.github.io.todoapp.openid.OpenIdUser;
-import net.minidev.json.JSONArray;
 import org.junit.jupiter.api.Assertions;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.test.web.reactive.server.EntityExchangeResult;
 
 import java.io.IOException;
@@ -18,7 +18,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 /**
- * @noinspection unchecked, ClassCanBeRecord
+ * @noinspection unchecked, ClassCanBeRecord, ConstantConditions
  */
 public class Authenticator {
 
@@ -54,6 +54,9 @@ public class Authenticator {
                 .exchange()
                 .expectBody().returnResult();
         try {
+            if (result.getStatus() != HttpStatus.OK && result.getStatus() != HttpStatus.CREATED) {
+                Assertions.fail("Authentication failed with status " + result.getStatus() + ". Response: " + new String(result.getResponseBodyContent()));
+            }
             Map<String, String> response = mapper.readValue(result.getResponseBodyContent(), Map.class);
             authenticateWithToken(response.get("access_token"));
         } catch (IOException exception) {
@@ -71,6 +74,10 @@ public class Authenticator {
         String token = email + name + profileUrl;
         when(openIdTokenParser.extract(eq(token))).thenReturn(new OpenIdUser(email, name, profileUrl));
         return token;
+    }
+
+    public String makeOpenIdTokenFor(String email) {
+        return makeOpenIdTokenFor(email, "Default name", "https://default.com/default.jpg");
     }
 
     public void makeParsingFailsTo(String token) {

@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.test.web.reactive.server.JsonPathAssertions;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
@@ -245,6 +246,11 @@ public class Request {
 
         public ExecutedRequest isNotFound() {
             arguments.setResponseSpec(arguments.getResponseSpec().expectStatus().isNotFound());
+            return this;
+        }
+
+        public ExecutedRequest isConflict() {
+            arguments.setResponseSpec(arguments.getResponseSpec().expectStatus().isEqualTo(HttpStatus.CONFLICT));
             return this;
         }
 

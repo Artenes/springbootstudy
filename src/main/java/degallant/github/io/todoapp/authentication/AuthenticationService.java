@@ -1,11 +1,12 @@
 package degallant.github.io.todoapp.authentication;
 
-import degallant.github.io.todoapp.openid.OpenIdExtractionException;
-import degallant.github.io.todoapp.openid.OpenIdTokenParser;
-import degallant.github.io.todoapp.openid.OpenIdUser;
 import degallant.github.io.todoapp.domain.users.Role;
 import degallant.github.io.todoapp.domain.users.UserEntity;
 import degallant.github.io.todoapp.domain.users.UsersRepository;
+import degallant.github.io.todoapp.exceptions.InvalidStateException;
+import degallant.github.io.todoapp.openid.OpenIdExtractionException;
+import degallant.github.io.todoapp.openid.OpenIdTokenParser;
+import degallant.github.io.todoapp.openid.OpenIdUser;
 import degallant.github.io.todoapp.sanitization.InvalidValueException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -43,11 +44,15 @@ public class AuthenticationService {
         return new TokenPair(accessToken, refreshToken);
     }
 
-    public Authentication authenticateWith(OpenIdUser openIdUser) {
+    public Authentication authenticateWith(OpenIdUser openIdUser) throws InvalidStateException {
         Optional<UserEntity> user = repository.findByEmail(openIdUser.email());
 
         UserEntity userEntity;
         boolean isNewUser;
+
+        if (user.isPresent() && user.get().isDeleted()) {
+            throw new InvalidStateException("error.user_deleted", user.get().getId());
+        }
 
         if (user.isPresent()) {
             userEntity = user.get();
@@ -76,7 +81,7 @@ public class AuthenticationService {
 
     public Authentication authenticateWithJwtToken(String jwtToken) throws JwtTokenException {
         var userId = token.parseToUserId(jwtToken);
-        var user = repository.findById(userId);
+        var user = repository.findByIdAndDeletedAtIsNull(userId);
 
         if (user.isEmpty()) {
             throw new JwtTokenException.InvalidSubject(jwtToken);

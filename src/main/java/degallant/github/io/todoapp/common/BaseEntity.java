@@ -38,4 +38,8 @@ public class BaseEntity {
         this.updatedAt = OffsetDateTime.now();
     }
 
+    public boolean isDeleted() {
+        return deletedAt != null;
+    }
+
 }
