@@ -1,3 +1,12 @@
+CREATE TABLE api_keys (
+    id uuid NOT NULL,
+    name varchar(255) NOT NULL,
+    last_access timestamp with time zone,
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone,
+    deleted_at timestamp with time zone
+);
+
 CREATE TABLE users (
 	id uuid NOT NULL,
 	email varchar(255) UNIQUE NOT NULL,

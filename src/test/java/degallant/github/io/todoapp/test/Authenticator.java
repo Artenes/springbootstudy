@@ -25,16 +25,18 @@ public class Authenticator {
     private final ClientProxy client;
     private final OpenIdTokenParser openIdTokenParser;
     private final ObjectMapper mapper;
+    private final UUID apiKey;
 
-    public Authenticator(ClientProxy client, OpenIdTokenParser openIdTokenParser, ObjectMapper mapper) {
+    public Authenticator(ClientProxy client, OpenIdTokenParser openIdTokenParser, ObjectMapper mapper, UUID apiKey) {
         this.client = client;
         this.openIdTokenParser = openIdTokenParser;
         this.mapper = mapper;
+        this.apiKey = apiKey;
     }
 
     public UUID makeUser(String email) {
         authenticate(email);
-        EntityExchangeResult<byte[]> result = client.get().uri("/v1/auth/profile").exchange().expectBody().returnResult();
+        EntityExchangeResult<byte[]> result = client.get().uri("/v1/auth/profile").header("Client-Agent", apiKey.toString()).exchange().expectBody().returnResult();
         try {
             var response = mapper.readValue(result.getResponseBodyContent(), JsonNode.class);
             return UUID.fromString(response.get("id").asText());
@@ -50,6 +52,7 @@ public class Authenticator {
         String profileUrl = "https://google.com/profile/903jfiwfiwoe";
         String token = makeOpenIdTokenFor(email, name, profileUrl);
         EntityExchangeResult<byte[]> result = client.post().uri("/v1/auth")
+                .header("Client-Agent", apiKey.toString())
                 .bodyValue(Map.of("open_id_token", token))
                 .exchange()
                 .expectBody().returnResult();

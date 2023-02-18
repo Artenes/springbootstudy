@@ -23,11 +23,13 @@ public class Request {
     private final ClientProxy client;
     private final Authenticator authenticator;
     private final ObjectMapper mapper;
+    private final UUID apiKey;
 
-    public Request(ClientProxy client, Authenticator authenticator, ObjectMapper mapper) {
+    public Request(ClientProxy client, Authenticator authenticator, ObjectMapper mapper, UUID apiKey) {
         this.client = client;
         this.authenticator = authenticator;
         this.mapper = mapper;
+        this.apiKey = apiKey;
     }
 
     public Authenticated asUser(String email) {
@@ -49,7 +51,7 @@ public class Request {
     }
 
     private RequestArguments makeArgs() {
-        return new RequestArguments(client, mapper, authenticator);
+        return new RequestArguments(client, mapper, authenticator, apiKey);
     }
 
     /**
@@ -207,6 +209,7 @@ public class Request {
         private void setHeaders() {
             arguments.getClient().mutateWith((builder, httpHandlerBuilder, connector) -> {
                 builder.defaultHeader(HttpHeaders.ACCEPT, "application/json");
+                builder.defaultHeader("Client-Agent", arguments.getApiKey().toString());
                 for (String header : arguments.getHeaders().keySet()) {
                     builder.defaultHeader(header, arguments.getHeaders().get(header).toString());
                 }

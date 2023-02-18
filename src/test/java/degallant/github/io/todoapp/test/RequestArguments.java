@@ -7,6 +7,7 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 class RequestArguments {
 
@@ -16,6 +17,7 @@ class RequestArguments {
     private final Map<String, Object> body = new HashMap<>();
     private final Map<String, Object> params = new HashMap<>();
     private final Map<String, Object> headers = new HashMap<>();
+    private final UUID apiKey;
     private Request.AuthInfo authInfo;
     private String version;
     private URI uri;
@@ -25,10 +27,11 @@ class RequestArguments {
     private WebTestClient.BodyContentSpec bodySpec;
     private EntityExchangeResult<byte[]> response;
 
-    public RequestArguments(ClientProxy client, ObjectMapper mapper, Authenticator authenticator) {
+    public RequestArguments(ClientProxy client, ObjectMapper mapper, Authenticator authenticator, UUID apiKey) {
         this.client = client;
         this.mapper = mapper;
         this.authenticator = authenticator;
+        this.apiKey = apiKey;
     }
 
     public ClientProxy getClient() {
@@ -118,4 +121,9 @@ class RequestArguments {
     public Map<String, Object> getHeaders() {
         return headers;
     }
+
+    public UUID getApiKey() {
+        return apiKey;
+    }
+
 }

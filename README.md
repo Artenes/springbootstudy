@@ -1,7 +1,5 @@
 # TO DO
 
-- check about created at, updated at columns (maybe add an enable option to users?)
-
 - add api keys management for client access and track usage
 
 - deal with logging and monitoring
@@ -24,7 +22,15 @@
 
 - check about docker
 
+- create admin application
+  - manage users
+  - manage admins
+  - different auth process
+  - manage api keys
+
 - write about everything
+
+- create empty sample project based on this one
 
 # Explanations
 
@@ -34,6 +40,15 @@
 - so, when sending a response to the client, the datetime must be changed to the user's preferred timezone
 - there might be a need to configure either mysql or postgres to use UTC by default as timezone when saving datetime information
 - we use ISO 8601 to display the date back to user
+
+# Questions
+
+## How to manage admin routes and other sensitive data?
+
+The best way to handle this is to create another application. One would be the public API for your first-party clients, 
+while the other will have access to the same database as the first one, but its sole purpose is to manage users and API keys.
+The advantage of putting this on another application is the possibility of restricting its access with a more tight authentication
+process (e.g. 2FA) and limiting its access by IP address so only some people can use it. 
 
 # Resources test cases
 

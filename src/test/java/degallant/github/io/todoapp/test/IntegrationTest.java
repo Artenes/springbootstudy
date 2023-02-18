@@ -1,6 +1,8 @@
 package degallant.github.io.todoapp.test;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import degallant.github.io.todoapp.authentication.ApiKeyEntity;
+import degallant.github.io.todoapp.authentication.ApiKeyRepository;
 import degallant.github.io.todoapp.authentication.JwtToken;
 import degallant.github.io.todoapp.openid.OpenIdTokenParser;
 import degallant.github.io.todoapp.domain.users.Role;
@@ -17,6 +19,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.reactive.server.JsonPathAssertions;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
+import java.util.UUID;
 import java.util.function.Consumer;
 
 import static org.hamcrest.Matchers.containsString;
@@ -52,19 +55,25 @@ public abstract class IntegrationTest {
     @Autowired
     private UsersRepository usersRepository;
 
+    @Autowired
+    private ApiKeyRepository apiKeyRepository;
+
     protected Request request;
 
     protected EntityRequest entityRequest;
 
     protected Authenticator authenticator;
 
+    private UUID apiKey;
+
     @BeforeEach
     public void setUp() {
-        ClientProxy proxy = new ClientProxy(client);
-        authenticator = new Authenticator(proxy, openIdTokenParser, mapper);
-        request = new Request(proxy, authenticator, mapper);
-        entityRequest = new EntityRequest(request);
         flyway.migrate();
+        makeApiKey();
+        ClientProxy proxy = new ClientProxy(client);
+        authenticator = new Authenticator(proxy, openIdTokenParser, mapper, apiKey);
+        request = new Request(proxy, authenticator, mapper, apiKey);
+        entityRequest = new EntityRequest(request);
         makeAdmin();
     }
 
@@ -73,6 +82,12 @@ public abstract class IntegrationTest {
         var entity = usersRepository.findById(id).orElseThrow();
         entity.setRole(Role.ROLE_ADMIN);
         usersRepository.save(entity);
+    }
+
+    protected void makeApiKey() {
+        var apiKey = ApiKeyEntity.builder().name("test-key").build();
+        apiKey = apiKeyRepository.save(apiKey);
+        this.apiKey = apiKey.getId();
     }
 
     @AfterEach
