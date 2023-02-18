@@ -56,7 +56,7 @@ public abstract class IntegrationTest {
     private UsersRepository usersRepository;
 
     @Autowired
-    private ApiKeyRepository apiKeyRepository;
+    protected ApiKeyRepository apiKeyRepository;
 
     protected Request request;
 
@@ -64,7 +64,7 @@ public abstract class IntegrationTest {
 
     protected Authenticator authenticator;
 
-    private UUID apiKey;
+    protected UUID apiKey;
 
     @BeforeEach
     public void setUp() {

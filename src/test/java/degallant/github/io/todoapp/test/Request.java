@@ -51,7 +51,7 @@ public class Request {
     }
 
     private RequestArguments makeArgs() {
-        return new RequestArguments(client, mapper, authenticator, apiKey);
+        return new RequestArguments(client, mapper, authenticator, apiKey.toString());
     }
 
     /**
@@ -103,6 +103,11 @@ public class Request {
 
         public Destination withBody(Object object) {
             arguments.setRawBody(object);
+            return this;
+        }
+
+        public Destination withApiKey(String key) {
+            arguments.setApiKey(key);
             return this;
         }
 
@@ -209,7 +214,7 @@ public class Request {
         private void setHeaders() {
             arguments.getClient().mutateWith((builder, httpHandlerBuilder, connector) -> {
                 builder.defaultHeader(HttpHeaders.ACCEPT, "application/json");
-                builder.defaultHeader("Client-Agent", arguments.getApiKey().toString());
+                builder.defaultHeader("Client-Agent", arguments.getApiKey());
                 for (String header : arguments.getHeaders().keySet()) {
                     builder.defaultHeader(header, arguments.getHeaders().get(header).toString());
                 }

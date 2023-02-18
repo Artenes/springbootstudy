@@ -17,7 +17,7 @@ class RequestArguments {
     private final Map<String, Object> body = new HashMap<>();
     private final Map<String, Object> params = new HashMap<>();
     private final Map<String, Object> headers = new HashMap<>();
-    private final UUID apiKey;
+    private String apiKey;
     private Request.AuthInfo authInfo;
     private String version;
     private URI uri;
@@ -27,7 +27,7 @@ class RequestArguments {
     private WebTestClient.BodyContentSpec bodySpec;
     private EntityExchangeResult<byte[]> response;
 
-    public RequestArguments(ClientProxy client, ObjectMapper mapper, Authenticator authenticator, UUID apiKey) {
+    public RequestArguments(ClientProxy client, ObjectMapper mapper, Authenticator authenticator, String apiKey) {
         this.client = client;
         this.mapper = mapper;
         this.authenticator = authenticator;
@@ -122,8 +122,11 @@ class RequestArguments {
         return headers;
     }
 
-    public UUID getApiKey() {
+    public String getApiKey() {
         return apiKey;
     }
 
+    public void setApiKey(String apiKey) {
+        this.apiKey = apiKey;
+    }
 }
