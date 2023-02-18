@@ -20,7 +20,8 @@ public class AuthTests extends IntegrationTest {
         try {
             request.asUser(DEFAULT_USER).to("auth/profile").get();
         } catch (AssertionError error) {
-            assertTrue(error.getMessage().contains("failed with status 409 BAD_REQUEST"), "Unexpected error " + error.getMessage());
+            var expected = "failed with status 409 CONFLICT";
+            assertTrue(error.getMessage().contains(expected), "The message " + expected + " was not found in " + error.getMessage());
         }
 
     }

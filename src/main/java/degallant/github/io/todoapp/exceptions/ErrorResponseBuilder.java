@@ -12,7 +12,6 @@ public class ErrorResponseBuilder {
     private final Exception exception;
     private HttpStatus status = HttpStatus.UNPROCESSABLE_ENTITY;
     private String detail = "";
-    private ErrorType type;
     private URI uriType;
     private String title;
     private boolean debug;
@@ -33,11 +32,6 @@ public class ErrorResponseBuilder {
 
     public ErrorResponseBuilder withDetail(String detail) {
         this.detail = detail;
-        return this;
-    }
-
-    public ErrorResponseBuilder withType(ErrorType type) {
-        this.type = type;
         return this;
     }
 
@@ -68,10 +62,6 @@ public class ErrorResponseBuilder {
                 status,
                 detail
         );
-
-        if (type != null) {
-            builder.type(type.getUri());
-        }
 
         if (uriType != null) {
             builder.type(uriType);

@@ -45,7 +45,7 @@ public class AppExceptionHandler {
                 .withTitle(messages.get("error.invalidrequest.title"))
                 .withDetail(messages.get("error.invalidrequest.detail"))
                 .withStatus(HttpStatus.BAD_REQUEST)
-                .withType(ErrorType.INVALID_REQUEST)
+                .withType(makeType("error.invalidrequest"))
                 .withProperty("errors", exception.getErrors().stream().map(this::toFieldAndErrorType).collect(Collectors.toList()))
                 .withDebug(debug)
                 .build();
@@ -76,7 +76,7 @@ public class AppExceptionHandler {
                 .withTitle(messages.get("error.invalidtoken.title"))
                 .withDetail(messages.get("error.invalidtoken.detail"))
                 .withStatus(HttpStatus.BAD_REQUEST)
-                .withType(ErrorType.INVALID_TOKEN)
+                .withType(makeType("error.invalidtoken"))
                 .withDebug(debug)
                 .build();
 
@@ -91,7 +91,7 @@ public class AppExceptionHandler {
                 .withTitle(messages.get("error.nosuchelement.title"))
                 .withDetail(messages.get("error.nosuchelement.detail"))
                 .withStatus(HttpStatus.NOT_FOUND)
-                .withType(ErrorType.NO_SUCH_ELEMENT)
+                .withType(makeType("error.nosuchelement"))
                 .withDebug(debug)
                 .build();
 
@@ -119,7 +119,7 @@ public class AppExceptionHandler {
                 .withTitle(messages.get("error.invalid_sort_title"))
                 .withDetail(details)
                 .withStatus(HttpStatus.BAD_REQUEST)
-                .withType(ErrorType.INVALID_SORT)
+                .withType(makeType("error.invalid_sort"))
                 .withDebug(debug)
                 .build();
 
@@ -134,7 +134,7 @@ public class AppExceptionHandler {
                 .withTitle(messages.get("error.invalidrequesttype.title"))
                 .withDetail(messages.get("error.invalidrequesttype.detail"))
                 .withStatus(HttpStatus.BAD_REQUEST)
-                .withType(ErrorType.INVALID_REQUEST_TYPE)
+                .withType(makeType("error.invalidrequesttype"))
                 .withDebug(debug)
                 .build();
 
@@ -149,7 +149,7 @@ public class AppExceptionHandler {
                 .withTitle(messages.get("error.notsupported.title"))
                 .withDetail(messages.get("error.notsupported.detail", exception.getMethod()))
                 .withStatus(HttpStatus.METHOD_NOT_ALLOWED)
-                .withType(ErrorType.METHOD_NOT_ALLOWED)
+                .withType(makeType("error.notsupported"))
                 .withDebug(debug)
                 .build();
 
@@ -164,7 +164,7 @@ public class AppExceptionHandler {
                 .withTitle(messages.get("error.server.title"))
                 .withDetail(messages.get("error.server.detail"))
                 .withStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-                .withType(ErrorType.INTERNAL_SERVER_ERROR)
+                .withType(makeType("error.server"))
                 .withDebug(debug)
                 .build();
 
@@ -233,7 +233,6 @@ public class AppExceptionHandler {
         );
     }
 
-    //TODO change all typing to this
     private URI makeType(String type) {
         return URI.create("https://todoapp.com/" + type);
     }
