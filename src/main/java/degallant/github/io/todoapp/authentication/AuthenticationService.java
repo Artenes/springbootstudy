@@ -44,6 +44,52 @@ public class AuthenticationService {
         return new TokenPair(accessToken, refreshToken);
     }
 
+    public Authentication authenticateAdminWith(OpenIdUser openIdUser) throws InvalidStateException {
+
+        Optional<UserEntity> user = repository.findByEmail(openIdUser.email());
+        Optional<UserEntity> anAdmin = repository.findByRole(Role.ROLE_ADMIN);
+
+        if (user.isEmpty() && anAdmin.isPresent()) {
+            throw new InvalidStateException("error.user_cannot_create_another_admin", openIdUser.email());
+        }
+
+        if (user.isPresent() && user.get().isDeleted()) {
+            throw new InvalidStateException("error.user_deleted", user.get().getId());
+        }
+
+        if (user.isPresent() && user.get().getRole() != Role.ROLE_ADMIN) {
+            throw new InvalidStateException("error.user_invalid_role", user.get().getId(), user.get().getRole());
+        }
+
+        UserEntity userEntity;
+        boolean isNewUser;
+
+        if (user.isPresent()) {
+            userEntity = user.get();
+            isNewUser = false;
+        } else {
+            UserEntity newUser = UserEntity.builder()
+                    .email(openIdUser.email())
+                    .name(openIdUser.name())
+                    .pictureUrl(openIdUser.pictureUrl())
+                    .role(Role.ROLE_ADMIN)
+                    .build();
+            userEntity = repository.save(newUser);
+            isNewUser = true;
+        }
+
+        var tokens = refresh(userEntity);
+
+        UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                userEntity,
+                tokens,
+                Collections.emptyList()
+        );
+        authentication.setDetails(isNewUser);
+        return authentication;
+
+    }
+
     public Authentication authenticateWith(OpenIdUser openIdUser) throws InvalidStateException {
         Optional<UserEntity> user = repository.findByEmail(openIdUser.email());
 

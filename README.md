@@ -1,36 +1,52 @@
 # TO DO
 
-- add api keys management for client access and track usage
+# stress tests
 
-- deal with logging and monitoring
-
+- see how to do stress test on spring boot app
 - check about caching - Cache-Control header
-
 - deal with rate limit
+- load balance
 
-- check about graphql
-
-- get back to OpenAPI/Swagger
+# security
 
 - check about CORS
 
-- add support to check style
+# log and monitoring
 
-- see how to do stress test on spring boot app
+- logstash, kibana and elasticsearch
+- logs configuration for production (identify logs by user uuid maybe?)
+
+# notification channels
+
+- message queues
+- emails
+- sms
+- slack/discord
+
+# others
+
+- add support to check style
 
 - practice regex?
 
 - check about docker
 
-- create admin application
+- improve admin endpoint and change authentication to password
   - manage users
   - manage admins
   - different auth process
   - manage api keys
+  - allow creation of access keys for tests
+
+- create empty sample project based on this one
+
+- deploy application to AWS
 
 - write about everything
 
-- create empty sample project based on this one
+- check about graphql
+
+- get back to OpenAPI/Swagger
 
 # Explanations
 

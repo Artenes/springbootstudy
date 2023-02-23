@@ -53,7 +53,7 @@ public abstract class IntegrationTest {
     protected JwtToken token;
 
     @Autowired
-    private UsersRepository usersRepository;
+    protected UsersRepository usersRepository;
 
     @Autowired
     protected ApiKeyRepository apiKeyRepository;
@@ -74,10 +74,9 @@ public abstract class IntegrationTest {
         authenticator = new Authenticator(proxy, openIdTokenParser, mapper, apiKey);
         request = new Request(proxy, authenticator, mapper, apiKey);
         entityRequest = new EntityRequest(request);
-        makeAdmin();
     }
 
-    private void makeAdmin() {
+    protected void makeAdmin() {
         var id = authenticator.makeUser(ADMIN_USER);
         var entity = usersRepository.findById(id).orElseThrow();
         entity.setRole(Role.ROLE_ADMIN);

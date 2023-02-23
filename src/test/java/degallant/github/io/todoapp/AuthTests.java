@@ -1,6 +1,7 @@
 package degallant.github.io.todoapp;
 
 import degallant.github.io.todoapp.test.IntegrationTest;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.UUID;
@@ -8,6 +9,13 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class AuthTests extends IntegrationTest {
+
+    @Override
+    @BeforeEach
+    public void setUp() {
+        super.setUp();
+        makeAdmin();
+    }
 
     @Test
     public void all_fails_user_authentication_when_deleted() {

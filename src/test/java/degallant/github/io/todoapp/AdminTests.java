@@ -1,11 +1,19 @@
 package degallant.github.io.todoapp;
 
 import degallant.github.io.todoapp.test.IntegrationTest;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.UUID;
 
 public class AdminTests extends IntegrationTest {
+
+    @Override
+    @BeforeEach
+    public void setUp() {
+        super.setUp();
+        makeAdmin();
+    }
 
     @Test
     public void delete_fails_delete_user_resource_access() {
