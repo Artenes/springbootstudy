@@ -36,10 +36,6 @@ public class RoutesConfiguration {
         //TODO format response when user does not have access
         //TODO generalize matches so version is not take into account
 
-        //TODO allow registration of admin users
-        //TODO allow user-password authentication in /admin/registration and /admin/login endpoints
-        //TODO block access to admin routes to only authenticated users of admin type
-
         http
                 .csrf().disable()
                 .authorizeHttpRequests(authorize -> authorize

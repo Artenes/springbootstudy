@@ -41,6 +41,12 @@ public class AdminController {
     private final ProjectsRepository projectsRepository;
     private final UsersFieldParser userParser;
 
+    //TODO add endpoint - POST /admin/admins - create new admin user
+    //TODO add endpoint - DELETE /admin/admins - delete an admin user
+    //TODO add endpoint - POST /admin/keys - make a new api key
+    //TODO add endpoint - DELETE /admin/keys - delete api key
+    //TODO add endpoint - POST /admin/tokens - make a new access token for tests that last 1 day
+
     @PostMapping("/promote")
     public ResponseEntity<?> promote(@RequestBody AuthDto.Promote request, Authentication authentication) {
         var user = (UserEntity) authentication.getPrincipal();
