@@ -6,7 +6,6 @@ import degallant.github.io.todoapp.common.PagedResponse;
 import degallant.github.io.todoapp.domain.users.UserEntity;
 import degallant.github.io.todoapp.sanitization.FieldValidator;
 import degallant.github.io.todoapp.sanitization.SanitizedCollection;
-import degallant.github.io.todoapp.sanitization.SanitizedValue;
 import degallant.github.io.todoapp.sanitization.Sanitizer;
 import degallant.github.io.todoapp.sanitization.parsers.PrimitiveFieldParser;
 import degallant.github.io.todoapp.sanitization.parsers.SortingFieldParser;
@@ -23,7 +22,6 @@ import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 /**

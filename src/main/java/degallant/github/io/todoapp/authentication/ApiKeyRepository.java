@@ -11,4 +11,6 @@ public interface ApiKeyRepository extends JpaRepository<ApiKeyEntity, UUID> {
 
     Optional<ApiKeyEntity> findByIdAndDeletedAtIsNull(UUID id);
 
+    Optional<ApiKeyEntity> findByName(String name);
+
 }

@@ -1,9 +1,13 @@
 package degallant.github.io.todoapp.domain.tasks;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import degallant.github.io.todoapp.domain.users.UserEntity;
 import degallant.github.io.todoapp.sanitization.parsers.TasksFieldParser;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.CacheManager;
 import org.springframework.hateoas.RepresentationModel;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -11,7 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import java.time.OffsetDateTime;
 
 /**
- * @noinspection ClassCanBeRecord, unused
+ * @noinspection ClassCanBeRecord, unused, ConstantConditions
  */
 @RestController
 @RequiredArgsConstructor
@@ -24,11 +28,16 @@ public class TasksController {
     private final PatchTasksService patchService;
     private final TasksRepository repository;
     private final TasksFieldParser parser;
+    private final CacheManager cacheManager;
+    private final ObjectMapper mapper;
 
     @PostMapping
     public ResponseEntity<?> create(@RequestBody TasksDto.Create request, Authentication authentication) {
 
-        var uri = createService.create(request, (UserEntity) authentication.getPrincipal());
+        var user = (UserEntity) authentication.getPrincipal();
+        var uri = createService.create(request, user);
+
+        invalidateCacheList(user);
 
         return ResponseEntity.created(uri).build();
 
@@ -37,7 +46,10 @@ public class TasksController {
     @PatchMapping("/{id}")
     public ResponseEntity<?> patch(@PathVariable String id, @RequestBody TasksDto.Create request, Authentication authentication) {
 
-        if (patchService.patch(id, request, (UserEntity) authentication.getPrincipal())) {
+        var user = (UserEntity) authentication.getPrincipal();
+
+        if (patchService.patch(id, request, user)) {
+            invalidateCacheList(user);
             return ResponseEntity.ok().build();
         }
 
@@ -55,14 +67,26 @@ public class TasksController {
             Authentication authentication
     ) {
 
+        var user = (UserEntity) authentication.getPrincipal();
+
+        var cache = cacheManager.getCache("user:" + user.getId() + ":tasks");
+        var cacheId = "page:" + requestedPageNumber + ":sort:" + sort + ":title:" + title + ":dueDate:" + dueDate + ":complete:" + requestedComplete;
+        var cachedValue = cache.get(cacheId, String.class);
+
+        if (cachedValue != null) {
+            return ResponseEntity.ok().contentType(MediaType.valueOf("application/hal+json")).body(cachedValue);
+        }
+
         RepresentationModel<?> response = listService.list(
                 requestedPageNumber,
                 sort,
                 title,
                 dueDate,
                 requestedComplete,
-                (UserEntity) authentication.getPrincipal()
+                user
         );
+
+        cache.put(cacheId, serialize(response));
 
         return ResponseEntity.ok(response);
 
@@ -86,8 +110,23 @@ public class TasksController {
         task.setDeletedAt(OffsetDateTime.now());
         repository.save(task);
 
+        invalidateCacheList(user);
+
         return ResponseEntity.noContent().build();
 
+    }
+
+    private String serialize(RepresentationModel<?> model) {
+        try {
+            return mapper.writeValueAsString(model);
+        } catch (JsonProcessingException exception) {
+            throw new RuntimeException(exception);
+        }
+    }
+
+    private void invalidateCacheList(UserEntity user) {
+        var cache = cacheManager.getCache("user:" + user.getId() + ":tasks");
+        cache.invalidate();
     }
 
 }

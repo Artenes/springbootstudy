@@ -7,6 +7,12 @@
 - deal with rate limit
 - load balance
 
+# async processing
+
+- long term execution with jobs
+- Spring Async
+- Spring Webflux
+
 # security
 
 - check about CORS
@@ -15,6 +21,10 @@
 
 - logstash, kibana and elasticsearch
 - logs configuration for production (identify logs by user uuid maybe?)
+
+# tests
+
+- other forms of tests that are not based on black-box
 
 # notification channels
 
@@ -50,6 +60,15 @@
 
 # Explanations
 
+## Load balance testing
+
+- Apache JMeter - stress test to help find bottlenecks or to just stress the app to see how it will behave
+
+## Postgres
+
+``psql -U postgres``
+``\l`` -  list all databases
+
 ## Timezone
 - when saving dates in database, the datetime field will be normalized to UTC+0 by spring JPA
 - when retrieving dates in database, the datetime field will be normalized to UTC+/- current JVM timezone
@@ -58,6 +77,14 @@
 - we use ISO 8601 to display the date back to user
 
 # Questions
+
+## Stress test with JMeter
+
+Latency: The number of milliseconds that elapsed between when JMeter sent the request and when an initial response was received
+
+Load Time: The number of milliseconds that the server took to fully serve the request (response + latency)
+
+According to the View Results in Tree output, the load Time is 144. This is fairly a high value for a simple Rest API, but in my case, this endpoint does few heavy tasks and that is acceptable for me. You might be having different results than me based on what your REST API endpoint does and based on other factors, such as; geographical distance (which generally increases latency), the size of the requested item (which increases transfer time) etc.. So don’t worry about the result, if you have different values than mine.
 
 ## How to manage admin routes and other sensitive data?
 
