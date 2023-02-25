@@ -1,11 +1,30 @@
-# TO DO
+# Spring Boot Playground
 
-# stress tests
+My personal BOK for things related to back-end engineering and spring boot.
 
-- see how to do stress test on spring boot app
-- check about caching - Cache-Control header
-- deal with rate limit
+Don't mind the mess!
+
+# Index
+
+## Spring boot
+- [URI building](docs/uri-building.md)
+
+## Performance
+- Load balancing test (Apache Jmeter)
+- Cache at server side (Redis)
+- Cache at client site (Cache-Control header)
+- [Rate Limit](https://reflectoring.io/rate-limiting-with-resilience4j/)
+- [Circuit Breaker](https://reflectoring.io/circuitbreaker-with-resilience4j/)
+- [Bulkhead](https://reflectoring.io/bulkhead-with-resilience4j/)
+- [Timeouts](https://reflectoring.io/time-limiting-with-resilience4j/)
+- [Retry](https://reflectoring.io/retry-with-resilience4j/)
 - load balance
+
+## Monitoring
+
+- logstash, kibana and elasticsearch
+- logs configuration for production (identify logs by user uuid maybe?)
+- health checks
 
 # async processing
 
@@ -17,11 +36,6 @@
 
 - check about CORS
 
-# log and monitoring
-
-- logstash, kibana and elasticsearch
-- logs configuration for production (identify logs by user uuid maybe?)
-
 # tests
 
 - other forms of tests that are not based on black-box
@@ -31,7 +45,7 @@
 - message queues
 - emails
 - sms
-- slack/discord
+- slack
 
 # others
 
@@ -75,6 +89,28 @@
 - so, when sending a response to the client, the datetime must be changed to the user's preferred timezone
 - there might be a need to configure either mysql or postgres to use UTC by default as timezone when saving datetime information
 - we use ISO 8601 to display the date back to user
+
+## Cache header and cache engines
+
+A cache header and a cache database like Redis serve different purposes and can be used together to optimize web application performance. Here are some scenarios where you might choose one over the other:
+
+Use a cache header when:
+
+You want to cache a static resource: If the resource is static (e.g., images, CSS, JavaScript files), you can use cache headers to instruct the browser to cache the resource. This can improve the page load time for subsequent requests.
+
+You want to control the caching behavior for a specific resource: If you want to control the caching behavior for a specific resource, you can use cache headers to set the caching rules. For example, you can set the max-age directive to specify the maximum time a resource can be cached.
+
+You want to minimize server load: If you have a high-traffic website and want to reduce the load on your servers, you can use cache headers to instruct the browser to cache resources. This can reduce the number of requests your server has to handle.
+
+Use a cache database like Redis when:
+
+You want to cache dynamic data: If your web application generates dynamic content that cannot be cached using headers, you can use a cache database like Redis to store the results of database queries or expensive computations. This can reduce the response time for subsequent requests.
+
+You want to share cache data across multiple servers: If you have a distributed web application running on multiple servers, you can use a cache database like Redis to store the cache data. This ensures that all servers can access the same cache data, improving the cache hit rate.
+
+You want more control over the cache eviction policy: If you want to control when the cache data is evicted, you can use a cache database like Redis to set the eviction policy. Redis supports various eviction policies, such as time-based eviction, LRU (least recently used) eviction, and LFU (least frequently used) eviction.
+
+In summary, a cache header and a cache database like Redis can be used together to optimize web application performance. Use a cache header when you want to cache static resources or control the caching behavior for specific resources. Use a cache database like Redis when you want to cache dynamic data, share cache data across multiple servers, or have more control over the cache eviction policy.
 
 # Questions
 
@@ -156,9 +192,5 @@ process (e.g. 2FA) and limiting its access by IP address so only some people can
 - Internationalization tutorial https://reflectoring.io/spring-boot-internationalization/
 
 - Validation tutorial https://reflectoring.io/bean-validation-with-spring-boot
-
-- Removing query args from url https://github.com/spring-projects/spring-hateoas/issues/535
-
-- Examples on how to use uri building https://github.com/spring-projects/spring-hateoas/blob/0.23.0.RELEASE/src/test/java/org/springframework/hateoas/mvc/ControllerLinkBuilderUnitTest.java#L57
 
 - HAL pagination https://apigility.org/documentation/api-primer/halprimer
