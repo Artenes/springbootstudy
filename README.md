@@ -13,8 +13,9 @@ Don't mind the mess! This is more of a playground to test and keep track of thin
 
 ## Responses
 - [HATEOAS and HAL](docs/hateoas-hal.md)
-- [Paging, Filtering, Sorting]()
+- [Paging, Filtering, Sorting](docs/paging-filtering-sorting.md)
 - [URI building](docs/uri-building.md)
+- [Internationalization](docs/internationalization.md)
 
 ## Performance
 - Load balancing test (Apache Jmeter)
@@ -191,5 +192,3 @@ process (e.g. 2FA) and limiting its access by IP address so only some people can
 - Error response standards https://www.rfc-editor.org/rfc/rfc7807.html
 
 - Exception handling tutorial https://reflectoring.io/spring-boot-exception-handling/
-
-- Internationalization tutorial https://reflectoring.io/spring-boot-internationalization/
