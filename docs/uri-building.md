@@ -32,7 +32,7 @@ The HATEOAS API for generating URIs is not flexible. You will face problems spec
 
 Because of this edge case and other ones that I am yet to face, I rather manually generate the URIs to have more control of what is displayed at a given time.
 
-You can get the base URL of the application with this method:
+You can get the base URL of the application with this method (no, spring boot does not provide any simple way to just get the base url of the application):
 
 ````java
 private String makeBaseUrl() {

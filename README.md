@@ -1,12 +1,19 @@
 # Spring Boot Playground
 
-My personal BOK for things related to back-end engineering and spring boot.
+My personal BOK for things related to back-end engineering in a spring boot and java contexts.
 
-Don't mind the mess!
+Most examples present on ``docs`` folder are snippets from the code, so they will probably not make sense right away. 
+
+Don't mind the mess! This is more of a playground to test and keep track of things I am learning.
 
 # Index
 
-## Spring boot
+## Requests
+- [Validation](docs/validation.md)
+
+## Responses
+- [HATEOAS and HAL](docs/hateoas-hal.md)
+- [Paging, Filtering, Sorting]()
 - [URI building](docs/uri-building.md)
 
 ## Performance
@@ -181,16 +188,8 @@ process (e.g. 2FA) and limiting its access by IP address so only some people can
 
 - api versioning https://www.troyhunt.com/your-api-versioning-is-wrong-which-is/
 
-- HATEOAS https://stateless.co/hal_specification.html https://restfulapi.net/hateoas/
-
-- API paging https://www.mixmax.com/engineering/api-paging-built-the-right-way
-
 - Error response standards https://www.rfc-editor.org/rfc/rfc7807.html
 
 - Exception handling tutorial https://reflectoring.io/spring-boot-exception-handling/
 
 - Internationalization tutorial https://reflectoring.io/spring-boot-internationalization/
-
-- Validation tutorial https://reflectoring.io/bean-validation-with-spring-boot
-
-- HAL pagination https://apigility.org/documentation/api-primer/halprimer
