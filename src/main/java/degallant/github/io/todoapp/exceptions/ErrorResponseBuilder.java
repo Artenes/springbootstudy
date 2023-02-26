@@ -1,8 +1,6 @@
 package degallant.github.io.todoapp.exceptions;
 
-import com.google.api.client.http.HttpStatusCodes;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.web.ErrorResponse;
 
 import java.net.URI;
@@ -55,14 +53,6 @@ public class ErrorResponseBuilder {
     public ErrorResponseBuilder withDebug(boolean debug) {
         this.debug = debug;
         return this;
-    }
-
-    public ErrorResponse test() {
-        var builder = ErrorResponse.builder(new Exception(), HttpStatus.NOT_FOUND, "Requested element was not found");
-        builder.title("Not found");
-        builder.type(URI.create("http://app.com/error/not_found"));
-        builder.property("fieldA", "value");
-        return builder.build();
     }
 
     public ErrorResponse build() {
