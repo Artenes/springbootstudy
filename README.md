@@ -8,14 +8,22 @@ Don't mind the mess! This is more of a playground to test and keep track of thin
 
 # Index
 
-## Requests
+## Request
 - [Validation](docs/validation.md)
+- [API versioning](docs/api-versioning.md)
+- [Security](docs/security.md)
 
-## Responses
+## Response
 - [HATEOAS and HAL](docs/hateoas-hal.md)
 - [Paging, Filtering, Sorting](docs/paging-filtering-sorting.md)
 - [URI building](docs/uri-building.md)
 - [Internationalization](docs/internationalization.md)
+- [Exception Handling](docs/exception-handling.md)
+
+## Others
+- [Dealing with date and time](docs/dealing-date-time.md)
+- [API design](docs/api-design.md)
+- [Spring JPA](docs/spring-jpa.md)
 
 ## Performance
 - Load balancing test (Apache Jmeter)
@@ -174,21 +182,3 @@ process (e.g. 2FA) and limiting its access by IP address so only some people can
     - ignore deleted items
     - show dates according to offset in header
     - ignore resources that belong to other users
-
-# References
-
-- rest api design https://stackoverflow.blog/2020/03/02/best-practices-for-rest-api-design/
-
-- about date time in java https://reflectoring.io/spring-timezones/
-
-- retardedly, you can't have enums in the database and bring them to hibernate, maybe this can help: https://docs.jboss.org/hibernate/orm/6.1/userguide/html_single/Hibernate_User_Guide.html#basic-enums
-
-- when creating queries in a repository, by default it uses JPQL
-
-- top 10 security issues with rest apis https://github.com/OWASP/API-Security
-
-- api versioning https://www.troyhunt.com/your-api-versioning-is-wrong-which-is/
-
-- Error response standards https://www.rfc-editor.org/rfc/rfc7807.html
-
-- Exception handling tutorial https://reflectoring.io/spring-boot-exception-handling/

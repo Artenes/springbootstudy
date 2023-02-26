@@ -45,6 +45,10 @@ And in the method add the validation rule to the argument (in this case is the `
 public ResponseEntity<?> list(@Positive @RequestParam(name = "p", defaultValue = "1") int page)
 ````
 
+## Dealing with validation errors
+
+Checkout the [Exception Handling](exception-handling.md) page for more details.
+
 ## Limitations
 
 This validation mechanism is not that flexible because it tight everything together using annotations, which makes harder
