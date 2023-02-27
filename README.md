@@ -20,6 +20,9 @@ Don't mind the mess! This is more of a playground to test and keep track of thin
 - [Internationalization](docs/internationalization.md)
 - [Exception Handling](docs/exception-handling.md)
 
+## DevOps
+- [AWS Overview](docs/aws-overview.md)
+
 ## Others
 - [Dealing with date and time](docs/dealing-date-time.md)
 - [API design](docs/api-design.md)
