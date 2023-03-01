@@ -22,6 +22,7 @@ Don't mind the mess! This is more of a playground to test and keep track of thin
 
 ## DevOps
 - [AWS Overview](docs/aws-overview.md)
+- [Elastic Beanstalk](docs/elastic-beanstalk.md)
 
 ## Others
 - [Dealing with date and time](docs/dealing-date-time.md)
