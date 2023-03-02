@@ -2,11 +2,17 @@ package degallant.github.io.todoapp.domain.tasks;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import degallant.github.io.todoapp.OffsetHolder;
 import degallant.github.io.todoapp.domain.users.UserEntity;
 import degallant.github.io.todoapp.sanitization.parsers.TasksFieldParser;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.CacheManager;
 import org.springframework.hateoas.RepresentationModel;
+import org.springframework.hateoas.mediatype.MessageResolver;
+import org.springframework.hateoas.mediatype.hal.CurieProvider;
+import org.springframework.hateoas.mediatype.hal.Jackson2HalModule;
+import org.springframework.hateoas.server.core.AnnotationLinkRelationProvider;
+import org.springframework.hateoas.server.core.DelegatingLinkRelationProvider;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -30,6 +36,7 @@ public class TasksController {
     private final TasksFieldParser parser;
     private final CacheManager cacheManager;
     private final ObjectMapper mapper;
+    private final OffsetHolder offsetHolder;
 
     @PostMapping
     public ResponseEntity<?> create(@RequestBody TasksDto.Create request, Authentication authentication) {
@@ -70,7 +77,7 @@ public class TasksController {
         var user = (UserEntity) authentication.getPrincipal();
 
         var cache = cacheManager.getCache("user:" + user.getId() + ":tasks");
-        var cacheId = "page:" + requestedPageNumber + ":sort:" + sort + ":title:" + title + ":dueDate:" + dueDate + ":complete:" + requestedComplete;
+        var cacheId = "offset=" + offsetHolder.getOffset() + "&page=" + requestedPageNumber + "&sort=" + sort + "&title=" + title + "&dueDate=" + dueDate + "&complete=" + requestedComplete;
         var cachedValue = cache.get(cacheId, String.class);
 
         if (cachedValue != null) {
@@ -86,7 +93,8 @@ public class TasksController {
                 user
         );
 
-        cache.put(cacheId, serialize(response));
+        var serialized = serialize(response);
+        cache.put(cacheId, serialized);
 
         return ResponseEntity.ok(response);
 
@@ -116,9 +124,13 @@ public class TasksController {
 
     }
 
-    private String serialize(RepresentationModel<?> model) {
+    private String serialize(Object model) {
         try {
-            return mapper.writeValueAsString(model);
+            var provider = new DelegatingLinkRelationProvider(new AnnotationLinkRelationProvider());
+            var instantiator = new Jackson2HalModule.HalHandlerInstantiator(provider, CurieProvider.NONE, MessageResolver.DEFAULTS_ONLY);
+            mapper.registerModule(new Jackson2HalModule());
+            mapper.setHandlerInstantiator(instantiator);
+            return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(model);
         } catch (JsonProcessingException exception) {
             throw new RuntimeException(exception);
         }

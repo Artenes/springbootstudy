@@ -4,9 +4,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import degallant.github.io.todoapp.authentication.ApiKeyEntity;
 import degallant.github.io.todoapp.authentication.ApiKeyRepository;
 import degallant.github.io.todoapp.authentication.JwtToken;
-import degallant.github.io.todoapp.openid.OpenIdTokenParser;
 import degallant.github.io.todoapp.domain.users.Role;
 import degallant.github.io.todoapp.domain.users.UsersRepository;
+import degallant.github.io.todoapp.openid.OpenIdTokenParser;
 import net.minidev.json.JSONArray;
 import org.flywaydb.core.Flyway;
 import org.junit.jupiter.api.AfterEach;
@@ -15,12 +15,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.reactive.server.JsonPathAssertions;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
+import java.util.Objects;
 import java.util.UUID;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -58,6 +62,9 @@ public abstract class IntegrationTest {
     @Autowired
     protected ApiKeyRepository apiKeyRepository;
 
+    @Autowired
+    private CacheManager cacheManager;
+
     protected Request request;
 
     protected EntityRequest entityRequest;
@@ -92,6 +99,7 @@ public abstract class IntegrationTest {
     @AfterEach
     public void tearDown() {
         flyway.clean();
+        cacheManager.getCacheNames().stream().map(name -> cacheManager.getCache(name)).filter(Objects::nonNull).forEach(Cache::invalidate);
     }
 
     protected Consumer<JsonPathAssertions> isEqualTo(Object value) {
