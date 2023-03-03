@@ -51,14 +51,14 @@ public class DatabaseSeeder {
             user.ifPresent(userEntity -> {
 
                 var token = jwtToken.make().withSubject(userEntity.getId()).withExpiresAt(Instant.now().plus(1, ChronoUnit.DAYS)).build();
-                log.debug("Access token for tests {}", token);
+                log.info("Access token for tests {}", token);
 
             });
 
             var key = apiKeyRepository.findByName("Root");
             key.ifPresent(apiKeyEntity -> {
 
-                log.debug("API key for tests {}", apiKeyEntity.getId());
+                log.info("API key for tests {}", apiKeyEntity.getId());
 
             });
 
