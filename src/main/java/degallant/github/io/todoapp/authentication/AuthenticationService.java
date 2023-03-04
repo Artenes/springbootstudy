@@ -11,6 +11,7 @@ import degallant.github.io.todoapp.sanitization.InvalidValueException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
@@ -24,10 +25,9 @@ import java.util.Optional;
 public class AuthenticationService {
 
     private final UsersRepository repository;
-
     private final OpenIdTokenParser openIdTokenParser;
-
     private final JwtToken token;
+    private final PasswordEncoder passwordEncoder;
 
     public OpenIdUser parseOpenIdOrThrow(String openIdToken) throws InvalidValueException {
         try {
@@ -123,6 +123,31 @@ public class AuthenticationService {
         );
         authentication.setDetails(isNewUser);
         return authentication;
+    }
+
+    public Authentication authenticateWithEmail(String email, String password) throws InvalidStateException {
+        Optional<UserEntity> user = repository.findByEmail(email);
+
+        if (user.isPresent() && user.get().isDeleted()) {
+            throw new InvalidStateException("error.user_deleted", user.get().getId());
+        }
+
+        if (user.isEmpty()) {
+            throw new InvalidStateException("error.email_not_found", email);
+        }
+
+        if (!passwordEncoder.matches(password, user.get().getPassword())) {
+            throw new InvalidStateException("error.invalid_password");
+        }
+
+        var tokens = refresh(user.get());
+
+        return new UsernamePasswordAuthenticationToken(
+                user.get(),
+                tokens,
+                Collections.emptyList()
+        );
+
     }
 
     public Authentication authenticateWithJwtToken(String jwtToken) throws JwtTokenException {

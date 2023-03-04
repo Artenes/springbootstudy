@@ -1,5 +1,7 @@
 package degallant.github.io.todoapp;
 
+import degallant.github.io.todoapp.domain.users.Role;
+import degallant.github.io.todoapp.domain.users.UserEntity;
 import degallant.github.io.todoapp.test.IntegrationTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -308,6 +310,43 @@ public class AuthTests extends IntegrationTest {
                 .hasField("$.total_comments", isEqualTo(4))
                 .hasField("$.total_tags", isEqualTo(2))
                 .hasField("$.total_projects", isEqualTo(1));
+
+    }
+
+    @Test
+    public void authenticate_fails_invalid_data() {
+
+        request.asGuest().to("auth/email")
+                .withField("random", "value")
+                .post().isBadRequest()
+                .hasField("$.errors[?(@.field == 'email')].type", firstContains("validation.is_required"))
+                .hasField("$.errors[?(@.field == 'password')].type", firstContains("validation.is_required"));
+
+        request.asGuest().to("auth/email")
+                .withField("email", "")
+                .withField("password", "")
+                .post().isBadRequest()
+                .hasField("$.errors[?(@.field == 'email')].type", firstContains("validation.not_a_email"))
+                .hasField("$.errors[?(@.field == 'password')].type", firstContains("validation.is_empty"));
+
+    }
+
+    @Test
+    public void authenticate_success_with_password() {
+
+        usersRepository.save(UserEntity.builder()
+                .email(DEFAULT_USER)
+                .name("Default")
+                .password(passwordEncoder.encode("changeme"))
+                .role(Role.ROLE_ADMIN)
+                .build());
+
+        request.asGuest().to("auth/email")
+                .withField("email", DEFAULT_USER)
+                .withField("password", "changeme")
+                .post().isOk()
+                .hasField("$.access_token", exists())
+                .hasField("$.refresh_token", exists());
 
     }
 

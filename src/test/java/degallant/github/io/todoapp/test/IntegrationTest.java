@@ -17,6 +17,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.reactive.server.JsonPathAssertions;
 import org.springframework.test.web.reactive.server.WebTestClient;
@@ -64,6 +65,9 @@ public abstract class IntegrationTest {
 
     @Autowired
     private CacheManager cacheManager;
+
+    @Autowired
+    protected PasswordEncoder passwordEncoder;
 
     protected Request request;
 

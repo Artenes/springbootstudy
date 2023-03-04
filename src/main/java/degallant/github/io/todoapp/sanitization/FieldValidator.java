@@ -11,6 +11,7 @@ import java.net.URL;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
@@ -27,7 +28,7 @@ public class FieldValidator {
     }
 
     public void isNotEmpty(String value) throws InvalidValueException {
-        if (value.isEmpty()) {
+        if (value == null || value.isEmpty()) {
             throwError("validation.is_empty");
         }
     }
@@ -62,6 +63,12 @@ public class FieldValidator {
 
     public void throwError(String messageId, Object... args) throws InvalidValueException {
         throw new InvalidValueException(messageId, args);
+    }
+
+    public void isEmail(String value) throws InvalidValueException {
+        if (!Pattern.compile("^(.+)@(\\S+)$").matcher(value).matches()) {
+            throwError("validation.not_a_email", value);
+        }
     }
 
     @RequiredArgsConstructor

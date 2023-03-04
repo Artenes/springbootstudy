@@ -15,6 +15,10 @@ public class AuthDto {
         @JsonProperty("open_id_token")
         private String openIdToken;
 
+        private String email;
+
+        private String password;
+
 
     }
     @Getter

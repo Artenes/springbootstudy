@@ -26,6 +26,8 @@ public class UserEntity extends BaseEntity {
 
     private String name;
 
+    private String password;
+
     @Column(name = "picture_url")
     private String pictureUrl;
 

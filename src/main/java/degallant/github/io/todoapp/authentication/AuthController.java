@@ -1,16 +1,19 @@
 package degallant.github.io.todoapp.authentication;
 
 import degallant.github.io.todoapp.common.LinkBuilder;
-import degallant.github.io.todoapp.exceptions.AppExceptionHandler;
 import degallant.github.io.todoapp.domain.projects.ProjectsController;
 import degallant.github.io.todoapp.domain.tags.TagsController;
 import degallant.github.io.todoapp.domain.tasks.TasksController;
 import degallant.github.io.todoapp.domain.users.UserEntity;
 import degallant.github.io.todoapp.domain.users.UsersDto;
 import degallant.github.io.todoapp.domain.users.UsersRepository;
-import degallant.github.io.todoapp.sanitization.parsers.PrimitiveFieldParser;
+import degallant.github.io.todoapp.exceptions.AppExceptionHandler;
+import degallant.github.io.todoapp.exceptions.InvalidStateException;
+import degallant.github.io.todoapp.sanitization.FieldAndErrorMessage;
 import degallant.github.io.todoapp.sanitization.FieldValidator;
+import degallant.github.io.todoapp.sanitization.InvalidRequestException;
 import degallant.github.io.todoapp.sanitization.Sanitizer;
+import degallant.github.io.todoapp.sanitization.parsers.PrimitiveFieldParser;
 import lombok.RequiredArgsConstructor;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.Link;
@@ -36,6 +39,44 @@ public class AuthController {
     private final LinkBuilder link;
     private final AppExceptionHandler handler;
     private final UsersRepository usersRepository;
+
+    @PostMapping("email")
+    public ResponseEntity<?> authenticateWithEmail(@RequestBody AuthDto.Authenticate request) {
+
+        var result = sanitizer.sanitize(
+                sanitizer.field("email").withRequiredValue(request.getEmail()).sanitize(value -> {
+                    rules.isEmail(value);
+                    return value;
+                }),
+                sanitizer.field("password").withRequiredValue(request.getPassword()).sanitize(value -> {
+                    rules.isNotEmpty(value);
+                    return value;
+                })
+        );
+
+        try {
+            var authenticatedUser = service.authenticateWithEmail(result.get("email").value(), result.get("password").value());
+            var credentials = (AuthenticationService.TokenPair) authenticatedUser.getCredentials();
+
+            var tokenPair = AuthDto.TokenPair.builder()
+                    .accessToken(credentials.accessToken())
+                    .refreshToken(credentials.refreshToken())
+                    .build();
+
+            var linkSelf = link.to("auth").slash("profile").withSelfRel();
+            var response = EntityModel.of(tokenPair).add(linkSelf);
+
+            return ResponseEntity.ok().body(response);
+
+        } catch (InvalidStateException exception) {
+            switch (exception.getMessageId()) {
+                case "error.email_not_found" -> throw new InvalidRequestException(new FieldAndErrorMessage("email", "body", "error.email_not_found", result.get("email")));
+                case "error.invalid_password" -> throw new InvalidRequestException(new FieldAndErrorMessage("password", "body", "error.invalid_password"));
+            }
+            throw exception;
+        }
+
+    }
 
     @PostMapping
     public ResponseEntity<?> authenticate(@RequestBody AuthDto.Authenticate request) {

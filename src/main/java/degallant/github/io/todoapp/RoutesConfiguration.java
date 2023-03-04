@@ -40,6 +40,7 @@ public class RoutesConfiguration {
                 .csrf().disable()
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(HttpMethod.POST, "/v1/auth").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/v1/auth/email").permitAll()
                         .requestMatchers(HttpMethod.POST, "/v1/admin/auth").permitAll()
                         .requestMatchers("/v1/admin/**").access(withRole(Role.ROLE_ADMIN))
                         .anyRequest().access(withRole(Role.ROLE_USER))

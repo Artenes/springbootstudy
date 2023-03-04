@@ -11,6 +11,7 @@ CREATE TABLE users (
 	id uuid NOT NULL,
 	email varchar(255) UNIQUE NOT NULL,
 	name varchar(255) NOT NULL,
+	password varchar(255),
 	picture_url varchar(255),
 	role varchar(255) NOT NULL,
 	created_at timestamp with time zone,
