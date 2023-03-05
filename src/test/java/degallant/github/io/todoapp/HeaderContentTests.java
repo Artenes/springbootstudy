@@ -12,7 +12,7 @@ public class HeaderContentTests extends IntegrationTest {
         request.asUser(DEFAULT_USER).to("tasks")
                 .withHeader(HttpHeaders.ACCEPT_LANGUAGE, "")
                 .get().isBadRequest()
-                .hasField("$.errors[0].type", contains("validation.not_a_locale"));
+                .hasField("$.errors[0].type", contains("validation.invalid_locale"));
 
     }
 

@@ -19,6 +19,8 @@ Don't mind the mess! This is more of a playground to test and keep track of thin
 - [URI building](docs/uri-building.md)
 - [Internationalization](docs/internationalization.md)
 - [Exception Handling](docs/exception-handling.md)
+- [CORS](docs/cors.md)
+  https://github.com/spring-projects/spring-hateoas/issues/1306
 
 ## DevOps
 - [AWS Overview](docs/aws-overview.md)

@@ -341,12 +341,17 @@ public class AuthTests extends IntegrationTest {
                 .role(Role.ROLE_ADMIN)
                 .build());
 
-        request.asGuest().to("auth/email")
+        var body = request.asGuest().to("auth/email")
                 .withField("email", DEFAULT_USER)
                 .withField("password", "changeme")
                 .post().isOk()
                 .hasField("$.access_token", exists())
-                .hasField("$.refresh_token", exists());
+                .hasField("$.refresh_token", exists())
+                .getBody();
+
+        request.withToken(body.get("access_token").asText()).to("auth/profile")
+                .get().isOk()
+                .hasField("$.email", isEqualTo(DEFAULT_USER));
 
     }
 

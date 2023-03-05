@@ -1,5 +1,6 @@
 package degallant.github.io.todoapp;
 
+import degallant.github.io.todoapp.authentication.CorsAppConfiguration;
 import degallant.github.io.todoapp.authentication.JwtFilter;
 import degallant.github.io.todoapp.domain.users.Role;
 import org.springframework.context.annotation.Bean;
@@ -12,6 +13,11 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.intercept.RequestAuthorizationContext;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.Arrays;
 
 /**
  * @noinspection unused, SameParameterValue
@@ -21,11 +27,12 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class RoutesConfiguration {
 
     private final JwtFilter jwtFilter;
-
     private final RoleHierarchyImpl roleHierarchy;
+    private final CorsAppConfiguration corsAppConfiguration;
 
-    public RoutesConfiguration(JwtFilter jwtFilter) {
+    public RoutesConfiguration(JwtFilter jwtFilter, CorsAppConfiguration corsAppConfiguration) {
         this.jwtFilter = jwtFilter;
+        this.corsAppConfiguration = corsAppConfiguration;
         roleHierarchy = new RoleHierarchyImpl();
         roleHierarchy.setHierarchy("ROLE_ADMIN > ROLE_USER");
     }
@@ -45,10 +52,26 @@ public class RoutesConfiguration {
                         .requestMatchers("/v1/admin/**").access(withRole(Role.ROLE_ADMIN))
                         .anyRequest().access(withRole(Role.ROLE_USER))
                         .and().addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
-                );
+                )
+                .cors();
 
         return http.build();
 
+    }
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        var configuration = new CorsConfiguration();
+        configuration.setAllowedOrigins(Arrays.asList(corsAppConfiguration.allowedOrigins()));
+        configuration.setAllowedMethods(Arrays.asList(corsAppConfiguration.allowedMethods()));
+        configuration.setAllowedHeaders(Arrays.asList(corsAppConfiguration.allowedHeaders()));
+        configuration.setExposedHeaders(Arrays.asList(corsAppConfiguration.exposedHeaders()));
+        configuration.setMaxAge(corsAppConfiguration.maxAge());
+
+        var source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+
+        return source;
     }
 
     private AuthorityAuthorizationManager<RequestAuthorizationContext> withRole(Role role) {
