@@ -13,7 +13,6 @@ import java.util.UUID;
 public class BaseEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
     protected UUID id;
 
     @Column(name = "created_at")
@@ -27,6 +26,15 @@ public class BaseEntity {
 
     @PrePersist
     public void prePersist() {
+        /*
+        The  @GeneratedValue(strategy = GenerationType.UUID) annotation
+        overrides the UUID even if you manually set in the entity
+        the solution is just to generate it manually if absent
+         */
+        if (id == null) {
+            //retardedly we need to call the setter so JPA don't complain
+            setId(UUID.randomUUID());
+        }
         this.createdAt = OffsetDateTime.now();
     }
 
