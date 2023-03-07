@@ -23,6 +23,7 @@ Don't mind the mess! This is more of a playground to test and keep track of thin
   https://github.com/spring-projects/spring-hateoas/issues/1306
 
 ## DevOps
+- [Monitoring](docs/monitoring.md)
 - [AWS Overview](docs/aws-overview.md)
 - [Elastic Beanstalk](docs/elastic-beanstalk.md)
 

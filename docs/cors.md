@@ -50,3 +50,7 @@ public CorsConfigurationSource corsConfigurationSource() {
 ````
 
 If you don't setup CORS, no browser client will be able to make requests to your endpoints.
+
+## Links
+
+- [Configuring CORS with Spring Boot and Spring Security](https://reflectoring.io/spring-cors/)
