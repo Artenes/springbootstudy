@@ -16,6 +16,8 @@ import java.time.OffsetDateTime;
 @Entity(name = "api_keys")
 public class ApiKeyEntity extends BaseEntity {
 
+    private String secret;
+
     private String name;
 
     @Column(name = "last_access")

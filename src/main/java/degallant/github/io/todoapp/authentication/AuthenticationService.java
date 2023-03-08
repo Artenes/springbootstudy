@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Collections;
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  * @noinspection ClassCanBeRecord
@@ -28,6 +29,7 @@ public class AuthenticationService {
     private final OpenIdTokenParser openIdTokenParser;
     private final JwtToken token;
     private final PasswordEncoder passwordEncoder;
+    private final ApiKeyRepository apiKeyRepository;
 
     public OpenIdUser parseOpenIdOrThrow(String openIdToken) throws InvalidValueException {
         try {
@@ -159,6 +161,30 @@ public class AuthenticationService {
         }
 
         return new UsernamePasswordAuthenticationToken(user.get(), null, user.get().roles());
+    }
+
+    public Authentication authenticateWithKeys(String rawApiId, String apiSecret) throws InvalidStateException {
+
+        UUID apiKeyId;
+
+        try {
+            apiKeyId = UUID.fromString(rawApiId);
+        } catch (IllegalArgumentException exception) {
+            throw new InvalidStateException("error.api_key_invalid", rawApiId);
+        }
+
+        var keyEntity = apiKeyRepository.findById(apiKeyId);
+
+        if (keyEntity.isEmpty() || keyEntity.get().isDeleted()) {
+            throw new InvalidStateException("error.api_key_not_found", apiKeyId);
+        }
+
+        if (!passwordEncoder.matches(apiSecret, keyEntity.get().getSecret())) {
+            throw new InvalidStateException("error.api_key_invalid_secret", apiKeyId);
+        }
+
+        return new UsernamePasswordAuthenticationToken(keyEntity.get(), null, Collections.emptyList());
+
     }
 
     public record TokenPair(String accessToken, String refreshToken) {

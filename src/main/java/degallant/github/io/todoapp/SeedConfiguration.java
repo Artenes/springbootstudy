@@ -6,6 +6,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public record SeedConfiguration(
         String adminEmail,
         String adminPassword,
-        String apiKey
+        String apiKey,
+        String apiSecret
 ) {
 }

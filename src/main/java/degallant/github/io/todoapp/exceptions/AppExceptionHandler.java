@@ -218,6 +218,22 @@ public class AppExceptionHandler {
 
     }
 
+    public Error handleException(HttpServletRequest request, InvalidStateException exception) {
+
+        var problemDetail = handleInvalidStateException(exception).getBody();
+
+        var exceptionDetail = debug ? new ExceptionDetails(exception) : null;
+        return new Error(
+                problemDetail.getType(),
+                problemDetail.getTitle(),
+                problemDetail.getStatus(),
+                problemDetail.getDetail(),
+                request.getServletPath(),
+                exceptionDetail
+        );
+
+    }
+
     private void printStack(Exception exception) {
         if (debug) {
             exception.printStackTrace();

@@ -1,6 +1,7 @@
 CREATE TABLE api_keys (
     id uuid NOT NULL,
     name varchar(255) NOT NULL,
+    secret varchar(255) NOT NULL,
     last_access timestamp with time zone,
     created_at timestamp with time zone,
     updated_at timestamp with time zone,

@@ -40,6 +40,7 @@ public class DatabaseSeeder {
                 var id = UUID.fromString(seedConfiguration.apiKey());
                 var key = new ApiKeyEntity();
                 key.setId(id);
+                key.setSecret(passwordEncoder.encode(seedConfiguration.apiSecret()));
                 key.setName("root");
                 apiKeyRepository.save(key);
             }

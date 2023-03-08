@@ -1,10 +1,12 @@
 package degallant.github.io.todoapp;
 
+import degallant.github.io.todoapp.authentication.ApiKeyFilter;
 import degallant.github.io.todoapp.authentication.CorsAppConfiguration;
 import degallant.github.io.todoapp.authentication.JwtFilter;
 import degallant.github.io.todoapp.domain.users.Role;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl;
 import org.springframework.security.authorization.AuthorityAuthorizationManager;
@@ -27,14 +29,33 @@ import java.util.Arrays;
 public class RoutesConfiguration {
 
     private final JwtFilter jwtFilter;
+    private final ApiKeyFilter apiKeyFilter;
     private final RoleHierarchyImpl roleHierarchy;
     private final CorsAppConfiguration corsAppConfiguration;
 
-    public RoutesConfiguration(JwtFilter jwtFilter, CorsAppConfiguration corsAppConfiguration) {
+    public RoutesConfiguration(JwtFilter jwtFilter, ApiKeyFilter apiKeyFilter, CorsAppConfiguration corsAppConfiguration) {
         this.jwtFilter = jwtFilter;
+        this.apiKeyFilter = apiKeyFilter;
         this.corsAppConfiguration = corsAppConfiguration;
         roleHierarchy = new RoleHierarchyImpl();
         roleHierarchy.setHierarchy("ROLE_ADMIN > ROLE_USER");
+    }
+
+    @Bean
+    @Order(10)
+    public SecurityFilterChain actuatorFilterChain(HttpSecurity http) throws Exception {
+
+        http
+                .securityMatcher("/actuator/**")
+                .authorizeHttpRequests(authorize -> authorize
+                        .anyRequest().authenticated()
+                        .and().addFilterBefore(apiKeyFilter, UsernamePasswordAuthenticationFilter.class)
+                )
+                .csrf().disable()
+                .cors();
+
+        return http.build();
+
     }
 
     @Bean
