@@ -32,6 +32,7 @@ Don't mind the mess! This is more of a playground to test and keep track of thin
 - [Dealing with date and time](docs/dealing-date-time.md)
 - [API design](docs/api-design.md)
 - [Spring JPA](docs/spring-jpa.md)
+https://reflectoring.io/spring-boot-feature-flags/
 
 ## Performance
 - Load balancing test (Apache Jmeter)
