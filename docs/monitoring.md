@@ -3,6 +3,7 @@
 ## TODO
 - setup Prometheus and Grafana in the project (review docker-compose)
 - setup integration with CloudWatch
+- monitor logs
 
 ## Actuator
 

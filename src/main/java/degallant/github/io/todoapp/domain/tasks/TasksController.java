@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import degallant.github.io.todoapp.OffsetHolder;
 import degallant.github.io.todoapp.domain.users.UserEntity;
 import degallant.github.io.todoapp.sanitization.parsers.TasksFieldParser;
+import io.micrometer.core.instrument.MeterRegistry;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.CacheManager;
 import org.springframework.hateoas.RepresentationModel;
@@ -18,6 +19,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.Duration;
 import java.time.OffsetDateTime;
 
 /**
@@ -37,6 +39,7 @@ public class TasksController {
     private final CacheManager cacheManager;
     private final ObjectMapper mapper;
     private final OffsetHolder offsetHolder;
+    private final MeterRegistry meterRegistry;
 
     @PostMapping
     public ResponseEntity<?> create(@RequestBody TasksDto.Create request, Authentication authentication) {
@@ -74,6 +77,11 @@ public class TasksController {
             Authentication authentication
     ) {
 
+        meterRegistry.counter("PAGE_VIEW.TasksList").increment();
+
+        var startTime = System.currentTimeMillis();
+        var timer = meterRegistry.timer("execution.time.TasksList");
+
         var user = (UserEntity) authentication.getPrincipal();
 
         var cache = cacheManager.getCache("user:" + user.getId() + ":tasks");
@@ -81,6 +89,7 @@ public class TasksController {
         var cachedValue = cache.get(cacheId, String.class);
 
         if (cachedValue != null) {
+            timer.record(Duration.ofMillis(System.currentTimeMillis() - startTime));
             return ResponseEntity.ok().contentType(MediaType.valueOf("application/hal+json")).body(cachedValue);
         }
 
@@ -96,6 +105,7 @@ public class TasksController {
         var serialized = serialize(response);
         cache.put(cacheId, serialized);
 
+        timer.record(Duration.ofMillis(System.currentTimeMillis() - startTime));
         return ResponseEntity.ok(response);
 
     }
