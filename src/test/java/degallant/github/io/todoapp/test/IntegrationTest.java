@@ -95,7 +95,7 @@ public abstract class IntegrationTest {
     }
 
     protected void makeApiKey() {
-        var apiKey = ApiKeyEntity.builder().name("test-key").build();
+        var apiKey = ApiKeyEntity.builder().name("test-key").secret(passwordEncoder.encode("12345")).build();
         apiKey = apiKeyRepository.save(apiKey);
         this.apiKey = apiKey.getId();
     }
