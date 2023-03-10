@@ -1,9 +1,12 @@
 package degallant.github.io.todoapp;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import degallant.github.io.todoapp.authentication.ApiKeyFilter;
+import degallant.github.io.todoapp.authentication.AuthenticationService;
 import degallant.github.io.todoapp.authentication.CorsAppConfiguration;
 import degallant.github.io.todoapp.authentication.JwtFilter;
 import degallant.github.io.todoapp.domain.users.Role;
+import degallant.github.io.todoapp.exceptions.AppExceptionHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
@@ -15,7 +18,6 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.intercept.RequestAuthorizationContext;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.security.web.util.matcher.NegatedRequestMatcher;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -34,9 +36,14 @@ public class RoutesConfiguration {
     private final RoleHierarchyImpl roleHierarchy;
     private final CorsAppConfiguration corsAppConfiguration;
 
-    public RoutesConfiguration(JwtFilter jwtFilter, ApiKeyFilter apiKeyFilter, CorsAppConfiguration corsAppConfiguration) {
-        this.jwtFilter = jwtFilter;
-        this.apiKeyFilter = apiKeyFilter;
+    public RoutesConfiguration(
+            CorsAppConfiguration corsAppConfiguration,
+            AuthenticationService authenticationService,
+            AppExceptionHandler appExceptionHandler,
+            ObjectMapper objectMapper
+    ) {
+        this.jwtFilter = new JwtFilter(authenticationService, appExceptionHandler, objectMapper);
+        this.apiKeyFilter = new ApiKeyFilter(authenticationService, appExceptionHandler, objectMapper);
         this.corsAppConfiguration = corsAppConfiguration;
         roleHierarchy = new RoleHierarchyImpl();
         roleHierarchy.setHierarchy("ROLE_ADMIN > ROLE_USER");

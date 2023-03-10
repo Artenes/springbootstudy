@@ -34,7 +34,7 @@ public class HeaderValidation implements WebMvcConfigurer, HandlerInterceptor {
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
-        registry.addInterceptor(this);
+        registry.addInterceptor(this).excludePathPatterns("/actuator/**");
     }
 
     @Override

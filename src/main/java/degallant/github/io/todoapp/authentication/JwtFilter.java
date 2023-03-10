@@ -9,11 +9,9 @@ import lombok.RequiredArgsConstructor;
 import org.apache.http.entity.ContentType;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 
-@Component
 @RequiredArgsConstructor
 public class JwtFilter extends GenericFilter {
 

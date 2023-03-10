@@ -22,6 +22,16 @@ services:
     ports:
       - "6379:6379"
 
+  prometheus:
+    container_name: prometheus_container
+    image: prom/prometheus
+    volumes:
+      - ./prometheus-config.yml:/etc/prometheus/prometheus.yml
+      - prometheus:/prometheus
+    ports:
+      - "9090:9090"
+
 volumes:
   postgres:
   redis:
+  prometheus:
