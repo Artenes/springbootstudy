@@ -31,7 +31,16 @@ services:
     ports:
       - "9090:9090"
 
+  grafana:
+    container_name: grafana
+    image: grafana/grafana
+    volumes:
+      - grafana:/var/lib/grafana
+    ports:
+      - "3000:3000"
+
 volumes:
   postgres:
   redis:
   prometheus:
+  grafana:

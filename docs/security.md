@@ -64,5 +64,8 @@ they do not stack on top of each other, the first one to match a URL path will b
 - [How to Define a Spring Boot Filter?](https://www.baeldung.com/spring-boot-add-filter)
 - [How to manage exceptions thrown in filters in Spring?](https://stackoverflow.com/questions/34595605/how-to-manage-exceptions-thrown-in-filters-in-spring)
 - [How to apply Spring Security filter only on secured endpoints?](https://stackoverflow.com/questions/36795894/how-to-apply-spring-security-filter-only-on-secured-endpoints)
+- [Spring Security](https://docs.spring.io/spring-security/reference/index.html)
 - [Java Configuration](https://docs.spring.io/spring-security/reference/servlet/configuration/java.html)
 - [Negate Request Matchers](https://stackoverflow.com/questions/42121778/how-to-allow-api-through-my-basic-auth-config-and-into-my-oauth-config-in)
+- [Spring Security Authentication Provider](https://www.baeldung.com/spring-security-authentication-provider)
+- [Spring Security: Authentication and Authorization In-Depth](https://www.marcobehler.com/guides/spring-security)

@@ -1,10 +1,7 @@
 package degallant.github.io.todoapp;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import degallant.github.io.todoapp.authentication.ApiKeyFilter;
-import degallant.github.io.todoapp.authentication.AuthenticationService;
-import degallant.github.io.todoapp.authentication.CorsAppConfiguration;
-import degallant.github.io.todoapp.authentication.JwtFilter;
+import degallant.github.io.todoapp.authentication.*;
 import degallant.github.io.todoapp.domain.users.Role;
 import degallant.github.io.todoapp.exceptions.AppExceptionHandler;
 import org.springframework.context.annotation.Bean;
@@ -32,7 +29,6 @@ import java.util.Arrays;
 public class RoutesConfiguration {
 
     private final JwtFilter jwtFilter;
-    private final ApiKeyFilter apiKeyFilter;
     private final RoleHierarchyImpl roleHierarchy;
     private final CorsAppConfiguration corsAppConfiguration;
 
@@ -43,7 +39,6 @@ public class RoutesConfiguration {
             ObjectMapper objectMapper
     ) {
         this.jwtFilter = new JwtFilter(authenticationService, appExceptionHandler, objectMapper);
-        this.apiKeyFilter = new ApiKeyFilter(authenticationService, appExceptionHandler, objectMapper);
         this.corsAppConfiguration = corsAppConfiguration;
         roleHierarchy = new RoleHierarchyImpl();
         roleHierarchy.setHierarchy("ROLE_ADMIN > ROLE_USER");
@@ -51,16 +46,15 @@ public class RoutesConfiguration {
 
     @Bean
     @Order(10)
-    public SecurityFilterChain actuatorFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain actuatorFilterChain(HttpSecurity http, ApiKeyRepository apiKeyRepository) throws Exception {
 
         http
                 .securityMatcher("/actuator/**")
-                .authorizeHttpRequests(authorize -> authorize
-                        .anyRequest().authenticated()
-                        .and().addFilterBefore(apiKeyFilter, UsernamePasswordAuthenticationFilter.class)
-                )
+                .authorizeHttpRequests(authorize -> authorize.anyRequest().authenticated())
                 .csrf().disable()
-                .cors();
+                .cors()
+                .and().httpBasic()
+                .and().userDetailsService(new ApiKeyDetailsService(apiKeyRepository));
 
         return http.build();
 

@@ -22,7 +22,7 @@ scrape_configs:
     metrics_path: '/actuator/prometheus'
     scrape_interval: 5s
     static_configs:
-      - targets: ['127.0.0.1:5000']
+      - targets: ['host.docker.internal:5000']
     basic_auth:
-      username:
-      password:
+      username: 4946f784-e4b8-4178-95d1-65a0b72dfa5c
+      password: CuHVvl0CBLrwbChH

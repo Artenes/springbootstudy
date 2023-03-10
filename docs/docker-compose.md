@@ -35,9 +35,12 @@ services:
       - "8001:5432"
 ````
 
+Use ``host.docker.internal`` when referencing the host machine from within the container.
+
 ## Links
 
 - [Networking in Compose](https://docs.docker.com/compose/networking/)
 - [Volumes](https://docs.docker.com/storage/volumes/)
 - [Use Compose in production](https://docs.docker.com/compose/production/)
 - [Docker Compose Tutorial: advanced Docker made simple](https://www.educative.io/blog/docker-compose-tutorial)
+- [How to access host port from docker container [duplicate]](https://stackoverflow.com/questions/31324981/how-to-access-host-port-from-docker-container)
