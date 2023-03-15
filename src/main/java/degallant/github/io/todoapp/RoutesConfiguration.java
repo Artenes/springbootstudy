@@ -1,7 +1,10 @@
 package degallant.github.io.todoapp;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import degallant.github.io.todoapp.authentication.*;
+import degallant.github.io.todoapp.authentication.ApiKeyRepository;
+import degallant.github.io.todoapp.authentication.AuthenticationService;
+import degallant.github.io.todoapp.authentication.CorsAppConfiguration;
+import degallant.github.io.todoapp.authentication.JwtFilter;
 import degallant.github.io.todoapp.domain.users.Role;
 import degallant.github.io.todoapp.exceptions.AppExceptionHandler;
 import org.springframework.context.annotation.Bean;
@@ -69,10 +72,10 @@ public class RoutesConfiguration {
         http
                 .csrf().disable()
                 .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers(HttpMethod.POST, "/v1/auth").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/v1/auth/email").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/v1/admin/auth").permitAll()
-                        .requestMatchers("/v1/admin/**").access(withRole(Role.ROLE_ADMIN))
+                        .requestMatchers(HttpMethod.POST, "/v*/auth").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/v*/auth/email").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/v*/admin/auth").permitAll()
+                        .requestMatchers("/v*/admin/**").access(withRole(Role.ROLE_ADMIN))
                         .anyRequest().access(withRole(Role.ROLE_USER))
                         .and().addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
                 )

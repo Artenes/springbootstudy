@@ -31,7 +31,7 @@ public class AppExceptionHandler {
     private final Messages messages;
     private final boolean debug;
 
-    public AppExceptionHandler(Messages messages, @Value("${app.debug:false}") boolean debug) {
+    public AppExceptionHandler(Messages messages, @Value("${debug:false}") boolean debug) {
         this.messages = messages;
         this.debug = debug;
     }

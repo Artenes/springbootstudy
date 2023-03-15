@@ -1,10 +1,5 @@
 # Monitoring
 
-## TODO
-- setup Prometheus and Grafana in the project (review docker-compose)
-- setup integration with CloudWatch
-- monitor logs
-
 ## Actuator
 
 This is the spring boot solution to provide endpoints to watch for the health of the application. In pactice this might not
@@ -20,6 +15,24 @@ by tools that can consume and display this information such as Prometheus and Cl
 This one you configure with a ``prometheus-config.yml`` file by passing the address of your service and some basic auth
 information to authenticate against the actuator endpoint. And no, it is not possible to add custom headers to the request
 that Prometheus will make. So to make things simples, just use basic auth to protect the actuator endpoints.
+
+## Logs
+
+You need to send the application logs to some aggregation system, so you can evaluate them. Don't forget to use tracing tools
+to keep track of logs spanning multiple services.
+
+Essentially the idea is to use some stack such as ELK (elasticsearch, logstash, kibana) to handle this. Sometimes we can
+replace logstash with FileBeats. But this is a whole beast on its own, each of these tools have its fundamental ideas and
+patterns that needs to be studied individually.
+
+[7.4. Logging](https://docs.spring.io/spring-boot/docs/current/reference/htmlsingle/#features.logging)
+[Logging In Spring Boot](https://reflectoring.io/springboot-logging/)
+[Tracing with Spring Boot, OpenTelemetry, and Jaeger](https://reflectoring.io/spring-boot-tracing/)
+[Per-Environment Logging with Plain Java and Spring Boot](https://reflectoring.io/profile-specific-logging-spring-boot/#per-environment-logging-with-spring-boot0)
+[Spring Boot Logs Aggregation and Monitoring Using ELK Stack](https://auth0.com/blog/spring-boot-logs-aggregation-and-monitoring-using-elk-stack/)
+[Elastic Search, Logstash and Kibana via docker-compose](https://gist.github.com/mjul/fa222838e94d72560c5cce6b50db3346)
+[elasticsearch-kibana-docker-compose](https://github.com/self-tuts/awesome-docker-compose/blob/master/ecosystem/elasticsearch-kibana-docker-compose.yml)
+[Configurando o Elasticsearch e Kibana no Docker](https://hgmauri.medium.com/configurando-o-elasticsearch-e-kibana-no-docker-3f4679eb5feb)
 
 ## Links
 
