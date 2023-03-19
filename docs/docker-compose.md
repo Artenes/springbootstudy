@@ -37,6 +37,21 @@ services:
 
 Use ``host.docker.internal`` when referencing the host machine from within the container.
 
+## Pushing to docker hub
+
+Set a tag
+
+````
+docker tag image-name <username>/<any-name>:latest
+````
+
+Then push (you can't tag on docker desktop, but you can push there)
+
+````
+docker push <username>/<any-name>:latest
+````
+
+
 ## Real world example
 
 ````yaml
